@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "108843704730",
+    "project_id": "tasktracker-e8a27",
+    "storage_bucket": "tasktracker-e8a27.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:108843704730:android:c40f464d2d315032575a23",
+        "android_client_info": {
+          "package_name": "com.compalgo.task_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdNW7A_pWnZpfthxrdHeU_TnQ528HQt4s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
