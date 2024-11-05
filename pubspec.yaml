@@ -89,3 +89,15 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+  assets:
+    - icons/navigation_panel/home.png
+    - icons/navigation_panel/projects.png
+    - icons/navigation_panel/tasks.png
+    - icons/navigation_panel/employees.png
+    - icons/navigation_panel/profile.png
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: fonts/Roboto/Roboto-Regular.ttf
+        - asset: fonts/Roboto/Roboto-Bold.ttf
+          weight: 700

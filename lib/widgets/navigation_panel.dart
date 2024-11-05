@@ -1,14 +1,27 @@
 import 'package:flutter/material.dart';
-import '../screens/home_page.dart';  // Ваша страница "Главная"
-import '../screens/projects_screen.dart';  // Ваша страница "Проекты"
-import '../screens/tasks_screen.dart';  // Ваша страница "Задачи"
-import '../screens/employees_screen.dart';  // Ваша страница "Сотрудники"
-import '../screens/profile_screen.dart';  // Ваша страница "Профиль"
+import '../screens/home_page.dart';
+import '../screens/projects_screen.dart';
+import '../screens/tasks_screen.dart';
+import '../screens/employees_screen.dart';
+import '../screens/profile_screen.dart';
 
-class CustomBottomNavigationBar extends StatelessWidget {
+class CustomBottomNavigationBar extends StatefulWidget {
   final int currentIndex;
 
   const CustomBottomNavigationBar({Key? key, required this.currentIndex}) : super(key: key);
+
+  @override
+  _CustomBottomNavigationBarState createState() => _CustomBottomNavigationBarState();
+}
+
+class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
+  int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.currentIndex;
+  }
 
   void _onItemTapped(BuildContext context, int index) {
     Widget screen;
@@ -26,17 +39,21 @@ class CustomBottomNavigationBar extends StatelessWidget {
         screen = EmployeesScreen();
         break;
       case 4:
-        screen = ProfileScreen(userId: '',);
+        screen = ProfileScreen(userId: 'e717cc52-72ec-4b21-aa48-05a2a60dec8c');
         break;
       default:
         return;
     }
 
+    setState(() {
+      _selectedIndex = index;
+    });
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation1, animation2) => screen,
-        transitionDuration: Duration.zero, // Убираем анимацию
+        transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),
     );
@@ -45,32 +62,86 @@ class CustomBottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
-      currentIndex: currentIndex,
+      currentIndex: _selectedIndex,
       selectedItemColor: Colors.black,
-      unselectedItemColor: Colors.black,
+      unselectedItemColor: Colors.grey,
+      showUnselectedLabels: true,
       items: [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
+        _buildNavigationBarItem(
+          context,
+          index: 0,
+          assetPath: 'icons/navigation_panel/home.png',
           label: 'Главная',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.work_outline),
+        _buildNavigationBarItem(
+          context,
+          index: 1,
+          assetPath: 'icons/navigation_panel/projects.png',
           label: 'Проекты',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.task),
+        _buildNavigationBarItem(
+          context,
+          index: 2,
+          assetPath: 'icons/navigation_panel/tasks.png',
           label: 'Задачи',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.people),
+        _buildNavigationBarItem(
+          context,
+          index: 3,
+          assetPath: 'icons/navigation_panel/employees.png',
           label: 'Сотрудники',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_2_outlined),
+        _buildNavigationBarItem(
+          context,
+          index: 4,
+          assetPath: 'icons/navigation_panel/profile.png',
           label: 'Профиль',
         ),
       ],
-      onTap: (index) => _onItemTapped(context, index), // Обработка нажатий
+      onTap: (index) => _onItemTapped(context, index),
+    );
+  }
+
+  BottomNavigationBarItem _buildNavigationBarItem(BuildContext context,
+      {required int index, required String assetPath, required String label}) {
+    return BottomNavigationBarItem(
+      icon: GestureDetector(
+        onTap: () => _onItemTapped(context, index),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Анимация применяется только к иконке
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              width: 64, // Ширина для иконки
+              height: 32, // Высота для иконки
+              decoration: BoxDecoration(
+                color: _selectedIndex == index ? Colors.grey[300] : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Center(
+                child: Image.asset(
+                  assetPath,
+                  width: 24,
+                  height: 24,
+                  color: _selectedIndex == index ? Colors.black : Colors.grey,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: _selectedIndex == index ? Colors.black : Colors.grey,
+                fontSize: 12,
+                fontFamily: 'Roboto'
+              ),
+            ),
+          ],
+        ),
+      ),
+      label: '',
     );
   }
 }

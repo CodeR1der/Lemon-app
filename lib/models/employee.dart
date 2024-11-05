@@ -1,8 +1,6 @@
-import 'package:uuid/uuid.dart';
 
 class Employee {
   late String userId;
-  late String employeeId;
   late String name;
   late String position;
   late String phone;
@@ -11,22 +9,18 @@ class Employee {
 
   // Конструктор
   Employee({
-    required this.employeeId,
+    required this.userId,
     required this.name,
     required this.position,
     required this.phone,
     required this.telegramId,
     required this.vkId,
-  }) {
-    // Генерация GUID для userId
-    userId = Uuid().v4(); // Использование библиотеки uuid
-  }
+  });
 
   // Преобразование объекта в JSON для хранения в Firebase
-  Map<String, dynamic> toJson() {
+  toJson() {
     return {
       'userId': userId,
-      'employeeId': employeeId,
       'name': name,
       'position': position,
       'phone': phone,
@@ -38,7 +32,7 @@ class Employee {
   // Создание объекта Employee из JSON
   factory Employee.fromJson(Map<String, dynamic> json) {
     return Employee(
-      employeeId: json['employeeId'],
+      userId: json['userId'],
       name: json['name'],
       position: json['position'],
       phone: json['phone'],

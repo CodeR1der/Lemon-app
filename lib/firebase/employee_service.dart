@@ -1,11 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uuid/uuid.dart';
 import '/models/employee.dart';
 
 class EmployeeService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final _uuid = Uuid();
 
   // Добавление сотрудника в Firestore
   Future<void> addEmployee(Employee employee) async {
+    // Генерация нового userId, если он не указан
+    if (employee.userId.isEmpty) {
+      employee.userId = _uuid.v4();
+    }
+
     try {
       await _firestore.collection('employees').doc(employee.userId).set(employee.toJson());
     } catch (e) {
