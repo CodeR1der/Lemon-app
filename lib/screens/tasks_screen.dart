@@ -12,7 +12,6 @@ class TasksScreen extends StatelessWidget {
       body: Center(
         child: Text('Здесь сотрудники'),
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(currentIndex: 2), // Индекс для главной страницы
     );
   }
 }

@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../firebase/employee_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/employee.dart';
-import '../widgets/navigation_panel.dart';
+import '../supabase/employee_operations.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -15,9 +16,11 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final EmployeeService _employeeService = EmployeeService();
+  final ImagePicker _imagePicker = ImagePicker();
 
   String name = '';
   String position = '';
+  String? avatarUrl;
   bool isLoading = true;
 
   // Контроллеры для текстовых полей
@@ -35,23 +38,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserProfile() async {
     try {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('employees')
-          .doc(widget.userId)
-          .get();
-
-      setState(() {
-        name = userDoc['name'];
-        position = userDoc['position'];
-        _phoneController.text = userDoc['phone'];
-        _telegramController.text = userDoc['telegramId'];
-        _vkController.text = userDoc['vkId'];
-        isLoading = false; // Устанавливаем флаг загрузки в false
-      });
+      final employee = await _employeeService.getEmployee(widget.userId);
+      if (employee != null) {
+        setState(() {
+          name = employee.name;
+          position = employee.position;
+          _phoneController.text = employee.phone;
+          _telegramController.text = employee.telegramId;
+          _vkController.text = employee.vkId;
+          avatarUrl = employee.avatarFileName; // Получение URL аватара
+          isLoading = false;
+        });
+      }
     } catch (e) {
       print('Ошибка при загрузке данных профиля: $e');
       setState(() {
-        isLoading = false; // Устанавливаем флаг загрузки в false даже при ошибке
+        isLoading = false;
       });
     }
   }
@@ -65,82 +67,115 @@ class _ProfileScreenState extends State<ProfileScreen> {
         phone: _phoneController.text,
         telegramId: _telegramController.text,
         vkId: _vkController.text,
+        avatarFileName: avatarUrl, // Сохранение URL аватара
       ));
     } catch (e) {
       print('Ошибка при сохранении данных профиля: $e');
     }
   }
 
+  Future<void> _selectAndUploadAvatar() async {
+    final pickedFile =
+        await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final file = File(pickedFile.path);
+      final uploadedFileName =
+          await _employeeService.uploadAvatar(file, widget.userId);
+      if (uploadedFileName != null) {
+        setState(() {
+          avatarUrl = uploadedFileName; // Обновляем URL аватара
+        });
+
+        // Сразу вызываем сохранение профиля, чтобы сохранить URL аватара
+        await _saveUserProfile();
+      }
+    }
+  }
+
+  Widget _buildAvatar() {
+    return GestureDetector(
+      onTap: _selectAndUploadAvatar,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: CircleAvatar(
+          radius: 50,
+          backgroundImage: avatarUrl != null
+              ? NetworkImage(
+            _employeeService.getAvatarUrl(avatarUrl),
+          )
+              : null,
+          child: avatarUrl == null ? Icon(Icons.person, size: 50) : null,
+        ),
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: isLoading // Показываем индикатор загрузки, если данные еще загружаются
+        child: isLoading
             ? Center(child: CircularProgressIndicator())
             : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 40),
-            Padding(
-              padding: const EdgeInsets.only(left: 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: CircleAvatar(
-                  radius: 40,
-                  child: Icon(Icons.person, size: 40),
-                ),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 40),
+                  Center(child: _buildAvatar()),
+                  _buildProfileSection('ФИО', name),
+                  _buildBorders(),
+                  _buildProfileSection('Должность', position),
+                  _buildBorders(),
+                  _buildEditableProfileSection(
+                      'Контактный телефон', _phoneController),
+                  _buildBorders(),
+                  _buildEditableProfileSection(
+                      'Имя пользователя в Телеграм', _telegramController),
+                  _buildBorders(),
+                  _buildEditableProfileSection(
+                      'Адрес страницы в VK', _vkController),
+                ],
               ),
-            ),
-            _buildProfileSection('ФИО', name),
-            _buildBorders(),
-            _buildProfileSection('Должность', position),
-            _buildBorders(),
-            _buildEditableProfileSection('Контактный телефон', _phoneController),
-            _buildBorders(),
-            _buildEditableProfileSection('Имя пользователя в Телеграм', _telegramController),
-            _buildBorders(),
-            _buildEditableProfileSection('Адрес страницы в VK', _vkController),
-          ],
-        ),
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(currentIndex: 4),
       floatingActionButton: isLoading
           ? null
           : _isEditing
-          ? Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            onPressed: () {
-              setState(() {
-                _isEditing = false; // Выход из режима редактирования без сохранения
-              });
-            },
-            backgroundColor: Colors.red,
-            child: Icon(Icons.close),
-          ),
-          SizedBox(width: 16), // Отступ между кнопками
-          FloatingActionButton(
-            onPressed: () async {
-              await _saveUserProfile(); // Сохранение профиля
-              setState(() {
-                _isEditing = false; // Выход из режима редактирования после сохранения
-              });
-            },
-            backgroundColor: Colors.green,
-            child: Icon(Icons.save),
-          ),
-        ],
-      )
-          : FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _isEditing = true; // Включает режим редактирования
-          });
-        },
-        child: Icon(Icons.edit),
-      ),
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    FloatingActionButton(
+                      onPressed: () {
+                        setState(() {
+                          _isEditing =
+                              false; // Выход из режима редактирования без сохранения
+                        });
+                      },
+                      backgroundColor: Colors.red,
+                      child: Icon(Icons.close),
+                    ),
+                    SizedBox(width: 16),
+                    FloatingActionButton(
+                      onPressed: () async {
+                        await _saveUserProfile(); // Сохранение профиля
+                        setState(() {
+                          _isEditing =
+                              false; // Выход из режима редактирования после сохранения
+                        });
+                      },
+                      backgroundColor: Colors.green,
+                      child: Icon(Icons.save),
+                    ),
+                  ],
+                )
+              : FloatingActionButton(
+                  onPressed: () {
+                    setState(() {
+                      _isEditing = true; // Включает режим редактирования
+                    });
+                  },
+                  child: Icon(Icons.edit),
+                ),
     );
   }
 
@@ -157,7 +192,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileSection(String title, String content) {
-    bool isLink = title == 'Имя пользователя в Телеграм' || title == 'Адрес страницы в VK';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -168,15 +202,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             fontWeight: FontWeight.bold,
             fontSize: 14,
             color: Colors.grey,
-            fontFamily: 'Roboto',
+            fontFamily: 'Roboto', // Используем шрифт Roboto
           ),
         ),
         Text(
           content.isNotEmpty ? content : 'Загрузка...',
           style: TextStyle(
             fontSize: 16,
-            fontFamily: 'Roboto',
-            color: isLink ? Colors.blue : Colors.black,
+            color: Colors.black,
+            fontFamily: 'Roboto', // Используем шрифт Roboto
           ),
         ),
         SizedBox(height: 13),

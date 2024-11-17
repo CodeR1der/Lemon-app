@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart'; // Для иконок
 import '../models/employee.dart';
-import '../firebase/employee_service.dart';
-import '../widgets/navigation_panel.dart';
+import '../supabase/employee_operations.dart';
 import 'employee_details_screen.dart';
 
 class EmployeesScreen extends StatefulWidget {
@@ -39,14 +39,47 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     });
   }
 
+  Widget _buildEmployeeIcons(Employee employee) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        _buildIconWithNumber(Iconsax.archive_tick, 12),
+        _buildIconWithNumber(Iconsax.timer, 2),
+        _buildIconWithNumber(Iconsax.calendar_remove, 5),
+        _buildIconWithNumber(Iconsax.task_square, 1),
+        _buildIconWithNumber(Iconsax.search_normal, 7),
+        _buildIconWithNumber(Iconsax.eye, 7),
+      ],
+    );
+  }
+
+  Widget _buildIconWithNumber(IconData icon, int count) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        SizedBox(width: 4),
+        Text(
+          count.toString(),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.black54,
+          ),
+        ),
+        SizedBox(width: 8),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           SizedBox(height: 40),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0), // Уменьшен до горизонтального отступа
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -60,14 +93,18 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
           ),
           Expanded(
             child: ListView.builder(
-              padding: EdgeInsets.zero, // Убираем стандартные отступы
               itemCount: _filteredEmployees.length,
               itemBuilder: (context, index) {
                 Employee employee = _filteredEmployees[index];
                 return ListTile(
                   leading: CircleAvatar(
                     radius: 24,
-                    child: Icon(Icons.person),
+                    backgroundImage: employee.avatarFileName != null
+                        ? NetworkImage(_employeeService.getAvatarUrl(employee.avatarFileName))
+                        : null,
+                    child: employee.avatarFileName == null
+                        ? Icon(Icons.person)
+                        : null,
                   ),
                   title: Text(
                     employee.name,
@@ -77,13 +114,20 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                       fontFamily: 'Roboto',
                     ),
                   ),
-                  subtitle: Text(
-                    employee.position,
-                    style: TextStyle(
-                      color: Colors.black38,
-                      fontSize: 13,
-                      fontFamily: 'Roboto',
-                    ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        employee.position,
+                        style: TextStyle(
+                          color: Colors.black38,
+                          fontSize: 13,
+                          fontFamily: 'Roboto',
+                        ),
+                      ),
+                      SizedBox(height: 4), // Отступ между текстом и иконками
+                      _buildEmployeeIcons(employee),
+                    ],
                   ),
                   onTap: () {
                     Navigator.push(
@@ -99,7 +143,6 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(currentIndex: 3), // Навигационная панель
     );
   }
 }

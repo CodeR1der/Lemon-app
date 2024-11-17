@@ -1,4 +1,3 @@
-
 class Employee {
   late String userId;
   late String name;
@@ -6,6 +5,7 @@ class Employee {
   late String phone;
   late String telegramId;
   late String vkId;
+  String? avatarFileName; // Поле для хранения имени файла аватара
 
   // Конструктор
   Employee({
@@ -15,10 +15,11 @@ class Employee {
     required this.phone,
     required this.telegramId,
     required this.vkId,
+    this.avatarFileName, // Поле для аватара
   });
 
-  // Преобразование объекта в JSON для хранения в Firebase
-  toJson() {
+  // Преобразование объекта в JSON для хранения в Supabase
+  Map<String, dynamic> toJson() {
     return {
       'userId': userId,
       'name': name,
@@ -26,6 +27,7 @@ class Employee {
       'phone': phone,
       'telegramId': telegramId,
       'vkId': vkId,
+      'avatarFileName': avatarFileName,
     };
   }
 
@@ -38,10 +40,11 @@ class Employee {
       phone: json['phone'],
       telegramId: json['telegramId'],
       vkId: json['vkId'],
+      avatarFileName: json['avatarFileName'], // Добавляем из JSON
     );
   }
 
-  // Проверка валидности номера телефона с использованием регулярного выражения
+  // Проверка валидности номера телефона
   bool isPhoneValid() {
     final phoneRegExp = RegExp(r'^\+?[0-9]{10,13}$'); // Пример регулярного выражения
     return phoneRegExp.hasMatch(phone);

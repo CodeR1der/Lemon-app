@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/navigation_panel.dart';
 
 class ProjectsScreen extends StatelessWidget {
+  const ProjectsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -12,7 +14,6 @@ class ProjectsScreen extends StatelessWidget {
       body: Center(
         child: Text('Здесь сотрудники'),
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(currentIndex: 1),
     );
   }
 }
