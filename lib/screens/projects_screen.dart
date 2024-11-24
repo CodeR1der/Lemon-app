@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/navigation_panel.dart';
 
 class ProjectsScreen extends StatelessWidget {
   const ProjectsScreen({super.key});

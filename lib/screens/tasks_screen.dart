@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/navigation_panel.dart';
 
 class TasksScreen extends StatelessWidget {
   @override
