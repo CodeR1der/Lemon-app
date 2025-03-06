@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart'; // Для иконок
 import '../models/employee.dart';
-import '../supabase/employee_operations.dart';
+import '../services//employee_operations.dart';
 import 'employee_details_screen.dart';
 
 class EmployeesScreen extends StatefulWidget {
@@ -99,20 +99,16 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                 return ListTile(
                   leading: CircleAvatar(
                     radius: 24,
-                    backgroundImage: employee.avatarFileName != null
-                        ? NetworkImage(_employeeService.getAvatarUrl(employee.avatarFileName))
+                    backgroundImage: employee.avatar_url != ''
+                        ? NetworkImage(_employeeService.getAvatarUrl(employee.avatar_url))
                         : null,
-                    child: employee.avatarFileName == null
+                    child: employee.avatar_url == ''
                         ? Icon(Icons.person)
                         : null,
                   ),
                   title: Text(
                     employee.name,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontFamily: 'Roboto',
-                    ),
+                    style: Theme.of(context).textTheme.bodyLarge
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

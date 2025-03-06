@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   uuid: 4.5.1
+  url_launcher: ^6.3.1
   iconsax_flutter: ^1.0.0
   get: 4.6.6
   # The following adds the Cupertino Icons font to your application.
@@ -90,12 +91,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-  assets:
-    - icons/navigation_panel/home.png
-    - icons/navigation_panel/projects.png
-    - icons/navigation_panel/tasks.png
-    - icons/navigation_panel/employees.png
-    - icons/navigation_panel/profile.png
   fonts:
     - family: Roboto
       fonts:

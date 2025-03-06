@@ -1,14 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/employee.dart';
-import '../supabase/employee_operations.dart';
+import '../services/employee_operations.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final String userId;
+  final String user_id;
 
-  ProfileScreen({required this.userId});
+  ProfileScreen({required this.user_id});
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -22,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String position = '';
   String? avatarUrl;
   bool isLoading = true;
+  String role = '';
 
   // Контроллеры для текстовых полей
   late TextEditingController _phoneController = TextEditingController();
@@ -38,15 +38,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserProfile() async {
     try {
-      final employee = await _employeeService.getEmployee(widget.userId);
+      final employee = await _employeeService.getEmployee(widget.user_id);
       if (employee != null) {
         setState(() {
           name = employee.name;
           position = employee.position;
-          _phoneController.text = employee.phone;
-          _telegramController.text = employee.telegramId;
-          _vkController.text = employee.vkId;
-          avatarUrl = employee.avatarFileName; // Получение URL аватара
+          _phoneController.text = employee.phone?? '';
+          _telegramController.text = employee.telegram_id?? '';
+          _vkController.text = employee.vk_id ?? '';
+          avatarUrl = employee.avatar_url;
           isLoading = false;
         });
       }
@@ -61,13 +61,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveUserProfile() async {
     try {
       await _employeeService.updateEmployee(Employee(
-        userId: widget.userId,
+        user_id: widget.user_id,
         name: name,
         position: position,
         phone: _phoneController.text,
-        telegramId: _telegramController.text,
-        vkId: _vkController.text,
-        avatarFileName: avatarUrl, // Сохранение URL аватара
+        telegram_id: _telegramController.text,
+        vk_id: _vkController.text,
+        avatar_url: avatarUrl,
+        role: role,
       ));
     } catch (e) {
       print('Ошибка при сохранении данных профиля: $e');
@@ -80,7 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       final uploadedFileName =
-          await _employeeService.uploadAvatar(file, widget.userId);
+          await _employeeService.uploadAvatar(file, widget.user_id);
       if (uploadedFileName != null) {
         setState(() {
           avatarUrl = uploadedFileName; // Обновляем URL аватара
@@ -99,12 +100,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         alignment: Alignment.centerLeft,
         child: CircleAvatar(
           radius: 50,
-          backgroundImage: avatarUrl != null
-              ? NetworkImage(
-            _employeeService.getAvatarUrl(avatarUrl),
-          )
+          backgroundImage: avatarUrl != ''
+              ? NetworkImage(_employeeService.getAvatarUrl(avatarUrl),)
               : null,
-          child: avatarUrl == null ? Icon(Icons.person, size: 50) : null,
+          child: avatarUrl == ''
+              ? const Icon(Icons.person, size: 50)
+              : null,
         ),
       )
     );
@@ -198,20 +199,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SizedBox(height: 13),
         Text(
           title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: Colors.grey,
-            fontFamily: 'Roboto', // Используем шрифт Roboto
-          ),
+          style: Theme.of(context).textTheme.titleMedium
         ),
         Text(
           content.isNotEmpty ? content : 'Загрузка...',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.black,
-            fontFamily: 'Roboto', // Используем шрифт Roboto
-          ),
+          style: Theme.of(context).textTheme.bodyLarge
         ),
         SizedBox(height: 13),
       ],
@@ -239,11 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             height: 20, // Фиксированная высота для текстового поля
             child: TextField(
-              style: TextStyle(
-                fontSize: 16,
-                fontFamily: 'Roboto',
-                color: isLink ? Colors.blue : Colors.black,
-              ),
+              style: Theme.of(context).textTheme.titleMedium,
               controller: controller,
               decoration: InputDecoration(
                 isCollapsed: true,

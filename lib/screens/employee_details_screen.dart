@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import '../models/employee.dart';
-import '../supabase/employee_operations.dart';
+import '../services/employee_operations.dart';
 
 class EmployeeDetailScreen extends StatefulWidget {
   final Employee employee;
@@ -35,13 +35,13 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
         alignment: Alignment.centerLeft,
         child: CircleAvatar(
           radius: 50,
-          backgroundImage: widget.employee.avatarFileName != null
+          backgroundImage: widget.employee.avatar_url != ''
               ? NetworkImage(
-                  widget._employeeService
-                      .getAvatarUrl(widget.employee.avatarFileName),
-                )
+            widget._employeeService
+                .getAvatarUrl(widget.employee.avatar_url),
+          )
               : null,
-          child: widget.employee.avatarFileName == null
+          child: widget.employee.avatar_url == ''
               ? Icon(Icons.person, size: 50)
               : null,
         ),
@@ -78,11 +78,11 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
           ),
         ),
         Text(
-          content.isNotEmpty ? content : 'Загрузка...',
+          content.isNotEmpty ? content : "Не указан",
           style: TextStyle(
             fontSize: 16,
             fontFamily: 'Roboto',
-            color: isLink ? Colors.blue : Colors.black,
+            color: isLink ? Colors.blue  : Colors.black,
           ),
         ),
         SizedBox(height: 13),
@@ -234,13 +234,13 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                 _buildProfileSection('Должность', widget.employee.position),
                 _buildBorders(context),
                 _buildProfileSection(
-                    'Контактный телефон', widget.employee.phone),
+                    'Контактный телефон', widget.employee.phone?? ''),
                 _buildBorders(context),
                 _buildProfileSection(
-                    'Имя пользователя в Телеграм', widget.employee.telegramId),
+                    'Имя пользователя в Телеграм', widget.employee.telegram_id ?? ''),
                 _buildBorders(context),
                 _buildProfileSection(
-                    'Адрес страницы в VK', widget.employee.vkId),
+                    'Адрес страницы в VK', widget.employee.vk_id?? ''),
               ],
             ),
           ),

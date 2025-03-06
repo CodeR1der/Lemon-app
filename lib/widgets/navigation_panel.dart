@@ -45,11 +45,11 @@ class NavigationController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
 
   final screens = [
-    const HomeScreen(),
-    const ProjectsScreen(),
+    HomeScreen(),
+    ProjectScreen(),
     TasksScreen(),
     EmployeesScreen(),
-    ProfileScreen(userId: "1d9543b4-96a5-4bdd-9cc7-b4b0ca77ec3c")
+    ProfileScreen(user_id: "71a5a83c-7bf8-4227-ba71-3fc5eb6407c2")
   ];
 
 }

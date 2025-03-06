@@ -7,8 +7,8 @@ import 'screens/home_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Supabase.initialize(
-    url: 'https://oergqqjwtapfqcqagyfs.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lcmdxcWp3dGFwZnFjcWFneWZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEzNDU3ODUsImV4cCI6MjA0NjkyMTc4NX0.jnj7QD0WEnkjiTq2cIq_dR_LwyXJy70rHJ8UHeiJC-s',
+    url: 'https://xusyxtgdmtpupmroemzb.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1c3l4dGdkbXRwdXBtcm9lbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0NDU2NTgsImV4cCI6MjA0ODAyMTY1OH0.Z7gU-A_s6ymY7-vTW4ObeHurvtbSIt4kWe-9EXF5j9M',
   );
   //createAndSaveEmployee();
   runApp(MyApp());
@@ -19,6 +19,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      theme: ThemeData(
+        // Задаем шрифт для всего приложения
+        fontFamily: 'Roboto', // Название шрифта
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(fontSize: 15,color: Colors.black),
+          bodySmall: TextStyle(fontSize: 14,color: Colors.black),
+          bodyLarge: TextStyle(fontSize: 16,color: Colors.black),
+          titleMedium: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+        ),
+      ),
       debugShowCheckedModeBanner: false,
       routes: {
         '/home': (context) => const HomeScreen(),      // Маршрут для домашнего экрана

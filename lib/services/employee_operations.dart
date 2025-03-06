@@ -11,12 +11,12 @@ class EmployeeService {
 
   // Добавление сотрудника в Supabase
   Future<void> addEmployee(Employee employee) async {
-    if (employee.userId.isEmpty) {
-      employee.userId = _uuid.v4();
+    if (employee.user_id.isEmpty) {
+      employee.user_id = _uuid.v4();
     }
 
     try {
-      await _client.from('employees').insert(employee.toJson());
+      await _client.from('employee').insert(employee.toJson());
       print('Сотрудник успешно добавлен');
     } on PostgrestException catch (error) {
       print('Ошибка при добавлении сотрудника: ${error.message}');
@@ -26,7 +26,7 @@ class EmployeeService {
   // Получение списка всех сотрудников
   Future<List<Employee>> getAllEmployees() async {
     try {
-      final response = await _client.from('employees').select();
+      final response = await _client.from('employee').select();
       List<Employee> employeeList = (response as List<dynamic>).map((data) {
         return Employee.fromJson(data as Map<String, dynamic>);
       }).toList();
@@ -38,12 +38,12 @@ class EmployeeService {
   }
 
   // Получение данных сотрудника по userId
-  Future<Employee?> getEmployee(String userId) async {
+  Future<Employee?> getEmployee(String user_id) async {
     try {
       final response = await _client
-          .from('employees')
+          .from('employee')
           .select()
-          .eq('userId', userId)
+          .eq('user_id', user_id)
           .single() as Map<String, dynamic>;
       return Employee.fromJson(response);
     } on PostgrestException catch (error) {
@@ -56,9 +56,9 @@ class EmployeeService {
   Future<void> updateEmployee(Employee employee) async {
     try {
       await _client
-          .from('employees')
+          .from('employee')
           .update(employee.toJson())
-          .eq('userId', employee.userId);
+          .eq('userId', employee.user_id);
       print('Данные сотрудника успешно обновлены');
     } on PostgrestException catch (error) {
       print('Ошибка при обновлении данных сотрудника: ${error.message}');
@@ -68,7 +68,7 @@ class EmployeeService {
   // Удаление сотрудника
   Future<void> deleteEmployee(String userId) async {
     try {
-      await _client.from('employees').delete().eq('userId', userId);
+      await _client.from('employee').delete().eq('userId', userId);
       print('Сотрудник успешно удален');
     } on PostgrestException catch (error) {
       print('Ошибка при удалении сотрудника: ${error.message}');
@@ -76,11 +76,11 @@ class EmployeeService {
   }
 
   Future<String?> uploadAvatar(File imageFile, String userId) async {
-    final fileName =
-        '${userId}_${basename(imageFile.path)}'; // Уникальное имя файла
+    final String fileName =
+        'users/${userId}_${basename(imageFile.path)}'; // Уникальное имя файла
     try {
       await Supabase.instance.client.storage
-          .from('avatars')
+          .from('Avatars')
           .upload(fileName, imageFile);
       print("Аватарка успешно загружена");
       return fileName; // Возвращаем имя файла для сохранения в базе данных
@@ -94,7 +94,7 @@ class EmployeeService {
   // Удаление аватара сотрудника
   Future<void> deleteAvatar(String fileName) async {
     try {
-      await _client.storage.from('avatars').remove([fileName]);
+      await _client.storage.from('Avatars').remove([fileName]);
       print('Аватар успешно удален');
     } on PostgrestException catch (error) {
       print('Ошибка при удалении аватара: ${error.message}');
@@ -103,6 +103,6 @@ class EmployeeService {
 
   // Получение публичного URL для аватара
   String getAvatarUrl(String? fileName) {
-    return _client.storage.from('avatars').getPublicUrl(fileName!);
+    return _client.storage.from('Avatars').getPublicUrl(fileName!);
   }
 }
