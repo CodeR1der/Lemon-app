@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   uuid: 4.5.1
+  google_fonts: ^6.2.1
   url_launcher: ^6.3.1
   iconsax_flutter: ^1.0.0
   get: 4.6.6
@@ -39,14 +40,26 @@ dependencies:
   cupertino_icons: ^1.0.8
   supabase_flutter: ^2.8.0
   image_picker: ^1.1.2
+  shared_preferences: ^2.0.6
+  file_picker: ^9.1.0
+  table_calendar: ^3.0.0
+  record: ^5.2.1
+  just_audio: ^0.9.42
+  photo_view: ^0.15.0
+  video_player: ^2.5.3
+  get_thumbnail_video: ^0.7.3
+  chewie: ^1.3.0
+  intl: ^0.18.0
+  wechat_assets_picker: ^9.4.2
+  permission_handler: ^11.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
+  # encourage good coding practices. The lint set provided by the package i1tivated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint1111
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
 
@@ -91,9 +104,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-  fonts:
-    - family: Roboto
-      fonts:
-        - asset: fonts/Roboto/Roboto-Regular.ttf
-        - asset: fonts/Roboto/Roboto-Bold.ttf
-          weight: 700

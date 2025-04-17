@@ -26,7 +26,26 @@ class ProjectService {
   // Получение списка всех проектов
   Future<List<Project>> getAllProjects() async {
     try {
-      final response = await _client.from('project').select();
+      final response = await _client
+          .from('project')
+          .select('''
+          project_id,
+          name,
+          avatar_url,
+          observers:project_observers (  
+            employee:employee_id (  
+              user_id,
+              avatar_url,
+              name,
+              position,
+              phone,
+              telegram_id,
+              vk_id,
+              role
+            )
+          )
+        ''');
+
       List<Project> projectList = (response as List<dynamic>).map((data) {
         return Project.fromJson(data as Map<String, dynamic>);
       }).toList();
@@ -38,18 +57,14 @@ class ProjectService {
   }
 
   // Получение данных проекта по projectId
-  Future<Project?> getProject(String projectId) async {
-    try {
+  Future<Project> getProject(String projectId) async {
       final response = await _client
           .from('project')
           .select()
           .eq('project_id', projectId)
           .single() as Map<String, dynamic>;
       return Project.fromJson(response);
-    } on PostgrestException catch (error) {
-      print('Ошибка при получении данных проекта: ${error.message}');
-      return null;
-    }
+
   }
 
   // Получение данных описания проекта по projectId
@@ -98,7 +113,7 @@ class ProjectService {
       print("Аватар проекта успешно загружен");
       return fileName; // Возвращаем имя файла для сохранения в БД
     } on PostgrestException catch (error) {
-      print("Ошибка загрузки аватарки проекта: ${error!.message}");
+      print("Ошибка загрузки аватарки проекта: ${error.message}");
     }
     return null;
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:task_tracker/task_screens/taskTitleScreen.dart';
 import '../models/employee.dart';
 import '../services/employee_operations.dart';
 
@@ -15,16 +16,19 @@ class EmployeeDetailScreen extends StatefulWidget {
 
 class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
     with SingleTickerProviderStateMixin {
+  late ScrollController _scrollController;
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this); // Две вкладки
+    _scrollController = ScrollController(initialScrollOffset: 0.0);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -82,7 +86,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
           style: TextStyle(
             fontSize: 16,
             fontFamily: 'Roboto',
-            color: isLink ? Colors.blue  : Colors.black,
+            color: isLink ? Colors.blue : Colors.black,
           ),
         ),
         SizedBox(height: 13),
@@ -90,7 +94,6 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
     );
   }
 
-  // Универсальный метод для создания ListTile с числом в боксе
   Widget _buildTaskItem({
     required IconData icon,
     required String title,
@@ -117,57 +120,64 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
     );
   }
 
-  // Список задач для S3 Stores Inc
   Widget _buildS3StoresTasks() {
-    return ListView(
-      children: [
-        _buildTaskItem(
-          icon: Iconsax.archive_tick_copy,
-          title: 'В работе',
-          count: 12,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.timer_copy,
-          title: 'Подходит время сдачи',
-          count: 5,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.calendar_remove_copy,
-          title: 'Просроченные задачи',
-          count: 2,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.task_square_copy,
-          title: 'Поставить в очередь на выполнение',
-          count: 0,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.eye_copy,
-          title: 'Не прочитал / не понял',
-          count: 8,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.search_normal_copy,
-          title: 'Завершенные задачи на проверке',
-          count: 3,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.microscope_copy,
-          title: 'Наблюдатель',
-          count: 1,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.folder_open_copy,
-          title: 'Архив задач',
-          count: 15,
+    return CustomScrollView(
+      shrinkWrap: true, // Уменьшаем размер, чтобы избежать лишней прокрутки
+      physics: NeverScrollableScrollPhysics(), // Отключаем прокрутку внутри
+      slivers: [
+        SliverList(
+          delegate: SliverChildListDelegate(
+            [
+              _buildTaskItem(
+                icon: Iconsax.archive_tick_copy,
+                title: 'В работе',
+                count: 12,
+              ),
+              _buildTaskItem(
+                icon: Iconsax.timer_copy,
+                title: 'Подходит время сдачи',
+                count: 5,
+              ),
+              _buildTaskItem(
+                icon: Iconsax.calendar_remove_copy,
+                title: 'Просроченные задачи',
+                count: 2,
+              ),
+              _buildTaskItem(
+                icon: Iconsax.task_square_copy,
+                title: 'Поставить в очередь на выполнение',
+                count: 0,
+              ),
+              _buildTaskItem(
+                icon: Iconsax.eye_copy,
+                title: 'Не прочитал / не понял',
+                count: 8,
+              ),
+              _buildTaskItem(
+                icon: Iconsax.search_normal_copy,
+                title: 'Завершенные задачи на проверке',
+                count: 3,
+              ),
+              _buildTaskItem(
+                icon: Iconsax.microscope_copy,
+                title: 'Наблюдатель',
+                count: 1,
+              ),
+              _buildTaskItem(
+                icon: Iconsax.folder_open_copy,
+                title: 'Архив задач',
+                count: 15,
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  // Список задач для PRT
   Widget _buildPRTTasks() {
     return ListView(
+      padding: EdgeInsets.zero,
       children: [
         _buildTaskItem(
           icon: Iconsax.archive_tick_copy,
@@ -217,54 +227,134 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text(widget.employee.name),
-      ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildAvatar(),
-                _buildProfileSection('ФИО', widget.employee.name),
-                _buildBorders(context),
-                _buildProfileSection('Должность', widget.employee.position),
-                _buildBorders(context),
-                _buildProfileSection(
-                    'Контактный телефон', widget.employee.phone?? ''),
-                _buildBorders(context),
-                _buildProfileSection(
-                    'Имя пользователя в Телеграм', widget.employee.telegram_id ?? ''),
-                _buildBorders(context),
-                _buildProfileSection(
-                    'Адрес страницы в VK', widget.employee.vk_id?? ''),
-              ],
-            ),
-          ),
-          // Вкладки с задачами
-          TabBar(
-            controller: _tabController,
-            labelColor: Color(0xFF6750A4),
-            indicatorColor: Color(0xFF6750A4),
-            tabs: const [
-              Tab(text: 'S3 Stores Inc'),
-              Tab(text: 'PRT'),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(
+          NestedScrollView(
+            floatHeaderSlivers: true,
+            controller: _scrollController,
+            headerSliverBuilder: (BuildContext context, bool boxIsScrolled) {
+              return <Widget>[
+                SliverAppBar(
+                  pinned: true,
+                  floating: true,
+                  forceElevated: boxIsScrolled,
+                  backgroundColor: Colors.white,
+                  flexibleSpace: FlexibleSpaceBar(
+                    title: Text(widget.employee.name.split(' ').take(2).join(' ')),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildAvatar(),
+                        _buildProfileSection('ФИО', widget.employee.name),
+                        _buildBorders(context),
+                        _buildProfileSection('Должность', widget.employee.position),
+                        _buildBorders(context),
+                        _buildProfileSection('Контактный телефон', widget.employee.phone ?? ''),
+                        _buildBorders(context),
+                        _buildProfileSection('Имя пользователя в Телеграм', widget.employee.telegram_id ?? ''),
+                        _buildBorders(context),
+                        _buildProfileSection('Адрес страницы в VK', widget.employee.vk_id ?? ''),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverPersistentHeader(
+                  delegate: _SliverAppBarDelegate(
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: Color(0xFF6750A4),
+                      indicatorColor: Color(0xFF6750A4),
+                      tabs: const [
+                        Tab(text: 'S3 Stores Inc'),
+                        Tab(text: 'PRT'),
+                      ],
+                    ),
+                  ),
+                  pinned: true,
+                ),
+              ];
+            },
+            body: TabBarView(
               controller: _tabController,
-              children: [
+              children: <Widget>[
                 _buildS3StoresTasks(),
                 _buildPRTTasks(),
               ],
             ),
           ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TaskTitleScreen(employee: widget.employee),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFFF9700), // Цвет кнопки
+                padding: EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.add_circle,
+                    color: Colors.white, // Цвет иконки
+                    size: 24, // Размер иконки
+                  ),
+                  SizedBox(width: 8), // Отступ между иконкой и текстом
+                  Text(
+                    'Поставить задачу',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
+  }
+}
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar _tabBar;
+
+  _SliverAppBarDelegate(this._tabBar);
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Colors.white,
+      child: _tabBar,
+    );
+  }
+
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
   }
 }

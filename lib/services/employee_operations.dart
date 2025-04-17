@@ -4,6 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '/models/employee.dart';
 
+abstract class EmployeeDataStrategy {
+  Future<Employee?> getEmployee(String userId);
+  Future<List<Employee>> getAllEmployees();
+  Future<void> updateEmployee(Employee employee);
+  Future<String?> uploadAvatar(File file, String userId);
+  String getAvatarUrl(String? avatarUrl);
+}
+
 class EmployeeService {
   final SupabaseClient _client = Supabase.instance.client;
   final _uuid = Uuid();
@@ -44,7 +52,7 @@ class EmployeeService {
           .from('employee')
           .select()
           .eq('user_id', user_id)
-          .single() as Map<String, dynamic>;
+          .single();
       return Employee.fromJson(response);
     } on PostgrestException catch (error) {
       print('Ошибка при получении данных сотрудника: ${error.message}');
@@ -85,7 +93,7 @@ class EmployeeService {
       print("Аватарка успешно загружена");
       return fileName; // Возвращаем имя файла для сохранения в базе данных
     } on PostgrestException catch (error) {
-      print("Ошибка загрузки аватарки: ${error!.message}");
+      print("Ошибка загрузки аватарки: ${error.message}");
     }
     print("Аватарка успешно загружена");
     return null;

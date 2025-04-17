@@ -4,10 +4,109 @@ import 'package:image_picker/image_picker.dart';
 import '../models/employee.dart';
 import '../services/employee_operations.dart';
 
+// Абстрактное состояние профиля
+abstract class ProfileState {
+  Widget buildBody(_ProfileScreenState screen);
+  Widget buildFloatingActionButton(_ProfileScreenState screen);
+}
+
+// Состояние просмотра профиля
+class ViewProfileState implements ProfileState {
+  @override
+  Widget buildBody(_ProfileScreenState screen) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 40),
+        Center(child: screen._buildAvatar()),
+        screen._buildProfileSection('ФИО', screen.name),
+        screen._buildBorders(),
+        screen._buildProfileSection('Должность', screen.position),
+        screen._buildBorders(),
+        screen._buildEditableProfileSection(
+            'Контактный телефон', screen._phoneController, false),
+        screen._buildBorders(),
+        screen._buildEditableProfileSection(
+            'Имя пользователя в Телеграм', screen._telegramController, false),
+        screen._buildBorders(),
+        screen._buildEditableProfileSection(
+            'Адрес страницы в VK', screen._vkController, false),
+      ],
+    );
+  }
+
+  @override
+  Widget buildFloatingActionButton(_ProfileScreenState screen) {
+    return FloatingActionButton(
+      onPressed: () {
+        screen.setState(() {
+          screen._currentState = EditProfileState();
+        });
+      },
+      child: const Icon(Icons.edit),
+    );
+  }
+}
+
+// Состояние редактирования профиля
+class EditProfileState implements ProfileState {
+  @override
+  Widget buildBody(_ProfileScreenState screen) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 40),
+        Center(child: screen._buildAvatar()),
+        screen._buildProfileSection('ФИО', screen.name),
+        screen._buildBorders(),
+        screen._buildProfileSection('Должность', screen.position),
+        screen._buildBorders(),
+        screen._buildEditableProfileSection(
+            'Контактный телефон', screen._phoneController, true),
+        screen._buildBorders(),
+        screen._buildEditableProfileSection(
+            'Имя пользователя в Телеграм', screen._telegramController, true),
+        screen._buildBorders(),
+        screen._buildEditableProfileSection(
+            'Адрес страницы в VK', screen._vkController, true),
+      ],
+    );
+  }
+
+  @override
+  Widget buildFloatingActionButton(_ProfileScreenState screen) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        FloatingActionButton(
+          onPressed: () {
+            screen.setState(() {
+              screen._currentState = ViewProfileState();
+            });
+          },
+          backgroundColor: Colors.red,
+          child: const Icon(Icons.close),
+        ),
+        const SizedBox(width: 16),
+        FloatingActionButton(
+          onPressed: () async {
+            await screen._saveUserProfile();
+            screen.setState(() {
+              screen._currentState = ViewProfileState();
+            });
+          },
+          backgroundColor: Colors.green,
+          child: const Icon(Icons.save),
+        ),
+      ],
+    );
+  }
+}
+
 class ProfileScreen extends StatefulWidget {
   final String user_id;
 
-  ProfileScreen({required this.user_id});
+  const ProfileScreen({required this.user_id, Key? key}) : super(key: key);
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -23,17 +122,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool isLoading = true;
   String role = '';
 
-  // Контроллеры для текстовых полей
-  late TextEditingController _phoneController = TextEditingController();
-  late TextEditingController _telegramController = TextEditingController();
-  late TextEditingController _vkController = TextEditingController();
+  late TextEditingController _phoneController;
+  late TextEditingController _telegramController;
+  late TextEditingController _vkController;
 
-  bool _isEditing = false; // Флаг редактирования
+  ProfileState _currentState = ViewProfileState();
 
   @override
   void initState() {
     super.initState();
+    _phoneController = TextEditingController();
+    _telegramController = TextEditingController();
+    _vkController = TextEditingController();
     _loadUserProfile();
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _telegramController.dispose();
+    _vkController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserProfile() async {
@@ -43,8 +152,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           name = employee.name;
           position = employee.position;
-          _phoneController.text = employee.phone?? '';
-          _telegramController.text = employee.telegram_id?? '';
+          _phoneController.text = employee.phone ?? '';
+          _telegramController.text = employee.telegram_id ?? '';
           _vkController.text = employee.vk_id ?? '';
           avatarUrl = employee.avatar_url;
           isLoading = false;
@@ -77,17 +186,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _selectAndUploadAvatar() async {
     final pickedFile =
-        await _imagePicker.pickImage(source: ImageSource.gallery);
+    await _imagePicker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       final uploadedFileName =
-          await _employeeService.uploadAvatar(file, widget.user_id);
+      await _employeeService.uploadAvatar(file, widget.user_id);
       if (uploadedFileName != null) {
         setState(() {
-          avatarUrl = uploadedFileName; // Обновляем URL аватара
+          avatarUrl = uploadedFileName;
         });
-
-        // Сразу вызываем сохранение профиля, чтобы сохранить URL аватара
         await _saveUserProfile();
       }
     }
@@ -100,83 +207,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         alignment: Alignment.centerLeft,
         child: CircleAvatar(
           radius: 50,
-          backgroundImage: avatarUrl != ''
-              ? NetworkImage(_employeeService.getAvatarUrl(avatarUrl),)
+          backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
+              ? NetworkImage(_employeeService.getAvatarUrl(avatarUrl!))
               : null,
-          child: avatarUrl == ''
+          child: avatarUrl == null || avatarUrl!.isEmpty
               ? const Icon(Icons.person, size: 50)
               : null,
         ),
-      )
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 40),
-                  Center(child: _buildAvatar()),
-                  _buildProfileSection('ФИО', name),
-                  _buildBorders(),
-                  _buildProfileSection('Должность', position),
-                  _buildBorders(),
-                  _buildEditableProfileSection(
-                      'Контактный телефон', _phoneController),
-                  _buildBorders(),
-                  _buildEditableProfileSection(
-                      'Имя пользователя в Телеграм', _telegramController),
-                  _buildBorders(),
-                  _buildEditableProfileSection(
-                      'Адрес страницы в VK', _vkController),
-                ],
-              ),
       ),
-      floatingActionButton: isLoading
-          ? null
-          : _isEditing
-              ? Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    FloatingActionButton(
-                      onPressed: () {
-                        setState(() {
-                          _isEditing =
-                              false; // Выход из режима редактирования без сохранения
-                        });
-                      },
-                      backgroundColor: Colors.red,
-                      child: Icon(Icons.close),
-                    ),
-                    SizedBox(width: 16),
-                    FloatingActionButton(
-                      onPressed: () async {
-                        await _saveUserProfile(); // Сохранение профиля
-                        setState(() {
-                          _isEditing =
-                              false; // Выход из режима редактирования после сохранения
-                        });
-                      },
-                      backgroundColor: Colors.green,
-                      child: Icon(Icons.save),
-                    ),
-                  ],
-                )
-              : FloatingActionButton(
-                  onPressed: () {
-                    setState(() {
-                      _isEditing = true; // Включает режим редактирования
-                    });
-                  },
-                  child: Icon(Icons.edit),
-                ),
     );
   }
 
@@ -196,64 +234,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 13),
+        const SizedBox(height: 13),
         Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         Text(
           content.isNotEmpty ? content : 'Загрузка...',
-          style: Theme.of(context).textTheme.bodyLarge
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
-        SizedBox(height: 13),
+        const SizedBox(height: 13),
       ],
     );
   }
-
-  Widget _buildEditableProfileSection(String title, TextEditingController controller) {
-    bool isLink = title == 'Имя пользователя в Телеграм' || title == 'Адрес страницы в VK';
+  Widget _buildEditableProfileSection(
+      String title, TextEditingController controller, bool isEditing) {
+    bool isLink = title == 'Имя пользователя в Телеграм' ||
+        title == 'Адрес страницы в VK';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 13),
+        const SizedBox(height: 13),
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
             color: Colors.grey,
             fontFamily: 'Roboto',
           ),
         ),
-        SizedBox(height: 8), // Отступ между заголовком и содержимым
-        if (_isEditing)
-          Container(
-            height: 20, // Фиксированная высота для текстового поля
+        const SizedBox(height: 8),
+        if (isEditing)
+          SizedBox(
+            height: 20,
             child: TextField(
               style: Theme.of(context).textTheme.titleMedium,
               controller: controller,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
               ),
             ),
           )
         else
-          Container(
-            height: 20, // Фиксированная высота для текстового поля
-            alignment: Alignment.centerLeft,
-            child: Text(
-              controller.text.isNotEmpty ? controller.text : 'Загрузка...',
-              style: TextStyle(
-                fontSize: 16,
-                fontFamily: 'Roboto',
-                color: isLink ? Colors.blue : Colors.black,
+          SizedBox(
+            height: 20,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                controller.text.isNotEmpty ? controller.text : 'Загрузка...',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontFamily: 'Roboto',
+                  color: isLink ? Colors.blue : Colors.black,
+                ),
               ),
             ),
           ),
-        SizedBox(height: 13),
+        const SizedBox(height: 13),
       ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _currentState.buildBody(this),
+      ),
+      floatingActionButton: isLoading
+          ? null
+          : _currentState.buildFloatingActionButton(this),
     );
   }
 }
