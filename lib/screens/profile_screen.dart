@@ -104,9 +104,9 @@ class EditProfileState implements ProfileState {
 }
 
 class ProfileScreen extends StatefulWidget {
-  final String user_id;
+  final Employee user;
 
-  const ProfileScreen({required this.user_id, Key? key}) : super(key: key);
+  const ProfileScreen({required this.user, Key? key}) : super(key: key);
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -147,15 +147,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserProfile() async {
     try {
-      final employee = await _employeeService.getEmployee(widget.user_id);
-      if (employee != null) {
+      if (widget.user != null) {
         setState(() {
-          name = employee.name;
-          position = employee.position;
-          _phoneController.text = employee.phone ?? '';
-          _telegramController.text = employee.telegram_id ?? '';
-          _vkController.text = employee.vk_id ?? '';
-          avatarUrl = employee.avatar_url;
+          name = widget.user.name;
+          position = widget.user.position;
+          _phoneController.text = widget.user.phone ?? '';
+          _telegramController.text = widget.user.telegram_id ?? '';
+          _vkController.text = widget.user.vk_id ?? '';
+          avatarUrl = widget.user.avatar_url;
           isLoading = false;
         });
       }
@@ -170,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveUserProfile() async {
     try {
       await _employeeService.updateEmployee(Employee(
-        user_id: widget.user_id,
+        user_id: widget.user.user_id,
         name: name,
         position: position,
         phone: _phoneController.text,
@@ -190,7 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       final uploadedFileName =
-      await _employeeService.uploadAvatar(file, widget.user_id);
+      await _employeeService.uploadAvatar(file, widget.user.user_id);
       if (uploadedFileName != null) {
         setState(() {
           avatarUrl = uploadedFileName;

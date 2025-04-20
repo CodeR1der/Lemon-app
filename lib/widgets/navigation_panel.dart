@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:get/get.dart';
-import 'package:task_tracker/models/employee.dart';
 import '../screens/home_page.dart';
 import '../screens/projects_screen.dart';
 import '../screens/tasks_screen.dart';
@@ -51,15 +50,13 @@ class NavigationController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
 
   List<Widget> get screens {
-    final userId = UserService.to.currentUser?.user_id ?? '';
-    final user_role = UserService.to.currentUser?.role ?? '';
-    final employee = UserService.to.currentUser!;
+    final user = UserService.to.currentUser!;
     return [
       HomeScreen(),
       ProjectScreen(),
-      TasksScreen(user: employee),
+      TasksScreen(user: user),
       EmployeesScreen(),
-      ProfileScreen(user_id: userId)
+      ProfileScreen(user: user)
     ];
   }
 }
