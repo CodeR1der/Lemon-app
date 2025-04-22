@@ -6,6 +6,8 @@ import '../models/project.dart';
 import '../models/task.dart';
 import 'package:path/path.dart';
 
+import '../models/task_status.dart';
+
 class TaskService {
   final SupabaseClient _client = Supabase.instance.client;
 
@@ -99,12 +101,190 @@ class TaskService {
         attachments: List<String>.from(response['attachments']),
         audioMessage: response['audio_message'],
         videoMessage: List<String>.from(response['video_message']),
+        status: response['status'],
       );
 
       return task;
     } catch (e) {
       print('Ошибка при загрузке задачи: ${e}');
       rethrow;
+    }
+  }
+
+  Future<Map<String, int>> getCountOfTasksByStatus(String position, String employeeId) async {
+    try {
+      late List<dynamic> tasksResponse;
+      final now = DateTime.now();
+
+      if (position == 'Исполнитель') {
+        // Логика для исполнителя
+        final teamsResponse = await _client
+            .from('team_members')
+            .select('team_id')
+            .eq('employee_id', employeeId);
+
+        if (teamsResponse.isEmpty) return _initializeEmptyStatusMap();
+
+        final teamIds = (teamsResponse as List)
+            .map((team) => team['team_id'] as String)
+            .toList();
+
+        tasksResponse = await _client
+            .from('task_team')
+            .select('task:task_id(status, end_date)')
+            .inFilter('team_id', teamIds);
+      }
+      else if (position == 'Постановщик') {
+        // Логика для постановщика - получаем задачи, где он создатель
+        tasksResponse = await _client
+            .from('task_team')
+            .select('task:task_id(status, end_date)')
+            .eq('creator_id', employeeId);
+      }
+
+      // Общая логика обработки задач
+      final statusCounts = _initializeEmptyStatusMap();
+
+      for (final task in tasksResponse) {
+        final taskData = position == 'Постановщик'
+            ? task
+            : task['task'] as Map<String, dynamic>?;
+
+        if (taskData != null) {
+          final status = taskData['status'] as String? ?? 'new';
+          final endDate = taskData['end_date'] != null
+              ? DateTime.parse(taskData['end_date'] as String)
+              : null;
+
+          // Проверка на просроченность
+          if (endDate != null && endDate.isBefore(now) && status == 'in_progress') {
+            statusCounts[TaskStatus.overdue.displayName] =
+                (statusCounts[TaskStatus.overdue.displayName] ?? 0) + 1;
+            continue;
+          }
+
+          final taskStatus = _mapDbStatusToEnum(status);
+          statusCounts[taskStatus.displayName] =
+              (statusCounts[taskStatus.displayName] ?? 0) + 1;
+        }
+      }
+
+      return statusCounts;
+
+    } on PostgrestException catch (error) {
+      print('Ошибка при получении количества задач: ${error.message}');
+      return _initializeEmptyStatusMap();
+    } catch (e) {
+      print('Неожиданная ошибка: $e');
+      return _initializeEmptyStatusMap();
+    }
+  }
+
+  Map<String, int> _initializeEmptyStatusMap() {
+    return {
+      for (var status in TaskStatus.values)
+        status.displayName: 0
+    };
+  }
+
+  TaskStatus _mapDbStatusToEnum(String dbStatus) {
+    switch (dbStatus) {
+      case 'new':
+        return TaskStatus.newTask;
+      case 'revision':
+        return TaskStatus.revision;
+      case 'not_read':
+        return TaskStatus.notRead;
+      case 'need_explanation':
+        return TaskStatus.needExplanation;
+      case 'in_order':
+        return TaskStatus.inOrder;
+      case 'in_progress':
+        return TaskStatus.atWork;
+      case 'control_point':
+        return TaskStatus.controlPoint;
+      case 'extra_time':
+        return TaskStatus.extraTime;
+      case 'completed':
+        return TaskStatus.completedUnderReview;
+      default:
+        return TaskStatus.newTask;
+    }
+  }
+
+  // В TaskService добавим/изменим метод:
+  Future<List<Task>> getTasksByStatus({
+    required String position,
+    required TaskStatus status,
+    required String employeeId,
+  }) async {
+    try {
+      final statusString = status.toString().substring(11);
+
+      if (position == 'Постановщик') {
+        // 1. Получаем список ID задач с нужным статусом и creator_id
+        final taskIdsResponse = await _client
+            .from('task_team')
+            .select('task_id')
+            .eq('creator_id', employeeId);
+
+        if (taskIdsResponse.isEmpty) return [];
+
+        final taskIds = taskIdsResponse
+            .map((item) => item['task_id'] as String)
+            .toList();
+
+        // 2. Получаем полные данные задач с фильтрацией по статусу
+        final tasksResponse = await _client
+            .from('task')
+            .select('''
+          *,
+          project:project_id(*),
+          task_team(
+            employee_id,
+            employee:employee(*)
+          )
+        ''')
+            .inFilter('id', taskIds)
+            .eq('status', statusString);
+
+        return tasksResponse.map((taskData) => Task.fromJson(taskData)).toList();
+      } else {
+        // Для исполнителя получаем задачи через team_members
+        final teamsResponse = await _client
+            .from('team_members')
+            .select('team_id')
+            .eq('employee_id', employeeId);
+
+        if (teamsResponse.isEmpty) return [];
+
+        final teamIds = (teamsResponse as List)
+            .map((team) => team['team_id'] as String)
+            .toList();
+
+        final tasksResponse = await _client
+            .from('task')
+            .select('''
+            *,
+            project:project_id(*),
+            task_team:task_team(
+              employee:employee_id(*)
+            )
+          ''')
+            .inFilter('id',
+            await _client
+                .from('task_team')
+                .select('task_id')
+                .inFilter('team_id', teamIds)
+                .then((res) => res.map((r) => r['task_id'] as String).toList())
+        )
+            .eq('status', statusString);
+
+        return tasksResponse.map((taskData) => Task.fromJson(taskData)).toList();
+      }
+    } catch (e) {
+      print('Error getting tasks: $e');
+      return [];
     }
   }
 
@@ -247,7 +427,6 @@ class TaskService {
     }
   }
 
-
   Future<List<Employee>> getUniqueEmployees(List<Task> tasks) async {
     // Используем Set для хранения уникальных сотрудников
     final Set<Employee> uniqueEmployees = {};
@@ -260,7 +439,6 @@ class TaskService {
     // Преобразуем Set обратно в List и возвращаем
     return uniqueEmployees.toList();
   }
-
 
   Future<List<Project>> getAllProjects() async {
     try {
@@ -294,7 +472,6 @@ class TaskService {
       return [];
     }
   }
-
 
   String getTaskAttachment(String? fileName) {
     return _client.storage.from('TaskAttachments').getPublicUrl(fileName!);

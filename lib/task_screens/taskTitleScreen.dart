@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/employee.dart';
 import '../models/project.dart';
+import '../models/task_status.dart';
 import 'projectSelectionScreen.dart';
 import '../models/task.dart';
 import '../models/priority.dart';
@@ -108,6 +109,7 @@ class _TaskTitleScreenState extends State<TaskTitleScreen> {
                       endDate: DateTime.now(),
                       priority: Priority.low,
                       attachments: [],
+                      status: TaskStatus.newTask,
                     );
 
                     Navigator.push(

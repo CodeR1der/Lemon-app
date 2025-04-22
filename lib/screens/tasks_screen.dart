@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/screens/creater_tasks_tab.dart';
 import '../models/task.dart';
 import '../models/employee.dart';
 
@@ -41,7 +42,16 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
           ],
         ),
       ),
-
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          if (widget.user.role == "Коммуникатор")
+            const Text("Задачи коммуникатора"),
+          const Text("Задачи исполнителя"),
+          CreaterTasksTab(employeeId: widget.user.user_id),
+          const Text("Задачи наблюдателя"),
+        ],
+      ),
     );
   }
 

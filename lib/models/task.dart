@@ -1,3 +1,5 @@
+import 'package:task_tracker/models/task_status.dart';
+
 import 'priority.dart';
 import 'employee.dart';
 import 'project.dart';
@@ -14,7 +16,7 @@ class Task {
   String? audioMessage;
   List<String>? videoMessage;
   Priority priority;
-  //TaskStatus status;
+  TaskStatus status;
 
 
   Task({
@@ -29,6 +31,7 @@ class Task {
     this.audioMessage,
     this.videoMessage,
     this.priority = Priority.low, // Значение по умолчанию
+    required this.status,
   });
 
   // Метод для преобразования строки из базы данных в Priority
@@ -89,6 +92,7 @@ class Task {
       attachments: List<String>.from(json['attachments']),
       audioMessage: json['audio_message'],
       videoMessage: List<String>.from(json['video_message']),
+      status: json['status'],
     );
   }
 
@@ -134,57 +138,4 @@ class Task {
   String toString() {
     return 'Task: $taskName, Description: $description, Project: $project, Team: ${team.length} members, Period: $startDate : $endDate, Attachments: ${attachments.length} files, Audio: $audioMessage, Video: ${videoMessage!.length}';
   }
-
-  // Метод для преобразования строки из базы данных в Priority
-  // static TaskStatus parseStatus(String status) {
-  //   switch (status) {
-  //     case 'Новая задача':
-  //       return status.newTask;
-  //     case 'Задача на доработке'status.newTask:
-  //       return status.revision;
-  //     case 'Не прочитано / не понято':
-  //       return status.notRead;
-  //     case 'Нужно разъяснение':
-  //       return status.needExplanation;
-  //     case 'Выставить в очередь':
-  //       return status.inOrder;
-  //     case 'В работе':
-  //       return status.atWork;
-  //     case 'Контрольная точка':
-  //       return status.controlPoint;
-  //     case 'Запросы на дополнительное время':
-  //       return status.extraTime;
-  //     case 'Просроченная задача':
-  //       return status.overdue;
-  //     case 'Завершенная задача на проверке':
-  //       return status.completedUnderReview;
-  //     default:
-  //       throw ArgumentError('Unknown status: $status');
-  //   }
-  // }
-
-  // String statusToString() {
-  //   switch (status) {
-  //     case TaskStatus.newTask:
-  //       return 'Новая задача';
-  //     case TaskStatus.revision:
-  //       return 'Задача на доработке';
-  //     case TaskStatus.notRead:
-  //       return 'Не прочитано / не понято';
-  //     case TaskStatus.needExplanation:
-  //       return 'Нужно разъяснение';
-  //     case TaskStatus.inOrder:
-  //       return 'Выставить в очередь';
-  //     case TaskStatus.atWork:
-  //       return 'В работе';
-  //     case TaskStatus.controlPoint:
-  //       return 'Контрольная точка';
-  //     case TaskStatus.extraTime:
-  //       return 'Запросы на дополнительное время';
-  //     case TaskStatus.overdue:
-  //       return 'Просроченная задача';
-  //     case TaskStatus.completedUnderReview:
-  //       return 'Завершенная задача на проверке';
-  //   }
-  // }
 }
