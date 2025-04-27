@@ -99,7 +99,7 @@ class _TaskTitleScreenState extends State<TaskTitleScreen> {
                       taskName: _nameController.text,
                       description: _descriptionController.text,
                       project: Project(
-                        project_id: 'default',
+                        projectId: 'default',
                         name: 'Тестовый проект',
                         observers: [],
                       ),

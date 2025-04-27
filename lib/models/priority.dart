@@ -1,6 +1,5 @@
 enum Priority { low, medium, high }
 
-// Метод для преобразования enum в читаемый текст
 extension PriorityExtension on Priority {
   String get displayName {
     switch (this) {

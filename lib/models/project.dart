@@ -1,33 +1,33 @@
 import 'package:task_tracker/models/employee.dart';
 
 class Project{
-  late String project_id;
+  late String projectId;
   late String name;
-  late String? avatar_url;
+  late String? avatarUrl;
   final List<Employee> observers;
 
   // Конструктор
   Project({
-    required this.project_id,
+    required this.projectId,
     required this.name,
-    this.avatar_url,
+    this.avatarUrl,
     required this.observers
   });
 
   // Преобразование объекта в JSON для хранения в Supabase
   Map<String, dynamic> toJson() {
     return {
-      'project_id': project_id,
+      'project_id': projectId,
       'name': name,
-      'avatar_url': avatar_url,
+      'avatar_url': avatarUrl,
     };
   }
 
   factory Project.fromJson(Map<String, dynamic> json) {
     return Project(
-      project_id: json['project_id'],
+      projectId: json['project_id'],
       name: json['name'],
-      avatar_url: json['avatar_url'],
+      avatarUrl: json['avatar_url'],
       observers: json['project_observers'] != null
           ? List<Employee>.from(
         json['project_observers'].map((observer) {

@@ -13,7 +13,8 @@ import 'employee_details_screen.dart';
 class ProjectDetailsScreen extends StatefulWidget {
   final Project project;
 
-  const ProjectDetailsScreen({Key? key, required this.project}) : super(key: key);
+  const ProjectDetailsScreen({Key? key, required this.project})
+      : super(key: key);
 
   @override
   State<ProjectDetailsScreen> createState() => _ProjectDetailsScreenState();
@@ -39,7 +40,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
     _tabController = TabController(length: 3, vsync: this);
     _taskService = TaskService();
     _employeeService = EmployeeService();
-    _projectDescription = ProjectService().getProjectDescription(widget.project.project_id);
+    _projectDescription =
+        ProjectService().getProjectDescription(widget.project.projectId);
     _initializeData();
   }
 
@@ -49,7 +51,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   }
 
   Future<void> _loadTasks() async {
-    final tasks = await _taskService.getTasksByProjectId(widget.project.project_id);
+    final tasks =
+        await _taskService.getTasksByProjectId(widget.project.projectId);
     if (mounted) {
       setState(() => _taskList = tasks);
     }
@@ -60,8 +63,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
 
     if (mounted) {
       setState(() {
-        _communicators = employees.where((e) => e.role == 'Коммуникатор').toList();
-        _otherEmployees = employees.where((e) => e.role != 'Коммуникатор').toList();
+        _communicators =
+            employees.where((e) => e.role == 'Коммуникатор').toList();
+        _otherEmployees =
+            employees.where((e) => e.role != 'Коммуникатор').toList();
       });
     }
   }
@@ -115,20 +120,41 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
 
   Widget _buildTasksTab() {
     final taskCategories = [
-      _TaskCategory(icon: Iconsax.d_cube_scan_copy, title: 'Новые задачи', count: 9),
-      _TaskCategory(icon: Iconsax.box_search_copy, title: 'Подходит время сдачи', count: 4),
-      _TaskCategory(icon: Iconsax.task_square_copy, title: 'Просроченные задачи', count: 1),
-      _TaskCategory(icon: Iconsax.eye_copy, title: 'Поставить в очередь на выполнение', count: 0),
-      _TaskCategory(icon: Iconsax.stickynote_copy, title: 'Не прочитал / не понял', count: 2),
-      _TaskCategory(icon: Iconsax.arrow_square_copy, title: 'Завершенные задачи на проверке', count: 6),
+      _TaskCategory(
+          icon: Iconsax.d_cube_scan_copy, title: 'Новые задачи', count: 9),
+      _TaskCategory(
+          icon: Iconsax.box_search_copy,
+          title: 'Подходит время сдачи',
+          count: 4),
+      _TaskCategory(
+          icon: Iconsax.task_square_copy,
+          title: 'Просроченные задачи',
+          count: 1),
+      _TaskCategory(
+          icon: Iconsax.eye_copy,
+          title: 'Поставить в очередь на выполнение',
+          count: 0),
+      _TaskCategory(
+          icon: Iconsax.stickynote_copy,
+          title: 'Не прочитал / не понял',
+          count: 2),
+      _TaskCategory(
+          icon: Iconsax.arrow_square_copy,
+          title: 'Завершенные задачи на проверке',
+          count: 6),
       _TaskCategory(icon: Iconsax.timer_copy, title: 'Наблюдатель', count: 0),
       _TaskCategory(icon: Iconsax.edit_copy, title: 'Архив задач', count: 9),
       _TaskCategory(icon: Iconsax.timer_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(icon: Iconsax.arrow_square_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(icon: Iconsax.calendar_remove_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(icon: Iconsax.search_normal_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(icon: Iconsax.calendar_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(icon: Iconsax.folder_open_copy, title: 'Архив задач', count: 9),
+      _TaskCategory(
+          icon: Iconsax.arrow_square_copy, title: 'Архив задач', count: 9),
+      _TaskCategory(
+          icon: Iconsax.calendar_remove_copy, title: 'Архив задач', count: 9),
+      _TaskCategory(
+          icon: Iconsax.search_normal_copy, title: 'Архив задач', count: 9),
+      _TaskCategory(
+          icon: Iconsax.calendar_copy, title: 'Архив задач', count: 9),
+      _TaskCategory(
+          icon: Iconsax.folder_open_copy, title: 'Архив задач', count: 9),
     ];
 
     return ListView.separated(
@@ -150,7 +176,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
             _buildTeamSection('Команда проекта', _otherEmployees),
           // Добавляем отступ снизу для безопасной зоны
           SliverPadding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+            padding:
+                EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
           ),
         ],
       ),
@@ -166,11 +193,15 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('Ошибка загрузки данных', style: Theme.of(context).textTheme.bodyMedium));
+          return Center(
+              child: Text('Ошибка загрузки данных',
+                  style: Theme.of(context).textTheme.bodyMedium));
         }
 
         if (!snapshot.hasData || snapshot.data == null) {
-          return Center(child: Text('Данные не найдены', style: Theme.of(context).textTheme.bodyMedium));
+          return Center(
+              child: Text('Данные не найдены',
+                  style: Theme.of(context).textTheme.bodyMedium));
         }
 
         final projectDescription = snapshot.data!;
@@ -245,9 +276,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
         ...['facebook', 'twitter', 'instagram', 'linkedin'].map((network) =>
             _buildSocialNetworkLink(
                 network[0].toUpperCase() + network.substring(1),
-                socialNetworks[network]
-            )
-        ),
+                socialNetworks[network])),
       ],
     );
   }
@@ -262,7 +291,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
           style: TextStyle(
             fontSize: 16,
             color: link != null ? Colors.blue : Colors.grey,
-            decoration: link != null ? TextDecoration.underline : TextDecoration.none,
+            decoration:
+                link != null ? TextDecoration.underline : TextDecoration.none,
           ),
         ),
       ),
@@ -272,11 +302,13 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   SliverList _buildTeamSection(String title, List<Employee> employees) {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-            (context, index) {
+        (context, index) {
           if (index == 0) {
             return Padding(
-              padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16, bottom: 4),
-              child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+              padding: const EdgeInsets.only(
+                  left: 16.0, right: 16.0, top: 16, bottom: 4),
+              child:
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
             );
           }
           return _buildEmployeeItem(employees[index - 1]);
@@ -312,10 +344,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
     return ListTile(
       leading: CircleAvatar(
         radius: 24,
-        backgroundImage: employee.avatar_url!.isNotEmpty
-            ? NetworkImage(_employeeService.getAvatarUrl(employee.avatar_url))
+        backgroundImage: employee.avatarUrl!.isNotEmpty
+            ? NetworkImage(_employeeService.getAvatarUrl(employee.avatarUrl))
             : null,
-        child: employee.avatar_url!.isEmpty ? const Icon(Icons.person) : null,
+        child: employee.avatarUrl!.isEmpty ? const Icon(Icons.person) : null,
       ),
       title: Text(employee.name, style: Theme.of(context).textTheme.bodySmall),
       subtitle: Column(

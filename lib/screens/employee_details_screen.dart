@@ -39,13 +39,13 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
         alignment: Alignment.centerLeft,
         child: CircleAvatar(
           radius: 50,
-          backgroundImage: widget.employee.avatar_url != ''
+          backgroundImage: widget.employee.avatarUrl != ''
               ? NetworkImage(
             widget._employeeService
-                .getAvatarUrl(widget.employee.avatar_url),
+                .getAvatarUrl(widget.employee.avatarUrl),
           )
               : null,
-          child: widget.employee.avatar_url == ''
+          child: widget.employee.avatarUrl == ''
               ? Icon(Icons.person, size: 50)
               : null,
         ),
@@ -121,57 +121,62 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
   }
 
   Widget _buildS3StoresTasks() {
-    return CustomScrollView(
-      shrinkWrap: true, // Уменьшаем размер, чтобы избежать лишней прокрутки
-      physics: NeverScrollableScrollPhysics(), // Отключаем прокрутку внутри
-      slivers: [
-        SliverList(
-          delegate: SliverChildListDelegate(
-            [
-              _buildTaskItem(
-                icon: Iconsax.archive_tick_copy,
-                title: 'В работе',
-                count: 12,
-              ),
-              _buildTaskItem(
-                icon: Iconsax.timer_copy,
-                title: 'Подходит время сдачи',
-                count: 5,
-              ),
-              _buildTaskItem(
-                icon: Iconsax.calendar_remove_copy,
-                title: 'Просроченные задачи',
-                count: 2,
-              ),
-              _buildTaskItem(
-                icon: Iconsax.task_square_copy,
-                title: 'Поставить в очередь на выполнение',
-                count: 0,
-              ),
-              _buildTaskItem(
-                icon: Iconsax.eye_copy,
-                title: 'Не прочитал / не понял',
-                count: 8,
-              ),
-              _buildTaskItem(
-                icon: Iconsax.search_normal_copy,
-                title: 'Завершенные задачи на проверке',
-                count: 3,
-              ),
-              _buildTaskItem(
-                icon: Iconsax.microscope_copy,
-                title: 'Наблюдатель',
-                count: 1,
-              ),
-              _buildTaskItem(
-                icon: Iconsax.folder_open_copy,
-                title: 'Архив задач',
-                count: 15,
-              ),
-            ],
-          ),
-        ),
-      ],
+
+    final List<Map<String, dynamic>> tasks = [
+      {
+        'icon': Iconsax.archive_tick_copy,
+        'title': 'В работе',
+        'count': 12,
+      },
+      {
+        'icon': Iconsax.timer_copy,
+        'title': 'Подходит время сдачи',
+        'count': 5,
+      },
+      {
+        'icon': Iconsax.calendar_remove_copy,
+        'title': 'Просроченные задачи',
+        'count': 2,
+      },
+      {
+        'icon': Iconsax.task_square_copy,
+        'title': 'Поставить в очередь на выполнение',
+        'count': 0,
+      },
+      {
+        'icon': Iconsax.eye_copy,
+        'title': 'Не прочитал / не понял',
+        'count': 8,
+      },
+      {
+        'icon': Iconsax.search_normal_copy,
+        'title': 'Завершенные задачи на проверке',
+        'count': 3,
+      },
+      {
+        'icon': Iconsax.microscope_copy,
+        'title': 'Наблюдатель',
+        'count': 1,
+      },
+      {
+        'icon': Iconsax.folder_open_copy,
+        'title': 'Архив задач',
+        'count': 15,
+      },
+    ];
+
+    return ListView.builder(
+      shrinkWrap: true,
+      padding: EdgeInsets.zero,
+      itemCount: tasks.length,
+      itemBuilder: (context, index) {
+        final task = tasks[index];
+        return _buildTaskItem(
+          icon: task['icon'],
+          title: task['title'],
+          count: task['count'],
+        );
+      },
     );
   }
 
@@ -231,7 +236,6 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
         children: [
           NestedScrollView(
             floatHeaderSlivers: true,
-            controller: _scrollController,
             headerSliverBuilder: (BuildContext context, bool boxIsScrolled) {
               return <Widget>[
                 SliverAppBar(
@@ -256,9 +260,9 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                         _buildBorders(context),
                         _buildProfileSection('Контактный телефон', widget.employee.phone ?? ''),
                         _buildBorders(context),
-                        _buildProfileSection('Имя пользователя в Телеграм', widget.employee.telegram_id ?? ''),
+                        _buildProfileSection('Имя пользователя в Телеграм', widget.employee.telegramId ?? ''),
                         _buildBorders(context),
-                        _buildProfileSection('Адрес страницы в VK', widget.employee.vk_id ?? ''),
+                        _buildProfileSection('Адрес страницы в VK', widget.employee.vkId ?? ''),
                       ],
                     ),
                   ),

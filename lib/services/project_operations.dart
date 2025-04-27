@@ -11,8 +11,8 @@ class ProjectService {
 
   // Добавление проекта в Supabase
   Future<void> addProject(Project project) async {
-    if (project.project_id.isEmpty) {
-      project.project_id = _uuid.v4();
+    if (project.projectId.isEmpty) {
+      project.projectId = _uuid.v4();
     }
 
     try {
@@ -87,7 +87,7 @@ class ProjectService {
       await _client
           .from('project')
           .update(project.toJson())
-          .eq('project_id', project.project_id);
+          .eq('project_id', project.projectId);
       print('Данные проекта успешно обновлены');
     } on PostgrestException catch (error) {
       print('Ошибка при обновлении данных проекта: ${error.message}');

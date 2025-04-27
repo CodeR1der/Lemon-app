@@ -1,4 +1,4 @@
-enum TaskStatus {
+enum Position {
   director,
   communicator,
   programmer,

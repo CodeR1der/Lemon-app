@@ -7,6 +7,7 @@ import '../services/employee_operations.dart';
 // Абстрактное состояние профиля
 abstract class ProfileState {
   Widget buildBody(_ProfileScreenState screen);
+
   Widget buildFloatingActionButton(_ProfileScreenState screen);
 }
 
@@ -152,9 +153,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           name = widget.user.name;
           position = widget.user.position;
           _phoneController.text = widget.user.phone ?? '';
-          _telegramController.text = widget.user.telegram_id ?? '';
-          _vkController.text = widget.user.vk_id ?? '';
-          avatarUrl = widget.user.avatar_url;
+          _telegramController.text = widget.user.telegramId ?? '';
+          _vkController.text = widget.user.vkId ?? '';
+          avatarUrl = widget.user.avatarUrl;
           isLoading = false;
         });
       }
@@ -169,13 +170,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveUserProfile() async {
     try {
       await _employeeService.updateEmployee(Employee(
-        user_id: widget.user.user_id,
+        userId: widget.user.userId,
         name: name,
         position: position,
         phone: _phoneController.text,
-        telegram_id: _telegramController.text,
-        vk_id: _vkController.text,
-        avatar_url: avatarUrl,
+        telegramId: _telegramController.text,
+        vkId: _vkController.text,
+        avatarUrl: avatarUrl,
         role: role,
       ));
     } catch (e) {
@@ -185,11 +186,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _selectAndUploadAvatar() async {
     final pickedFile =
-    await _imagePicker.pickImage(source: ImageSource.gallery);
+        await _imagePicker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       final uploadedFileName =
-      await _employeeService.uploadAvatar(file, widget.user.user_id);
+          await _employeeService.uploadAvatar(file, widget.user.userId);
       if (uploadedFileName != null) {
         setState(() {
           avatarUrl = uploadedFileName;
@@ -246,6 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
+
   Widget _buildEditableProfileSection(
       String title, TextEditingController controller, bool isEditing) {
     bool isLink = title == 'Имя пользователя в Телеграм' ||
@@ -307,9 +309,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ? const Center(child: CircularProgressIndicator())
             : _currentState.buildBody(this),
       ),
-      floatingActionButton: isLoading
-          ? null
-          : _currentState.buildFloatingActionButton(this),
+      floatingActionButton:
+          isLoading ? null : _currentState.buildFloatingActionButton(this),
     );
   }
 }

@@ -99,10 +99,10 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                 return ListTile(
                   leading: CircleAvatar(
                     radius: 24,
-                    backgroundImage: employee.avatar_url != ''
-                        ? NetworkImage(_employeeService.getAvatarUrl(employee.avatar_url))
+                    backgroundImage: employee.avatarUrl != ''
+                        ? NetworkImage(_employeeService.getAvatarUrl(employee.avatarUrl))
                         : null,
-                    child: employee.avatar_url == ''
+                    child: employee.avatarUrl == ''
                         ? Icon(Icons.person)
                         : null,
                   ),

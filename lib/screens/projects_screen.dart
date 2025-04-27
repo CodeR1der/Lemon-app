@@ -74,10 +74,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
                       padding: const EdgeInsets.all(16.0), // Отступы вокруг аватара
                       child: CircleAvatar(
                         radius: 20, // Размер аватара
-                        backgroundImage: project.avatar_url != null
-                            ? NetworkImage(_projectService.getAvatarUrl(project.avatar_url))
+                        backgroundImage: project.avatarUrl != null
+                            ? NetworkImage(_projectService.getAvatarUrl(project.avatarUrl))
                             : null,
-                        child: project.avatar_url == null
+                        child: project.avatarUrl == null
                             ? Icon(Icons.business, size: 20, color: Colors.grey)
                             : null,
                       ),

@@ -57,7 +57,7 @@ class TaskTeamTab extends StatelessWidget {
         for (var employee in employees)
           ListTile(
             leading: CircleAvatar(
-              backgroundImage: NetworkImage(_database.getAvatarUrl(employee.avatar_url)),  // Assuming avatarUrl is available in Employee model
+              backgroundImage: NetworkImage(_database.getAvatarUrl(employee.avatarUrl)),  // Assuming avatarUrl is available in Employee model
             ),
             title: Text(employee.name, style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(employee.position),  // Assuming position is available in Employee model

@@ -109,7 +109,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundImage: NetworkImage(_database
-                                .getAvatarUrl(observer!.avatar_url)),
+                                .getAvatarUrl(observer!.avatarUrl)),
                           ),
                           title: Text(
                             observer.name,
@@ -198,7 +198,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   children: [
                     CircleAvatar(
                       backgroundImage: NetworkImage(
-                          _database.getAvatarUrl(employee.avatar_url)),
+                          _database.getAvatarUrl(employee.avatarUrl)),
                       radius: 16,
                     ),
                     const SizedBox(width: 8),

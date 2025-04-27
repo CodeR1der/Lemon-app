@@ -6,9 +6,13 @@ import '/models/employee.dart';
 
 abstract class EmployeeDataStrategy {
   Future<Employee?> getEmployee(String userId);
+
   Future<List<Employee>> getAllEmployees();
+
   Future<void> updateEmployee(Employee employee);
+
   Future<String?> uploadAvatar(File file, String userId);
+
   String getAvatarUrl(String? avatarUrl);
 }
 
@@ -16,11 +20,10 @@ class EmployeeService {
   final SupabaseClient _client = Supabase.instance.client;
   final _uuid = Uuid();
 
-
   // Добавление сотрудника в Supabase
   Future<void> addEmployee(Employee employee) async {
-    if (employee.user_id.isEmpty) {
-      employee.user_id = _uuid.v4();
+    if (employee.userId.isEmpty) {
+      employee.userId = _uuid.v4();
     }
 
     try {
@@ -66,7 +69,7 @@ class EmployeeService {
       await _client
           .from('employee')
           .update(employee.toJson())
-          .eq('userId', employee.user_id);
+          .eq('userId', employee.userId);
       print('Данные сотрудника успешно обновлены');
     } on PostgrestException catch (error) {
       print('Ошибка при обновлении данных сотрудника: ${error.message}');

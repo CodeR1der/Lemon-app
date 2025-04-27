@@ -6,6 +6,8 @@ import '../models/project.dart';
 import '../models/task.dart';
 import 'package:path/path.dart';
 
+import '../models/task_status.dart';
+
 class TaskService {
   final SupabaseClient _client = Supabase.instance.client;
 
@@ -61,19 +63,19 @@ class TaskService {
         taskName: response['task_name'],
         description: response['description'],
         project: Project(
-          project_id: projectData['id'],
+          projectId: projectData['id'],
           name: projectData['name'],
           observers: List<Employee>.from(
             projectData['project_observers'].map((observer) {
               final empData = observer['employee'];
               return Employee(
-                user_id: empData['id'],
+                userId: empData['id'],
                 name: empData['name'],
-                avatar_url: empData['avatar_url'],
+                avatarUrl: empData['avatar_url'],
                 position: empData['position'],
                 phone: empData['phone'],
-                telegram_id: empData['telegram_id'],
-                vk_id: empData['vk_id'],
+                telegramId: empData['telegram_id'],
+                vkId: empData['vk_id'],
                 role: empData['role'],
               );
             }),
@@ -85,13 +87,13 @@ class TaskService {
           response['task_team'].map((teamMember) {
             final empData = teamMember['employee'];
             return Employee(
-              user_id: empData['id'],
+              userId: empData['id'],
               name: empData['name'],
-              avatar_url: empData['avatar_url'],
+              avatarUrl: empData['avatar_url'],
               position: empData['position'],
               phone: empData['phone'],
-              telegram_id: empData['telegram_id'],
-              vk_id: empData['vk_id'],
+              telegramId: empData['telegram_id'],
+              vkId: empData['vk_id'],
               role: empData['role'],
             );
           }),
@@ -99,6 +101,7 @@ class TaskService {
         attachments: List<String>.from(response['attachments']),
         audioMessage: response['audio_message'],
         videoMessage: List<String>.from(response['video_message']),
+        status: response['status'],
       );
 
       return task;
@@ -146,7 +149,7 @@ class TaskService {
       final taskJson = task.toMap();
       final teamJson = task.team
           .map((employee) => {
-        'employee_id': employee.user_id,
+        'employee_id': employee.userId,
       })
           .toList();
 
@@ -295,6 +298,206 @@ class TaskService {
     }
   }
 
+  Future<Map<String, int>> getCountOfTasksByStatus(String position, String employeeId) async {
+    try {
+      late List<dynamic> tasksResponse;
+      final now = DateTime.now();
+
+
+
+      if (position == 'Исполнитель') {
+        // Логика для исполнителя
+        final teamsResponse = await _client
+            .from('team_members')
+            .select('team_id')
+            .eq('employee_id', employeeId);
+
+        if (teamsResponse.isEmpty) return _initializeEmptyStatusMap();
+
+        final teamIds = (teamsResponse as List)
+            .map((team) => team['team_id'] as String)
+            .toList();
+
+        tasksResponse = await _client
+            .from('task_team')
+            .select('task:task_id(status, end_date)')
+            .inFilter('team_id', teamIds);
+      }
+      else if (position == 'Постановщик') {
+        // Логика для постановщика - получаем задачи, где он создатель
+        tasksResponse = await _client
+            .from('task_team')
+            .select('task:task_id(status, end_date)')
+            .eq('creator_id', employeeId);
+      }
+      else if(position == 'Коммуникатор'){
+        tasksResponse = await _client
+            .from('task_team')
+            .select('''
+          task:task_id(
+            id,
+            status
+          )
+        ''')
+            .eq('communicator_id', employeeId);
+      }
+
+      // Общая логика обработки задач
+      final statusCounts = _initializeEmptyStatusMap();
+
+      for (final task in tasksResponse) {
+        final taskData = position == 'Постановщик'
+            ? task
+            : task['task'] as Map<String, dynamic>?;
+
+        if (taskData != null) {
+          final status = taskData['status'] as String? ?? 'newTask';
+          final endDate = taskData['end_date'] != null
+              ? DateTime.parse(taskData['end_date'] as String)
+              : null;
+
+          // Проверка на просроченность
+          if (endDate != null && endDate.isBefore(now) && status == 'in_progress') {
+            statusCounts[StatusHelper.displayName(TaskStatus.overdue)] =
+                (statusCounts[StatusHelper.displayName(TaskStatus.overdue)] ?? 0) + 1;
+            continue;
+          }
+
+          final taskStatus = StatusHelper.toTaskStatus(status);
+          statusCounts[StatusHelper.displayName(taskStatus)] =
+              (statusCounts[StatusHelper.displayName(taskStatus)] ?? 0) + 1;
+        }
+      }
+
+      return statusCounts;
+
+    } on PostgrestException catch (error) {
+      print('Ошибка при получении количества задач: ${error.message}');
+      return _initializeEmptyStatusMap();
+    } catch (e) {
+      print('Неожиданная ошибка: $e');
+      return _initializeEmptyStatusMap();
+    }
+  }
+
+  // В TaskService добавим/изменим метод:
+  Future<List<Task>> getTasksByStatus({required String position, required TaskStatus status, required String employeeId, }) async {
+    try {
+      final statusString = status.toString().substring(11);
+
+      if (position == 'Коммуникатор') {
+        final taskIdsResponse = await _client
+            .from('task_team')
+            .select('task_id')
+            .eq('communicator_id', employeeId);
+
+        if (taskIdsResponse.isEmpty) return [];
+
+        final taskIds = taskIdsResponse
+            .map((item) => item['task_id'] as String)
+            .toList();
+
+        // 2. Получаем полные данные задач с фильтрацией по статусу
+        final tasksResponse = await _client
+            .from('task')  // Исправлено название таблицы с 'task' на 'task_name'
+            .select('''
+          *,
+          project:project_id(*),  
+          task_team:task_team(   
+            *,
+            team_members:team_id(
+              *,
+              employee:employee_id(*)
+            )
+          )
+        ''')
+            .inFilter('id', taskIds)
+            .eq('status', statusString);
+
+        return tasksResponse.map((taskData) => Task.fromJson(taskData)).toList();
+      } else {
+        // Для исполнителя получаем задачи через team_members
+        final teamsResponse = await _client
+            .from('team_members')
+            .select('team_id')
+            .eq('employee_id', employeeId);
+
+        if (teamsResponse.isEmpty) return [];
+
+        final teamIds = (teamsResponse as List)
+            .map((team) => team['team_id'] as String)
+            .toList();
+
+        final tasksResponse = await _client
+            .from('task')
+            .select('''
+            *,
+            project:project_id(*),
+            task_team:task_team(
+              employee:employee_id(*)
+            )
+          ''')
+            .inFilter('id',
+            await _client
+                .from('task_team')
+                .select('task_id')
+                .inFilter('team_id', teamIds)
+                .then((res) => res.map((r) => r['task_id'] as String).toList())
+        )
+            .eq('status', statusString);
+
+        return tasksResponse.map((taskData) => Task.fromJson(taskData)).toList();
+      }
+    } catch (e) {
+      print('Error getting tasks: $e');
+      return [];
+    }
+  }
+
+  Future<Map<TaskStatus, int>> fetchCommunicatorTasksCount(communicatorId) async {
+    try {
+      // Запрос для получения количества задач по статусам
+      final response = await _client
+          .from('task_team')
+          .select('''
+          task:task_id(
+            id,
+            status
+          )
+        ''')
+          .eq('communicator_id', communicatorId);
+
+
+
+      // Инициализируем карту со всеми статусами и нулевыми значениями
+      final counts = Map<TaskStatus, int>.fromIterable(
+        TaskStatus.values,
+        value: (_) => 0,
+      );
+
+      // Подсчитываем задачи по статусам
+      for (final taskData in response) {
+        final task = taskData['task'] as Map<String, dynamic>;
+        final statusStr = task['status'] as String?;
+
+        if (statusStr != null) {
+          try {
+            final status = TaskStatus.values.firstWhere(
+                  (e) => e.toString().split('.').last == statusStr,
+            );
+            counts[status] = (counts[status] ?? 0) + 1;
+          } catch (_) {
+            // Пропускаем неизвестные статусы
+          }
+        }
+      }
+
+      return counts;
+    } catch (e) {
+      print('Error fetching communicator tasks count: $e');
+      rethrow;
+    }
+  }
 
   String getTaskAttachment(String? fileName) {
     return _client.storage.from('TaskAttachments').getPublicUrl(fileName!);
@@ -303,6 +506,12 @@ class TaskService {
   // Получение публичного URL для аватара
   String getAvatarUrl(String? fileName) {
     return _client.storage.from('Avatars').getPublicUrl(fileName!);
+  }
+  Map<String, int> _initializeEmptyStatusMap() {
+    return {
+      for (var status in TaskStatus.values)
+        StatusHelper.displayName(status): 0
+    };
   }
 
 }
