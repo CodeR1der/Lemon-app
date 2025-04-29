@@ -1,11 +1,12 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart'; // Для выбора файлов
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // Для выбора видео
 import 'package:just_audio/just_audio.dart';
 import 'package:record/record.dart'; // Для записи аудио
-import 'package:image_picker/image_picker.dart'; // Для выбора видео
 import 'package:task_tracker/task_screens/EmployeesScreen.dart';
+
 import '../models/task.dart'; // Импортируйте ваш класс Task
 
 class AddedFilesScreen extends StatefulWidget {
@@ -111,7 +112,8 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
 
   // Метод для записи видео
   Future<void> _recordVideo() async {
-    final XFile? recordedFile = await _imagePicker.pickVideo(source: ImageSource.camera);
+    final XFile? recordedFile =
+        await _imagePicker.pickVideo(source: ImageSource.camera);
     if (recordedFile != null) {
       setState(() {
         videoMessage.add(recordedFile.path);
@@ -136,12 +138,10 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
     setState(() {
       if (attachments.contains(filePath)) {
         attachments.remove(filePath);
-        widget.taskData.removeAttachment(
-            filePath);
+        widget.taskData.removeAttachment(filePath);
       } else {
         videoMessage.remove(filePath);
-        widget.taskData.removeVideoMessage(
-            filePath);
+        widget.taskData.removeVideoMessage(filePath);
       }
     });
   }
@@ -237,37 +237,38 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
               ),
             ),
             const SizedBox(height: 8),
-          Expanded(
-            child: ListView.builder(
-              itemCount: attachments.length + videoMessage.length,
-              itemBuilder: (context, index) {
-                String filePath;
-                bool isVideo = false;
+            Expanded(
+              child: ListView.builder(
+                itemCount: attachments.length + videoMessage.length,
+                itemBuilder: (context, index) {
+                  String filePath;
+                  bool isVideo = false;
 
-                if (index < attachments.length) {
-                  filePath = attachments[index];
-                  if (filePath.endsWith(".mp4")) {
+                  if (index < attachments.length) {
+                    filePath = attachments[index];
+                    if (filePath.endsWith(".mp4")) {
+                      isVideo = true;
+                    }
+                  } else {
+                    filePath = videoMessage[index - attachments.length];
                     isVideo = true;
                   }
-                } else {
-                  filePath = videoMessage[index - attachments.length];
-                  isVideo = true;
-                }
 
-                return ListTile(
-                  leading: isVideo
-                      ? const Icon(Icons.video_library, color: Colors.red)
-                      : Image.file(File(filePath), width: 50, height: 50, fit: BoxFit.cover),
-                  title: Text(filePath.split('/').last),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => removeAttachment(filePath),
-                  ),
-                );
-              },
+                  return ListTile(
+                    leading: isVideo
+                        ? const Icon(Icons.video_library, color: Colors.red)
+                        : Image.file(File(filePath),
+                            width: 50, height: 50, fit: BoxFit.cover),
+                    title: Text(filePath.split('/').last),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => removeAttachment(filePath),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-          const Spacer(),
+            const Spacer(),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

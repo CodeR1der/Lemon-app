@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/models/task_team.dart';
 import 'package:uuid/uuid.dart';
+
 import '../models/employee.dart';
+import '../models/priority.dart';
 import '../models/project.dart';
+import '../models/task.dart';
 import '../models/task_status.dart';
 import 'projectSelectionScreen.dart';
-import '../models/task.dart';
-import '../models/priority.dart';
 
 class TaskTitleScreen extends StatefulWidget {
   final Employee? employee;
+
   TaskTitleScreen({Key? key, this.employee}) : super(key: key);
 
   @override

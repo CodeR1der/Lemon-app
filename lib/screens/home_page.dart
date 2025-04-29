@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/screens/tasks_list_screen.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 
 import '../models/employee.dart';
 import '../models/project.dart';
+import '../models/task_category.dart';
+import '../models/task_status.dart';
+import '../services/task_categories.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,11 +33,11 @@ class _HomeScreenState extends State<HomeScreen> {
       final List<ProjectInformation> projectsWithCounts = [];
       final currentUser = UserService.to.currentUser!;
       final projects =
-          await EmployeeService().getAllProjects(currentUser.user_id);
+          await EmployeeService().getAllProjects(currentUser.userId);
 
       for (final project in projects) {
         final workersCount =
-            await ProjectService().getAllWorkersCount(project.project_id);
+            await ProjectService().getAllWorkersCount(project.projectId);
         projectsWithCounts.add(ProjectInformation(project, workersCount));
       }
 
@@ -291,42 +295,97 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Задачи',
+          'Мои задачи',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        _buildTaskItem('Сейчас в работе', false, 1),
-        _buildTaskItem('Просроченные задачи', true, 1),
-        _buildTaskItem('В очереди на выполнение', false, 2),
-        _buildTaskItem(
-            'Запросы на дополнительное время на выполнение', false, 1),
-        _buildTaskItem('Не прочитал / не понял', false, 1),
-        const SizedBox(height: 12),
-        const Text(
-          'Объявления',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        FutureBuilder<List<TaskCategory>>(
+          future: TaskCategories().getCategories(
+            'Исполнитель',
+            UserService.to.currentUser!.userId,
+          ),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Ошибка: ${snapshot.error}'));
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text('Нет задач'));
+            }
+
+            final categories = snapshot.data!;
+
+            return Column(
+              children: categories
+                  .map((category) => _buildTaskCategoryItem(category))
+                  .toList(),
+            );
+          },
         ),
-        const SizedBox(height: 8),
-        _buildTaskItem('Архив задач', false, 19),
       ],
     );
   }
 
-  Widget _buildTaskItem(String title, bool isCompleted, int count) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Checkbox(
-            value: isCompleted,
-            onChanged: (bool? value) {},
+  Widget _buildTaskCategoryItem(TaskCategory category) {
+    final icon = StatusHelper.getStatusIcon(
+        category.status); // Используем существующий метод
+
+    return Column(
+      children: [
+        ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          leading: Icon(icon, color: Colors.blue),
+          title: Text(
+            category.title,
+            style: const TextStyle(fontSize: 16),
           ),
-          Expanded(
-            child: Text(title),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              category.count.toString(),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-          Text(count.toString()),
-        ],
-      ),
+          onTap: () => () async {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) =>
+                  const Center(child: CircularProgressIndicator()),
+            );
+
+            try {
+              Navigator.of(context).pop();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TaskListByStatusScreen(
+                    position: 'Исполнитель',
+                    userId: UserService.to.currentUser!.userId,
+                    status: category.status,
+                  ),
+                ),
+              );
+            } catch (e) {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Ошибка: ${e.toString()}')),
+              );
+            }
+          },
+        ),
+        const Divider(height: 1),
+      ],
     );
   }
 
@@ -349,7 +408,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Text(
                 _employees.length.toString(),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -382,16 +442,15 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             CircleAvatar(
               radius: 34,
-              backgroundImage: (employee.avatar_url != null &&
-                      employee.avatar_url!.isNotEmpty)
+              backgroundImage: (employee.avatarUrl != null &&
+                      employee.avatarUrl!.isNotEmpty)
                   ? NetworkImage(
-                      ProjectService().getAvatarUrl(employee.avatar_url!) ?? '',
+                      ProjectService().getAvatarUrl(employee.avatarUrl!) ?? '',
                     )
                   : null,
-              child:
-                  (employee.avatar_url == null || employee.avatar_url!.isEmpty)
-                      ? const Icon(Icons.account_box, size: 34)
-                      : null,
+              child: (employee.avatarUrl == null || employee.avatarUrl!.isEmpty)
+                  ? const Icon(Icons.account_box, size: 34)
+                  : null,
             ),
             const SizedBox(height: 12),
             Text(
@@ -439,7 +498,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Text(
                 _projects.length.toString(),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -482,16 +542,16 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             CircleAvatar(
               radius: 17,
-              backgroundImage: (project.project.avatar_url != null &&
-                      project.project.avatar_url!.isNotEmpty)
+              backgroundImage: (project.project.avatarUrl != null &&
+                      project.project.avatarUrl!.isNotEmpty)
                   ? NetworkImage(
                       ProjectService()
-                              .getAvatarUrl(project.project.avatar_url!) ??
+                              .getAvatarUrl(project.project.avatarUrl!) ??
                           '',
                     )
                   : null,
-              child: (project.project.avatar_url == null ||
-                      project.project.avatar_url!.isEmpty)
+              child: (project.project.avatarUrl == null ||
+                      project.project.avatarUrl!.isEmpty)
                   ? const Icon(Icons.account_box, size: 17)
                   : null,
             ),

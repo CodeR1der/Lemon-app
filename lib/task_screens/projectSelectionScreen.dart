@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/task_screens/addedFilesScreen.dart';
+
 import '../models/project.dart';
 import '../models/task.dart';
 
 class ProjectSelectionScreen extends StatefulWidget {
   final Task taskData;
+
   const ProjectSelectionScreen(this.taskData, {super.key});
+
   @override
   _ProjectSelectionScreenState createState() => _ProjectSelectionScreenState();
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/models/priority.dart';
+import 'package:task_tracker/services/task_operations.dart';
 
 import '../models/task.dart';
 import '../task_screens/TaskDetailsScreen.dart';
@@ -165,13 +165,15 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
                             actions: [
                               TextButton(
                                 onPressed: () {
-                                  Navigator.of(context).pop(); // Закрываем диалог
+                                  Navigator.of(context)
+                                      .pop(); // Закрываем диалог
 
                                   // Переход на экран с задачей
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => TaskDetailsScreen(id: widget.taskData.id),
+                                      builder: (context) => TaskDetailsScreen(
+                                          id: widget.taskData.id),
                                     ),
                                   );
                                 },

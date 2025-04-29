@@ -1,17 +1,17 @@
 // main.dart
-import 'package:get/get.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:task_tracker/widgets/navigation_panel.dart';
+import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/widgets/navigation_panel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   InitialBindings().dependencies();
   await Supabase.initialize(
     url: 'https://xusyxtgdmtpupmroemzb.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1c3l4dGdkbXRwdXBtcm9lbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0NDU2NTgsImV4cCI6MjA0ODAyMTY1OH0.Z7gU-A_s6ymY7-vTW4ObeHurvtbSIt4kWe-9EXF5j9M',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1c3l4dGdkbXRwdXBtcm9lbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0NDU2NTgsImV4cCI6MjA0ODAyMTY1OH0.Z7gU-A_s6ymY7-vTW4ObeHurvtbSIt4kWe-9EXF5j9M',
   );
 
   runApp(MyApp());
@@ -29,10 +29,11 @@ class MyApp extends StatelessWidget {
 
   Future<void> _initializeApp() async {
     try {
-      const userId = '71a5a83c-7bf8-4227-ba71-3fc5eb6407c2';
-      //'d1e6c36b-0fb1-4686-9ccd-a062bd95011d'; //сотрудник
-      //'d6c99c8b-fd07-4702-b849-71cd603eab0b'; //владислав
-      //'71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; //никита
+      const userId = 'e50629e9-fef5-472f-b798-58fedc9739be';
+      //'e50629e9-fef5-472f-b798-58fedc9739be'; наблюдатель
+      //'d1e6c36b-0fb1-4686-9ccd-a062bd95011d'; сотрудник
+      //'d6c99c8b-fd07-4702-b849-71cd603eab0b'; владислав
+      //'71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; никита
       await UserService.to.initializeUser(userId);
     } catch (e) {
       print('Ошибка инициализации приложения: $e');
@@ -45,15 +46,14 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       theme: ThemeData(
         fontFamily: 'Roboto',
-        textTheme: TextTheme(
-          bodyMedium: TextStyle(fontSize: 15, color: Colors.black),
-          bodySmall: TextStyle(fontSize: 14, color: Colors.black),
-          bodyLarge: TextStyle(fontSize: 16, color: Colors.black),
-          titleMedium: TextStyle(fontSize: 14, color: Colors.grey,
-              fontWeight: FontWeight.bold),
-          titleSmall: TextStyle(fontSize: 14, color: Colors.grey),
-          displayMedium: TextStyle(fontSize: 13, color: Colors.grey)
-        ),
+        textTheme: const TextTheme(
+            bodyMedium: TextStyle(fontSize: 15, color: Colors.black),
+            bodySmall: TextStyle(fontSize: 14, color: Colors.black),
+            bodyLarge: TextStyle(fontSize: 16, color: Colors.black),
+            titleMedium: TextStyle(
+                fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+            titleSmall: TextStyle(fontSize: 14, color: Colors.grey),
+            displayMedium: TextStyle(fontSize: 13, color: Colors.grey)),
       ),
       debugShowCheckedModeBanner: false,
       home: FutureBuilder(

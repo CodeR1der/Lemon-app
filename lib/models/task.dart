@@ -18,21 +18,19 @@ class Task {
   Priority priority;
   TaskStatus status;
 
-
-  Task({
-    required this.id,
-    required this.taskName,
-    required this.description,
-    required this.project,
-    required this.team,
-    required this.startDate,
-    required this.endDate,
-    required this.attachments,
-    this.audioMessage,
-    this.videoMessage,
-    this.priority = Priority.low, // Значение по умолчанию
-    this.status = TaskStatus.newTask
-  });
+  Task(
+      {required this.id,
+      required this.taskName,
+      required this.description,
+      required this.project,
+      required this.team,
+      required this.startDate,
+      required this.endDate,
+      required this.attachments,
+      this.audioMessage,
+      this.videoMessage,
+      this.priority = Priority.low, // Значение по умолчанию
+      this.status = TaskStatus.newTask});
 
   // Метод для преобразования строки из базы данных в Priority
   static Priority parsePriority(String priority) {
@@ -85,7 +83,9 @@ class Task {
       project: Project.fromJson(json['project']),
       startDate: DateTime.parse(json['start_date']),
       endDate: DateTime.parse(json['end_date']),
-      team: (json['task_team'] as List).map((team) => TaskTeam.fromJson(team)).single,
+      team: (json['task_team'] as List)
+          .map((team) => TaskTeam.fromJson(team))
+          .single,
       attachments: List<String>.from(json['attachments'] ?? []),
       audioMessage: json['audio_message'],
       videoMessage: List<String>.from(json['video_message'] ?? []),
@@ -119,5 +119,4 @@ class Task {
   void removeVideoMessage(String filePath) {
     videoMessage!.remove(filePath);
   }
-
 }

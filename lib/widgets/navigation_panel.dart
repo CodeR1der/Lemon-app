@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+
+import '../screens/employees_screen.dart';
 import '../screens/home_page.dart';
+import '../screens/profile_screen.dart';
 import '../screens/projects_screen.dart';
 import '../screens/tasks_screen.dart';
-import '../screens/employees_screen.dart';
-import '../screens/profile_screen.dart';
 import '../services/user_service.dart';
 
 class BottomNavigationMenu extends StatelessWidget {

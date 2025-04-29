@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/screens/task_details_screen.dart';
+
 import '../models/task.dart';
 import '../models/task_status.dart';
 import '../services/task_operations.dart';
 
-
 class TaskListByStatusScreen extends StatefulWidget {
+  final String position;
   final String userId;
   final TaskStatus status;
 
   const TaskListByStatusScreen({
+    required this.position,
     required this.userId,
     required this.status,
     Key? key,
@@ -31,7 +33,7 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
 
   void _loadTasks() {
     _tasksFuture = _taskService.getTasksByStatus(
-      position: "Коммуникатор",
+      position: widget.position,
       status: widget.status,
       employeeId: widget.userId,
     );
@@ -69,19 +71,20 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
               Text(
                 'Статус',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+                      color: Colors.grey.shade600,
+                    ),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 16,
                     backgroundColor: Colors.blue,
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEBEDF0),
                       borderRadius: BorderRadius.circular(12),
@@ -94,10 +97,8 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
                           size: 16,
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          StatusHelper.displayName(task.status),
-                          style: Theme.of(context).textTheme.bodySmall
-                        ),
+                        Text(StatusHelper.displayName(task.status),
+                            style: Theme.of(context).textTheme.bodySmall),
                       ],
                     ),
                   ),
@@ -107,29 +108,29 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
               Text(
                 'Название задачи',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+                      color: Colors.grey.shade600,
+                    ),
               ),
               const SizedBox(height: 4),
               Text(
                 task.taskName,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.black,
-                ),
+                      color: Colors.black,
+                    ),
               ),
               const SizedBox(height: 16),
               Text(
                 'Проект',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+                      color: Colors.grey.shade600,
+                    ),
               ),
               const SizedBox(height: 4),
               Text(
                 task.project?.name ?? 'Не указан',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.black,
-                ),
+                      color: Colors.black,
+                    ),
               ),
             ],
           ),
@@ -137,7 +138,6 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
       ),
     );
   }
-
 
   String _getAvatarInitials(String? name) {
     if (name == null || name.isEmpty) return '?';

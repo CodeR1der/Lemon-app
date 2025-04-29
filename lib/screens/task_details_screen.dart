@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../models/task.dart';
-import '../services/task_operations.dart';
 import '../task_screens/TaskChatTab.dart';
 import '../task_screens/TaskDescriptionTab.dart';
 import '../task_screens/TaskPeriodTab.dart';

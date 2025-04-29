@@ -120,6 +120,7 @@ class StatusHelper {
         throw ArgumentError('Неизвестный статус задачи: $status');
     }
   }
+
   static IconData getStatusIcon(TaskStatus status) {
     switch (status) {
       case TaskStatus.newTask:

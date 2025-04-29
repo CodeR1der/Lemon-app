@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:rxdart/rxdart.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   final String audioUrl;
@@ -106,7 +105,8 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                               max: duration.inMilliseconds.toDouble(),
                               value: position.inMilliseconds.toDouble(),
                               onChanged: (value) {
-                                _player.seek(Duration(milliseconds: value.toInt()));
+                                _player.seek(
+                                    Duration(milliseconds: value.toInt()));
                               },
                             ),
                           ),
@@ -115,14 +115,14 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  _formatDuration(position),
-                                  style: Theme.of(context).textTheme.displayMedium
-                                ),
-                                Text(
-                                  _formatDuration(duration),
-                                  style: Theme.of(context).textTheme.displayMedium
-                                ),
+                                Text(_formatDuration(position),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayMedium),
+                                Text(_formatDuration(duration),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayMedium),
                               ],
                             ),
                           ),

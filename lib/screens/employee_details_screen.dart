@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/task_screens/taskTitleScreen.dart';
+
 import '../models/employee.dart';
 import '../services/employee_operations.dart';
 
@@ -41,9 +42,9 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
           radius: 50,
           backgroundImage: widget.employee.avatarUrl != ''
               ? NetworkImage(
-            widget._employeeService
-                .getAvatarUrl(widget.employee.avatarUrl),
-          )
+                  widget._employeeService
+                      .getAvatarUrl(widget.employee.avatarUrl),
+                )
               : null,
           child: widget.employee.avatarUrl == ''
               ? Icon(Icons.person, size: 50)
@@ -109,7 +110,6 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
   }
 
   Widget _buildS3StoresTasks() {
-
     final List<Map<String, dynamic>> tasks = [
       {
         'icon': Iconsax.archive_tick_copy,
@@ -232,7 +232,8 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                   forceElevated: boxIsScrolled,
                   backgroundColor: Colors.white,
                   flexibleSpace: FlexibleSpaceBar(
-                    title: Text(widget.employee.name.split(' ').take(2).join(' ')),
+                    title:
+                        Text(widget.employee.name.split(' ').take(2).join(' ')),
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -244,13 +245,17 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                         _buildAvatar(),
                         _buildProfileSection('ФИО', widget.employee.name),
                         const Divider(),
-                        _buildProfileSection('Должность', widget.employee.position),
+                        _buildProfileSection(
+                            'Должность', widget.employee.position),
                         const Divider(),
-                        _buildProfileSection('Контактный телефон', widget.employee.phone ?? ''),
+                        _buildProfileSection(
+                            'Контактный телефон', widget.employee.phone ?? ''),
                         const Divider(),
-                        _buildProfileSection('Имя пользователя в Телеграм', widget.employee.telegramId ?? ''),
+                        _buildProfileSection('Имя пользователя в Телеграм',
+                            widget.employee.telegramId ?? ''),
                         const Divider(),
-                        _buildProfileSection('Адрес страницы в VK', widget.employee.vkId ?? ''),
+                        _buildProfileSection(
+                            'Адрес страницы в VK', widget.employee.vkId ?? ''),
                       ],
                     ),
                   ),
@@ -288,7 +293,8 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TaskTitleScreen(employee: widget.employee),
+                    builder: (context) =>
+                        TaskTitleScreen(employee: widget.employee),
                   ),
                 );
               },
@@ -332,7 +338,8 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   _SliverAppBarDelegate(this._tabBar);
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: Colors.white,
       child: _tabBar,

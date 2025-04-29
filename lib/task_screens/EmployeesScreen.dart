@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/task_screens/DeadlineScreen.dart';
+
 import '../models/employee.dart';
 import '../models/task.dart';
 import '../models/task_team.dart';
@@ -11,7 +12,8 @@ class EmployeeSelectionScreen extends StatefulWidget {
   const EmployeeSelectionScreen(this.taskData, {super.key});
 
   @override
-  _EmployeeSelectionScreenState createState() => _EmployeeSelectionScreenState();
+  _EmployeeSelectionScreenState createState() =>
+      _EmployeeSelectionScreenState();
 }
 
 class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
@@ -59,7 +61,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   onSelected: (Employee? employee) {
                     if (_isEmployeeAlreadySelected(employee)) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Этот сотрудник уже выбран')),
+                        const SnackBar(
+                            content: Text('Этот сотрудник уже выбран')),
                       );
                     } else {
                       setState(() {
@@ -76,7 +79,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   onSelected: (Employee? employee) {
                     if (_isEmployeeAlreadySelected(employee)) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Этот сотрудник уже выбран')),
+                        const SnackBar(
+                            content: Text('Этот сотрудник уже выбран')),
                       );
                     } else {
                       setState(() {
@@ -102,7 +106,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: widget.taskData.team.teamMembers.length,
                         itemBuilder: (context, index) {
-                          final member = widget.taskData.team.teamMembers[index];
+                          final member =
+                              widget.taskData.team.teamMembers[index];
                           return ListTile(
                             leading: CircleAvatar(
                               backgroundImage: NetworkImage(
@@ -110,7 +115,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                             ),
                             title: Text(
                               member.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(member.position),
                           );

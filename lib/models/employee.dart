@@ -30,21 +30,20 @@ class Employee {
       'telegram_id': telegramId,
       'vk_id': vkId,
       'avatar_url': avatarUrl,
-      'role' : role
+      'role': role
     };
   }
 
   // Создание объекта Employee из JSON
   factory Employee.fromJson(Map<String, dynamic> json) {
     return Employee(
-      userId: json['user_id'],
-      name: json['name'],
-      position: json['position'],
-      phone: json['phone'],
-      telegramId: json['telegram_id'],
-      vkId: json['vk_id'],
-      avatarUrl: json['avatar_url'],
-      role: json['role']
-    );
+        userId: json['user_id'],
+        name: json['name'],
+        position: json['position'],
+        phone: json['phone'],
+        telegramId: json['telegram_id'],
+        vkId: json['vk_id'],
+        avatarUrl: json['avatar_url'],
+        role: json['role']);
   }
 }

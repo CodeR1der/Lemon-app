@@ -4,6 +4,7 @@ import 'package:task_tracker/models/project_description.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../models/employee.dart';
 import '../models/project.dart';
 import '../models/task.dart';
@@ -28,7 +29,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   late final TabController _tabController;
   late final TaskService _taskService;
   late final EmployeeService _employeeService;
-  late final Future<Project_Description?> _projectDescription;
+  late final Future<ProjectDescription?> _projectDescription;
 
   List<Employee> _communicators = [];
   List<Employee> _otherEmployees = [];
@@ -185,7 +186,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   }
 
   Widget _buildDescriptionTab() {
-    return FutureBuilder<Project_Description?>(
+    return FutureBuilder<ProjectDescription?>(
       future: _projectDescription,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -210,7 +211,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
     );
   }
 
-  Widget _buildProjectDescription(Project_Description description) {
+  Widget _buildProjectDescription(ProjectDescription description) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(

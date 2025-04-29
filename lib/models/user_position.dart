@@ -1,8 +1,1 @@
-enum Position {
-  director,
-  communicator,
-  programmer,
-  ceo,
-  designer,
-  worker
-}
+enum Position { director, communicator, programmer, ceo, designer, worker }

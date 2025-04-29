@@ -89,10 +89,12 @@ class TaskCategories {
     TaskCategory(title: 'Архив задач', count: 0, status: TaskStatus.completed),
   ];
 
-  Future<List<TaskCategory>> getCategories(String position, String employeeId) async {
+  Future<List<TaskCategory>> getCategories(
+      String position, String employeeId) async {
     try {
       // Получаем количество задач для каждого статуса
-      final tasksCount = await TaskService().getCountOfTasksByStatus(position, employeeId);
+      final tasksCount =
+          await TaskService().getCountOfTasksByStatus(position, employeeId);
 
       // Выбираем соответствующий список категорий
       List<TaskCategory> categories = [];
@@ -100,7 +102,7 @@ class TaskCategories {
         case "Исполнитель":
           categories = List.from(_executerCategories);
           break;
-        case "Коммуникатор":
+        case "Коммуникатор" || "Наблюдатель":
           categories = List.from(_communicatorCategories);
           break;
         case "Постановщик":
@@ -112,18 +114,18 @@ class TaskCategories {
 
       // Обновляем count для каждой категории
       return categories.map((category) {
-        final count = tasksCount[StatusHelper.displayName(category.status)] ?? 0;
+        final count =
+            tasksCount[StatusHelper.displayName(category.status)] ?? 0;
         category.count = count;
         return category;
       }).toList();
-
     } catch (e) {
       print('Error getting categories: $e');
       // В случае ошибки возвращаем список с нулевыми значениями
       switch (position) {
         case "Исполнитель":
           return _executerCategories;
-        case "Коммуникатор":
+        case "Коммуникатор" || "Наблюдатель":
           return _communicatorCategories;
         case "Постановщик":
           return _createrCategories;

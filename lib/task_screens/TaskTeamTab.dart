@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../models/task.dart';
 import '../models/employee.dart';
-import '../services/task_operations.dart';  // Import the Employee model (assuming you have it)
+import '../models/task.dart';
+import '../services/task_operations.dart'; // Import the Employee model (assuming you have it)
 
 class TaskTeamTab extends StatelessWidget {
   final Task task;
+
   TaskTeamTab({super.key, required this.task});
+
   final TaskService _database = TaskService();
 
   @override
@@ -24,8 +26,7 @@ class TaskTeamTab extends StatelessWidget {
           if (hasTeamMembers)
             _buildTeamMemberSection(
               title: 'Постановщик',
-              employees: [],
-              employee: _findEmployeeById(team.creatorId.userId, team.teamMembers),
+              employees: [team.creatorId],
             ),
           const SizedBox(height: 16.0),
 
@@ -33,18 +34,19 @@ class TaskTeamTab extends StatelessWidget {
           if (hasTeamMembers)
             _buildTeamMemberSection(
               title: 'Коммуникатор',
-              employees: [],
-              employee: _findEmployeeById(team.communicatorId.userId, team.teamMembers),
+              employees: [team.communicatorId],
             ),
           const SizedBox(height: 16.0),
 
           // Исполнители (все кроме creator и communicator)
-          if (team.teamMembers.length > 2)
+          if (hasTeamMembers)
             _buildTeamMemberSection(
               title: 'Исполнители',
-              employees: team.teamMembers.where((member) =>
-              member.userId != team.creatorId && member.userId != team.communicatorId
-              ).toList(),
+              employees: team.teamMembers
+                  .where((member) =>
+                      member.userId != team.creatorId &&
+                      member.userId != team.communicatorId)
+                  .toList(),
             ),
           const SizedBox(height: 16.0),
 
@@ -59,29 +61,24 @@ class TaskTeamTab extends StatelessWidget {
     );
   }
 
-  Employee? _findEmployeeById(String id, List<Employee> employees) {
-    try {
-      return employees.firstWhere((employee) => employee.userId== id);
-    } catch (e) {
-      return null;
-    }
-  }
-
   Widget _buildTeamMemberSection({
     required String title,
-    required List<Employee> employees, Employee? employee,
+    required List<Employee> employees,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        Text(title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 8.0),
         for (var employee in employees)
           ListTile(
             leading: CircleAvatar(
-              backgroundImage: NetworkImage(_database.getAvatarUrl(employee.avatarUrl)),
+              backgroundImage:
+                  NetworkImage(_database.getAvatarUrl(employee.avatarUrl)),
             ),
-            title: Text(employee.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(employee.name,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(employee.position),
           ),
       ],

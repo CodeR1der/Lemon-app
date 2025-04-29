@@ -1,6 +1,7 @@
 // services/user_service.dart
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/employee.dart';
 
 class UserService extends GetxService {
@@ -9,6 +10,7 @@ class UserService extends GetxService {
   final Rx<Employee?> _currentUser = Rx<Employee?>(null);
 
   Employee? get currentUser => _currentUser.value;
+
   bool get isLoggedIn => _currentUser.value != null;
 
   Future<void> initializeUser(String userId) async {

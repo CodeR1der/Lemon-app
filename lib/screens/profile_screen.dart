@@ -1,6 +1,8 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../models/employee.dart';
 import '../services/employee_operations.dart';
 
@@ -250,7 +252,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildEditableProfileSection(
       String title, TextEditingController controller, bool isEditing) {
-  Widget _buildEditableProfileSection(String title, TextEditingController controller, bool isEditing) {
     bool isLink = title == 'Имя пользователя в Телеграм' ||
         title == 'Адрес страницы в VK';
 

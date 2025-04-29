@@ -4,8 +4,8 @@ import '../models/task.dart';
 import '../services/task_operations.dart';
 import 'TaskChatTab.dart';
 import 'TaskDescriptionTab.dart';
-import 'TaskTeamTab.dart';
 import 'TaskPeriodTab.dart';
+import 'TaskTeamTab.dart';
 
 class TaskDetailsScreen extends StatefulWidget {
   final String id;

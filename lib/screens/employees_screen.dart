@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart'; // Для иконок
+
 import '../models/employee.dart';
 import '../services//employee_operations.dart';
 import 'employee_details_screen.dart';
@@ -79,7 +80,8 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
         children: [
           SizedBox(height: 40),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0), // Уменьшен до горизонтального отступа
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            // Уменьшен до горизонтального отступа
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -100,16 +102,13 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                   leading: CircleAvatar(
                     radius: 24,
                     backgroundImage: employee.avatarUrl != ''
-                        ? NetworkImage(_employeeService.getAvatarUrl(employee.avatarUrl))
+                        ? NetworkImage(
+                            _employeeService.getAvatarUrl(employee.avatarUrl))
                         : null,
-                    child: employee.avatarUrl == ''
-                        ? Icon(Icons.person)
-                        : null,
+                    child: employee.avatarUrl == '' ? Icon(Icons.person) : null,
                   ),
-                  title: Text(
-                    employee.name,
-                    style: Theme.of(context).textTheme.bodyLarge
-                  ),
+                  title: Text(employee.name,
+                      style: Theme.of(context).textTheme.bodyLarge),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -129,7 +128,8 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EmployeeDetailScreen(employee: employee),
+                        builder: (context) =>
+                            EmployeeDetailScreen(employee: employee),
                       ),
                     );
                   },

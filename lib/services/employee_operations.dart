@@ -1,9 +1,11 @@
 import 'dart:io';
+
 import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-import '/models/project.dart';
+
 import '/models/employee.dart';
+import '/models/project.dart';
 
 abstract class EmployeeDataStrategy {
   Future<Employee?> getEmployee(String userId);
@@ -121,9 +123,7 @@ class EmployeeService {
   Future<List<Project>> getAllProjects(String employeeId) async {
     try {
       // Получаем проекты, где сотрудник является членом команды
-      final teamProjects = await _client
-          .from('team_members')
-          .select('''
+      final teamProjects = await _client.from('team_members').select('''
           team_id,
           task_team:team_id(
             task_id,
@@ -132,30 +132,25 @@ class EmployeeService {
               project:project_id(*)
             )
           )
-          ''')
-          .eq('employee_id', employeeId);
+          ''').eq('employee_id', employeeId);
 
       // Получаем проекты, где сотрудник является коммуникатором
-      final communicatorProjects = await _client.from('task_team')
-          .select('''
+      final communicatorProjects = await _client.from('task_team').select('''
           task_id,
           task:task_id(
             project_id
             project:project_id(*)
           )
-        ''')
-          .eq('communicator_id', employeeId);
+        ''').eq('communicator_id', employeeId);
 
       // Получаем проекты, где сотрудник является создателем
-      final creatorProjects = await _client.from('task_team')
-          .select('''
+      final creatorProjects = await _client.from('task_team').select('''
           task_id,
           task:task_id(
             project_id
             project:project_id(*)
           )
-        ''')
-          .eq('creator_id', employeeId);
+        ''').eq('creator_id', employeeId);
 
       // Объединяем все проекты и убираем дубликаты
       final allProjects = <dynamic>{
