@@ -1,18 +1,531 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/services/employee_operations.dart';
+import 'package:task_tracker/services/project_operations.dart';
+import 'package:task_tracker/services/user_service.dart';
 
-class HomeScreen extends StatelessWidget {
+import '../models/employee.dart';
+import '../models/project.dart';
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<ProjectInformation> _projects = [];
+  List<Employee> _employees = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProjects();
+    _loadEmployees();
+  }
+
+  Future<void> _loadProjects() async {
+    try {
+      final List<ProjectInformation> projectsWithCounts = [];
+      final currentUser = UserService.to.currentUser!;
+      final projects =
+          await EmployeeService().getAllProjects(currentUser.user_id);
+
+      for (final project in projects) {
+        final workersCount =
+            await ProjectService().getAllWorkersCount(project.project_id);
+        projectsWithCounts.add(ProjectInformation(project, workersCount));
+      }
+
+      setState(() {
+        _projects = projectsWithCounts;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки данных: ${e.toString()}')),
+      );
+    }
+  }
+
+  Future<void> _loadEmployees() async {
+    try {
+      final currentUser = UserService.to.currentUser!;
+      final employees = await EmployeeService().getAllEmployees();
+
+      setState(() {
+        _employees = employees;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки данных: ${e.toString()}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Главная'),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Text('Главная страница'),
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            _buildUserInfo(),
+            const SizedBox(height: 20),
+            _buildSearchBox(),
+            const SizedBox(height: 20),
+            _buildAddTaskButton(),
+            const SizedBox(height: 20),
+            _buildAnnouncementCard(),
+            const SizedBox(height: 20),
+            _buildTasksSection(),
+            const SizedBox(height: 20),
+            _buildEmployeesSection(),
+            const SizedBox(height: 20),
+            _buildProjectsSection(),
+          ],
+        ),
       ),
     );
   }
+
+  Widget _buildUserInfo() {
+    var user = UserService.to.currentUser!;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              user.name.split(' ').take(2).join(' '),
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+            ),
+            Text(
+              'Программист',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+        IconButton(
+          icon: Stack(
+            children: [
+              const Icon(Icons.notifications),
+              Positioned(
+                // Красный кружок с количеством уведомлений
+                right: 0,
+                top: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: const Text(
+                    '3', // Замените на реальное количество уведомлений
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          onPressed: () {
+            // Переход на экран уведомлений
+            // Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsScreen()));
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchBox() {
+    return TextField(
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.grey[200],
+        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+        hintText: 'Поиск',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      ),
+    );
+  }
+
+  Widget _buildAddTaskButton() {
+    return SizedBox(
+      width: double.infinity, // занимает всю доступную ширину
+      child: ElevatedButton(
+        onPressed: () {
+          // действие
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.orange,
+          foregroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          elevation: 4,
+          shadowColor: Colors.blue.withOpacity(0.3),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center, // центрируем содержимое
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Icon(Icons.add, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'Поставить задачу',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnnouncementCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Заголовок с иконкой
+            const Row(
+              children: [
+                Icon(Icons.announcement, size: 20, color: Colors.blue),
+                SizedBox(width: 8),
+                Text(
+                  'ОБЪЯВЛЕНИЕ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Текст объявления
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Текст название объявления',
+                style: TextStyle(fontSize: 14),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Кнопка "Прочитать"
+            SizedBox(
+              width: double.infinity, // занимает всю доступную ширину
+              child: OutlinedButton(
+                onPressed: () {
+                  // действие
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  // цвет текста и иконки
+                  side: const BorderSide(color: Colors.orange, width: 1),
+                  // цвет и толщина границы
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(12), // закругление углов
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Прочитать',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTasksSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Задачи',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        _buildTaskItem('Сейчас в работе', false, 1),
+        _buildTaskItem('Просроченные задачи', true, 1),
+        _buildTaskItem('В очереди на выполнение', false, 2),
+        _buildTaskItem(
+            'Запросы на дополнительное время на выполнение', false, 1),
+        _buildTaskItem('Не прочитал / не понял', false, 1),
+        const SizedBox(height: 12),
+        const Text(
+          'Объявления',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        _buildTaskItem('Архив задач', false, 19),
+      ],
+    );
+  }
+
+  Widget _buildTaskItem(String title, bool isCompleted, int count) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Checkbox(
+            value: isCompleted,
+            onChanged: (bool? value) {},
+          ),
+          Expanded(
+            child: Text(title),
+          ),
+          Text(count.toString()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmployeesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Сотрудники',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                _employees.length.toString(),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 180, // Фиксированная высота для скроллируемой области
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _employees.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              return _buildEmployeeCell(_employees[index]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmployeeCell(Employee employee) {
+    return SizedBox(
+      width: 120, // Фиксированная ширина каждой ячейки
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 12),
+            CircleAvatar(
+              radius: 34,
+              backgroundImage: (employee.avatar_url != null &&
+                      employee.avatar_url!.isNotEmpty)
+                  ? NetworkImage(
+                      ProjectService().getAvatarUrl(employee.avatar_url!) ?? '',
+                    )
+                  : null,
+              child:
+                  (employee.avatar_url == null || employee.avatar_url!.isEmpty)
+                      ? const Icon(Icons.account_box, size: 34)
+                      : null,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              employee.name.split(' ').take(2).join(' '),
+              style: const TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  employee.position,
+                  style: const TextStyle(fontSize: 10),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProjectsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Проекты',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                _projects.length.toString(),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 140, // Фиксированная высота для скроллируемой области
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _projects.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              return _buildProjectCell(_projects[index]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProjectCell(ProjectInformation project) {
+    return SizedBox(
+      width: 150, // Фиксированная ширина каждой ячейки
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            CircleAvatar(
+              radius: 17,
+              backgroundImage: (project.project.avatar_url != null &&
+                      project.project.avatar_url!.isNotEmpty)
+                  ? NetworkImage(
+                      ProjectService()
+                              .getAvatarUrl(project.project.avatar_url!) ??
+                          '',
+                    )
+                  : null,
+              child: (project.project.avatar_url == null ||
+                      project.project.avatar_url!.isEmpty)
+                  ? const Icon(Icons.account_box, size: 17)
+                  : null,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              project.project.name,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.account_circle_sharp, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  project.employees.toString(),
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ProjectInformation {
+  final Project project;
+  final int employees;
+
+  ProjectInformation(this.project, this.employees);
 }

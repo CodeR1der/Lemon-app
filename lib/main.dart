@@ -29,7 +29,10 @@ class MyApp extends StatelessWidget {
 
   Future<void> _initializeApp() async {
     try {
-      const userId = 'd6c99c8b-fd07-4702-b849-71cd603eab0b';//'71a5a83c-7bf8-4227-ba71-3fc5eb6407c2';
+      const userId = '71a5a83c-7bf8-4227-ba71-3fc5eb6407c2';
+      //'d1e6c36b-0fb1-4686-9ccd-a062bd95011d'; //сотрудник
+      //'d6c99c8b-fd07-4702-b849-71cd603eab0b'; //владислав
+      //'71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; //никита
       await UserService.to.initializeUser(userId);
     } catch (e) {
       print('Ошибка инициализации приложения: $e');

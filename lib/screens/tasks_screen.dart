@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:task_tracker/screens/creater_tasks_tab.dart';
+import 'package:task_tracker/screens/position_tasks_tab.dart';
+import 'package:task_tracker/services/task_categories.dart';
 import '../models/task.dart';
 import '../models/employee.dart';
+import '../models/task_category.dart';
 
 class TasksScreen extends StatefulWidget {
   final Employee user;
@@ -12,9 +14,6 @@ class TasksScreen extends StatefulWidget {
 }
 
 class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStateMixin {
-  late List<Task> executorTasks;
-  late List<Task> producerTasks;
-  late List<Task> observerTasks;
   late TabController _tabController;
 
   @override
@@ -25,15 +24,15 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     _tabController = TabController(length: tabCount, vsync: this);
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
           tabs: [
             if (widget.user.role == "Коммуникатор") Tab(text: 'Я коммуникатор'),
             Tab(text: 'Я исполнитель'),
@@ -46,12 +45,32 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
         controller: _tabController,
         children: [
           if (widget.user.role == "Коммуникатор")
-            const Text("Задачи коммуникатора"),
-          const Text("Задачи исполнителя"),
-          CreaterTasksTab(employeeId: widget.user.user_id),
+            _buildFutureTab("Коммуникатор", widget.user.user_id),
+          _buildFutureTab("Исполнитель", widget.user.user_id),
+          _buildFutureTab("Постановщик", widget.user.user_id),
           const Text("Задачи наблюдателя"),
         ],
       ),
+    );
+  }
+
+  Widget _buildFutureTab(String position, String employeeId) {
+    return FutureBuilder<List<TaskCategory>>(
+      future: TaskCategories().getCategories(position, employeeId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Ошибка: ${snapshot.error}'));
+        } else if (!snapshot.hasData) {
+          return const Center(child: Text('Нет данных'));
+        }
+
+        return PositionTasksTab(
+          employeeId: employeeId,
+          categories: snapshot.data!,
+        );
+      },
     );
   }
 

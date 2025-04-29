@@ -133,5 +133,51 @@ class ProjectService {
     return _client.storage.from('Avatars').getPublicUrl(fileName!);
   }
 
+  Future<int> getAllWorkersCount(String projectId) async {
+    try {
+      final teamResponce = await _client
+          .from('task')
+          .select('''
+          id,
+          task_team:id(
+            *,
+            team_members:team_id(employee_id)
+          )
+          ''')
+          .eq('project_id', projectId);
+
+      if (teamResponce == null || teamResponce.isEmpty) {
+        return 0;
+      }
+
+      // Собираем все уникальные employee_id из всех команд всех задач проекта
+      final Set<String> uniqueWorkerIds = {};
+
+      for (final task in teamResponce) {
+        final teamData = task['task_team'];
+        if (teamData != null) {
+          for (final team in teamData) {
+            final teamMembers = team['team_members'];
+            uniqueWorkerIds.add(team['creator_id']);
+            uniqueWorkerIds.add(team['communicator_id']);
+            if (teamMembers != null) {
+              for (final member in teamMembers) {
+                final employeeId = member['employee_id'];
+                if (employeeId != null) {
+                  uniqueWorkerIds.add(employeeId);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return uniqueWorkerIds.length;
+    } catch (e) {
+      print('Error getting count of project workers: $e');
+      throw Exception('Error getting count of project workers: $e');
+    }
+  }
+
 
 }

@@ -141,31 +141,24 @@ class TaskService {
             .select('task:task_id(status, end_date)')
             .eq('creator_id', employeeId);
       }
+      else if (position == 'Коммуникатор') {
+        // Логика для постановщика - получаем задачи, где он создатель
+        tasksResponse = await _client
+            .from('task_team')
+            .select('task:task_id(status, end_date)')
+            .eq('communicator_id', employeeId);
+      }
 
       // Общая логика обработки задач
       final statusCounts = _initializeEmptyStatusMap();
 
       for (final task in tasksResponse) {
-        final taskData = position == 'Постановщик'
-            ? task
-            : task['task'] as Map<String, dynamic>?;
-
-        if (taskData != null) {
-          final status = taskData['status'] as String? ?? 'new';
-          final endDate = taskData['end_date'] != null
-              ? DateTime.parse(taskData['end_date'] as String)
-              : null;
-
-          // Проверка на просроченность
-          if (endDate != null && endDate.isBefore(now) && status == 'in_progress') {
-            statusCounts[TaskStatus.overdue.displayName] =
-                (statusCounts[TaskStatus.overdue.displayName] ?? 0) + 1;
-            continue;
-          }
+        if (task != null) {
+          final status = task['status'] as String? ?? 'new';
 
           final taskStatus = _mapDbStatusToEnum(status);
-          statusCounts[taskStatus.displayName] =
-              (statusCounts[taskStatus.displayName] ?? 0) + 1;
+          statusCounts[StatusHelper.displayName(taskStatus)] =
+              (statusCounts[StatusHelper.displayName(taskStatus)] ?? 0) + 1;
         }
       }
 
@@ -183,7 +176,7 @@ class TaskService {
   Map<String, int> _initializeEmptyStatusMap() {
     return {
       for (var status in TaskStatus.values)
-        status.displayName: 0
+        StatusHelper.displayName(status): 0
     };
   }
 
@@ -212,12 +205,7 @@ class TaskService {
     }
   }
 
-  // В TaskService добавим/изменим метод:
-  Future<List<Task>> getTasksByStatus({
-    required String position,
-    required TaskStatus status,
-    required String employeeId,
-  }) async {
+  Future<List<Task>> getTasksByStatus({required String position, required TaskStatus status, required String employeeId, }) async {
     try {
       final statusString = status.toString().substring(11);
 
@@ -236,13 +224,16 @@ class TaskService {
 
         // 2. Получаем полные данные задач с фильтрацией по статусу
         final tasksResponse = await _client
-            .from('task')
+            .from('task')  // Исправлено название таблицы с 'task' на 'task_name'
             .select('''
           *,
-          project:project_id(*),
-          task_team(
-            employee_id,
-            employee:employee(*)
+          project:project_id(*),  
+          task_team:task_team(   
+            *,
+            team_members:team_id(
+              *,
+              employee:employee_id(*)
+            )
           )
         ''')
             .inFilter('id', taskIds)

@@ -1,5 +1,4 @@
-import 'package:task_tracker/models/task_status.dart';
-
+import '../models/task_status.dart';
 import 'priority.dart';
 import 'employee.dart';
 import 'project.dart';
@@ -17,7 +16,6 @@ class Task {
   List<String>? videoMessage;
   Priority priority;
   TaskStatus status;
-
 
   Task({
     required this.id,
@@ -76,7 +74,7 @@ class Task {
     };
   }
 
-  factory Task.fromJson(Map<String, dynamic> json)  {
+  factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
       id: json['id'],
       taskName: json['task_name'],
@@ -85,14 +83,16 @@ class Task {
       startDate: DateTime.parse(json['start_date']),
       endDate: DateTime.parse(json['end_date']),
       team: List<Employee>.from(
-        json['task_team'].map((teamMember) {
-          return Employee.fromJson(teamMember['employee']);
-        },)
+        json['task_team'].expand((taskTeam) =>
+          (taskTeam['team_members'] as List).map((teamMember) =>
+            Employee.fromJson(teamMember['employee'])
+          )
+        ).toList()
       ),
-      attachments: List<String>.from(json['attachments']),
+      attachments: List<String>.from(json['attachments'] ?? []),
       audioMessage: json['audio_message'],
-      videoMessage: List<String>.from(json['video_message']),
-      status: json['status'],
+      videoMessage: List<String>.from(json['video_message'] ?? []),
+      status: StatusHelper.toTaskStatus(json['status']),
     );
   }
 

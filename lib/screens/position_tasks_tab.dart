@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import '../models/task_category.dart';
 import '../models/task_status.dart';
 import '../services/task_operations.dart';
 import 'category_tasks_list_screen.dart';
 
-class CreaterTasksTab extends StatelessWidget {
+class PositionTasksTab extends StatelessWidget {
   final String employeeId;
+  final List<TaskCategory> categories;
   final TaskService _taskOperations = TaskService();
 
-  CreaterTasksTab({Key? key, required this.employeeId}) : super(key: key);
+  PositionTasksTab({Key? key, required this.employeeId, required this.categories}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -21,16 +23,6 @@ class CreaterTasksTab extends StatelessWidget {
           }
 
           final taskCounts = snapshot.data ?? {};
-          final categories = [
-            TaskCategory(title: 'Новые задачи', count: taskCounts[TaskStatus.newTask.displayName] ?? 0, status: TaskStatus.newTask),
-            TaskCategory(title: 'Доработать задачу', count: taskCounts[TaskStatus.revision.displayName] ?? 0, status: TaskStatus.revision),
-            TaskCategory(title: 'Проверить завершённые задачи', count: taskCounts[TaskStatus.completedUnderReview.displayName] ?? 0, status: TaskStatus.completedUnderReview),
-            TaskCategory(title: 'Не прочитано / не понято', count: taskCounts[TaskStatus.notRead.displayName] ?? 0, status: TaskStatus.notRead),
-            TaskCategory(title: 'В очереди на выполнение', count: taskCounts[TaskStatus.inOrder.displayName] ?? 0, status: TaskStatus.inOrder),
-            TaskCategory(title: 'Сейчас в работе', count: taskCounts[TaskStatus.atWork.displayName] ?? 0, status: TaskStatus.atWork),
-            TaskCategory(title: 'Просроченные задачи', count: taskCounts[TaskStatus.overdue.displayName] ?? 0, status: TaskStatus.overdue),
-            TaskCategory(title: 'Запросы на дополнительное время', count: taskCounts[TaskStatus.extraTime.displayName] ?? 0, status: TaskStatus.extraTime),
-          ];
 
           return ListView.separated(
             padding: const EdgeInsets.all(1.0),
@@ -49,10 +41,10 @@ class CreaterTasksTab extends StatelessWidget {
   Widget _buildStaticContent() {
     return ListView.separated(
       padding: const EdgeInsets.all(1.0),
-      itemCount: _staticCategories.length,
+      itemCount: categories.length,
       separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
-        final category = _staticCategories[index];
+        final category = categories[index];
         return _buildCategoryItem(context, category);
       },
     );
@@ -122,27 +114,4 @@ class CreaterTasksTab extends StatelessWidget {
       },
     );
   }
-
-  final List<TaskCategory> _staticCategories = [
-    TaskCategory(title: 'Новые задачи', count: 0, status: TaskStatus.newTask),
-    TaskCategory(title: 'Доработать задачу', count: 0, status: TaskStatus.revision),
-    TaskCategory(title: 'Проверить завершённые задачи', count: 0, status: TaskStatus.completedUnderReview),
-    TaskCategory(title: 'Не прочитано / не понято', count: 0, status: TaskStatus.notRead),
-    TaskCategory(title: 'В очереди на выполнение', count: 0, status: TaskStatus.inOrder),
-    TaskCategory(title: 'Сейчас в работе', count: 0, status: TaskStatus.atWork),
-    TaskCategory(title: 'Просроченные задачи', count: 0, status: TaskStatus.overdue),
-    TaskCategory(title: 'Запросы на дополнительное время', count: 0, status: TaskStatus.extraTime),
-  ];
-}
-
-class TaskCategory {
-  final String title;
-  final int count;
-  final TaskStatus status;
-
-  TaskCategory({
-    required this.title,
-    required this.count,
-    required this.status,
-  });
 }
