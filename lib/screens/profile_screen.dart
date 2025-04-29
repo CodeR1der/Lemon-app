@@ -250,6 +250,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildEditableProfileSection(
       String title, TextEditingController controller, bool isEditing) {
+  Widget _buildEditableProfileSection(String title, TextEditingController controller, bool isEditing) {
     bool isLink = title == 'Имя пользователя в Телеграм' ||
         title == 'Адрес страницы в VK';
 

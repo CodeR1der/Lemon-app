@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import '/models/project.dart';
 import '/models/employee.dart';
 
 abstract class EmployeeDataStrategy {
@@ -115,5 +116,74 @@ class EmployeeService {
   // Получение публичного URL для аватара
   String getAvatarUrl(String? fileName) {
     return _client.storage.from('Avatars').getPublicUrl(fileName!);
+  }
+
+  Future<List<Project>> getAllProjects(String employeeId) async {
+    try {
+      // Получаем проекты, где сотрудник является членом команды
+      final teamProjects = await _client
+          .from('team_members')
+          .select('''
+          team_id,
+          task_team:team_id(
+            task_id,
+            task:task_id(
+              project_id,
+              project:project_id(*)
+            )
+          )
+          ''')
+          .eq('employee_id', employeeId);
+
+      // Получаем проекты, где сотрудник является коммуникатором
+      final communicatorProjects = await _client.from('task_team')
+          .select('''
+          task_id,
+          task:task_id(
+            project_id
+            project:project_id(*)
+          )
+        ''')
+          .eq('communicator_id', employeeId);
+
+      // Получаем проекты, где сотрудник является создателем
+      final creatorProjects = await _client.from('task_team')
+          .select('''
+          task_id,
+          task:task_id(
+            project_id
+            project:project_id(*)
+          )
+        ''')
+          .eq('creator_id', employeeId);
+
+      // Объединяем все проекты и убираем дубликаты
+      final allProjects = <dynamic>{
+        ..._extractProjectsFromResponse(teamProjects),
+        ..._extractProjectsFromResponse(communicatorProjects),
+        ..._extractProjectsFromResponse(creatorProjects),
+      }.toList();
+
+      return allProjects.map((json) => Project.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Error getting projects: $e');
+    }
+  }
+
+  List<Map<String, dynamic>> _extractProjectsFromResponse(dynamic response) {
+    final projects = <Map<String, dynamic>>[];
+
+    for (final item in response) {
+      if (item['task_team'] != null) {
+        final task_team = item['task_team'];
+        if (task_team['task'] != null && task_team['task']['project'] != null) {
+          projects.add(task_team['task']['project']);
+        }
+      } else if (item['task'] != null && item['task']['project'] != null) {
+        projects.add(item['task']['project']);
+      }
+    }
+
+    return projects;
   }
 }

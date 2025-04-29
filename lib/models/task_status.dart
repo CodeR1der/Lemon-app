@@ -45,7 +45,7 @@ class StatusHelper {
       case TaskStatus.completedUnderReview:
         return 'Завершенная задача на проверке';
       case TaskStatus.completed:
-        return 'Архив';
+        return 'Архив задач';
     }
   }
 
@@ -55,29 +55,65 @@ class StatusHelper {
         return TaskStatus.newTask;
       case 'newTask':
         return TaskStatus.newTask;
+
       case 'Задача на доработке':
         return TaskStatus.revision;
+      case 'revision':
+        return TaskStatus.revision;
+
       case 'Выставить в очередь на выполнение':
         return TaskStatus.queue;
+      case 'queue':
+        return TaskStatus.queue;
+
       case 'Не прочитано / не понято':
         return TaskStatus.notRead;
+      case 'notRead':
+        return TaskStatus.notRead;
+
       case 'Нужно разъяснение':
         return TaskStatus.needExplanation;
+      case 'needExplanation':
+        return TaskStatus.needExplanation;
+
       case 'Выставить в очередь':
         return TaskStatus.inOrder;
+      case 'inOrder':
+        return TaskStatus.inOrder;
+
       case 'В работе':
         return TaskStatus.atWork;
+      case 'atWork':
+        return TaskStatus.atWork;
+
       case 'Контрольная точка':
         return TaskStatus.controlPoint;
+      case 'controlPoint':
+        return TaskStatus.controlPoint;
+
       case 'Нужно письмо-решение':
         return TaskStatus.needTicket;
+      case 'needTicket':
+        return TaskStatus.needTicket;
+
       case 'Запросы на дополнительное время':
         return TaskStatus.extraTime;
+      case 'extraTime':
+        return TaskStatus.extraTime;
+
       case 'Просроченная задача':
         return TaskStatus.overdue;
+      case 'overdue':
+        return TaskStatus.overdue;
+
       case 'Завершенная задача на проверке':
         return TaskStatus.completedUnderReview;
-      case 'Архив':
+      case 'completedUnderReview':
+        return TaskStatus.completedUnderReview;
+
+      case 'Архив задач':
+        return TaskStatus.completed;
+      case 'completed':
         return TaskStatus.completed;
 
       default:
