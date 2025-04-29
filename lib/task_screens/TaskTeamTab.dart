@@ -11,43 +11,65 @@ class TaskTeamTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Example list of employees, you should replace it with actual employee data from your task object
-    List<Employee> team = [];
-    team.addAll(task.team);
-    team.addAll(task.project!.observers);
+    final team = task.team;
+    final hasTeamMembers = team.teamMembers.isNotEmpty;
+    final hasObservers = task.project?.observers.isNotEmpty ?? false;
 
-    // Check if team has enough members before displaying them
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Check if there's at least one employee for "Постановщик"
-          if (team.isNotEmpty)
-            _buildTeamMemberSection(title: 'Постановщик', employees: [team[0]]),
+          // Постановщик (creator)
+          if (hasTeamMembers)
+            _buildTeamMemberSection(
+              title: 'Постановщик',
+              employees: [],
+              employee: _findEmployeeById(team.creatorId.userId, team.teamMembers),
+            ),
           const SizedBox(height: 16.0),
 
-          // Check if there's at least two employees for "Коммуникатор"
-          if (team.length > 1)
-            _buildTeamMemberSection(title: 'Коммуникатор', employees: [team[1]]),
+          // Коммуникатор
+          if (hasTeamMembers)
+            _buildTeamMemberSection(
+              title: 'Коммуникатор',
+              employees: [],
+              employee: _findEmployeeById(team.communicatorId.userId, team.teamMembers),
+            ),
           const SizedBox(height: 16.0),
 
-          // Check if there's at least three employees for "Исполнитель"
-          if (team.length > 2)
-            _buildTeamMemberSection(title: 'Исполнитель', employees: [team[2]]),
+          // Исполнители (все кроме creator и communicator)
+          if (team.teamMembers.length > 2)
+            _buildTeamMemberSection(
+              title: 'Исполнители',
+              employees: team.teamMembers.where((member) =>
+              member.userId != team.creatorId && member.userId != team.communicatorId
+              ).toList(),
+            ),
           const SizedBox(height: 16.0),
 
-          // Check if there are more than three employees for "Наблюдатели"
-          if (team.length > 3)
-            _buildTeamMemberSection(title: 'Наблюдатели', employees: team.sublist(3)),
+          // Наблюдатели из проекта
+          if (hasObservers)
+            _buildTeamMemberSection(
+              title: 'Наблюдатели',
+              employees: task.project!.observers,
+            ),
         ],
       ),
     );
   }
 
+  Employee? _findEmployeeById(String id, List<Employee> employees) {
+    try {
+      return employees.firstWhere((employee) => employee.userId== id);
+    } catch (e) {
+      return null;
+    }
+  }
+
   Widget _buildTeamMemberSection({
     required String title,
-    required List<Employee> employees,
+    required List<Employee> employees, Employee? employee,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,10 +79,10 @@ class TaskTeamTab extends StatelessWidget {
         for (var employee in employees)
           ListTile(
             leading: CircleAvatar(
-              backgroundImage: NetworkImage(_database.getAvatarUrl(employee.avatarUrl)),  // Assuming avatarUrl is available in Employee model
+              backgroundImage: NetworkImage(_database.getAvatarUrl(employee.avatarUrl)),
             ),
             title: Text(employee.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(employee.position),  // Assuming position is available in Employee model
+            subtitle: Text(employee.position),
           ),
       ],
     );

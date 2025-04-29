@@ -48,7 +48,8 @@ class MyApp extends StatelessWidget {
           bodyLarge: TextStyle(fontSize: 16, color: Colors.black),
           titleMedium: TextStyle(fontSize: 14, color: Colors.grey,
               fontWeight: FontWeight.bold),
-          titleSmall: TextStyle(fontSize: 14, color: Colors.grey)
+          titleSmall: TextStyle(fontSize: 14, color: Colors.grey),
+          displayMedium: TextStyle(fontSize: 13, color: Colors.grey)
         ),
       ),
       debugShowCheckedModeBanner: false,

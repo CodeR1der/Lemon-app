@@ -3,9 +3,9 @@ import 'package:task_tracker/models/employee.dart';
 class TaskTeam {
   late String teamId;
   late String taskId;
-  late String communicatorId;
-  late String creatorId;
-  final List<Employee> teamMembers;
+  late Employee communicatorId;
+  late Employee creatorId;
+  late List<Employee> teamMembers;
 
   TaskTeam({
     required this.teamId,
@@ -26,17 +26,19 @@ class TaskTeam {
 
   factory TaskTeam.fromJson(Map<String, dynamic> json) {
     return TaskTeam(
-      teamId: json['team_id'],
-      taskId: json['task_id'],
-      communicatorId: json['communicator_id'],
-      creatorId: json['creator_id'],
+      teamId: json['team_id'] as String,
+      taskId: json['task_id'] as String,
+      communicatorId: Employee.fromJson(json['communicator_id'] as Map<String, dynamic>),
+      creatorId: Employee.fromJson(json['creator_id'] as Map<String, dynamic>),
       teamMembers: json['team_members'] != null
-        ? List<Employee>.from(
-        json['team_members'].map((member) {
-      return Employee.fromJson(member['employee']);
-    }),
+          ? List<Employee>.from(
+        (json['team_members'] as List).map(
+              (member) => Employee.fromJson(member['employee_id'] as Map<String, dynamic>),
+        ),
       )
           : <Employee>[],
     );
   }
+
+  TaskTeam.empty();
 }

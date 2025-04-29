@@ -1,7 +1,7 @@
 import 'package:task_tracker/models/task_status.dart';
+import 'package:task_tracker/models/task_team.dart';
 
 import 'priority.dart';
-import 'employee.dart';
 import 'project.dart';
 
 class Task {
@@ -9,7 +9,7 @@ class Task {
   String taskName;
   String description;
   Project? project;
-  List<Employee> team;
+  TaskTeam team;
   DateTime startDate;
   DateTime endDate;
   List<String> attachments;
@@ -85,13 +85,7 @@ class Task {
       project: Project.fromJson(json['project']),
       startDate: DateTime.parse(json['start_date']),
       endDate: DateTime.parse(json['end_date']),
-      team: List<Employee>.from(
-          json['task_team'].expand((taskTeam) =>
-              (taskTeam['team_members'] as List).map((teamMember) =>
-                  Employee.fromJson(teamMember['employee'])
-              )
-          ).toList()
-      ),
+      team: (json['task_team'] as List).map((team) => TaskTeam.fromJson(team)).single,
       attachments: List<String>.from(json['attachments'] ?? []),
       audioMessage: json['audio_message'],
       videoMessage: List<String>.from(json['video_message'] ?? []),
@@ -126,19 +120,4 @@ class Task {
     videoMessage!.remove(filePath);
   }
 
-  // Метод для добавления члена команды
-  void addTeamMember(Employee employee) {
-    team.add(employee);
-  }
-
-  // Метод для удаления члена команды
-  void removeTeamMember(Employee employee) {
-    team.remove(employee);
-  }
-
-  // Метод для получения информации о задаче
-  @override
-  String toString() {
-    return 'Task: $taskName, Description: $description, Project: $project, Team: ${team.length} members, Period: $startDate : $endDate, Attachments: ${attachments.length} files, Audio: $audioMessage, Video: ${videoMessage!.length}';
-  }
 }

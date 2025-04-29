@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/models/task_team.dart';
 import 'package:uuid/uuid.dart';
 import '../models/employee.dart';
 import '../models/project.dart';
@@ -103,7 +104,7 @@ class _TaskTitleScreenState extends State<TaskTitleScreen> {
                         name: 'Тестовый проект',
                         observers: [],
                       ),
-                      team: [],
+                      team: TaskTeam.empty(),
                       startDate: DateTime.now(),
                       endDate: DateTime.now(),
                       priority: Priority.low,

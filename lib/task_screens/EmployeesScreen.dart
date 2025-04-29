@@ -3,6 +3,7 @@ import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/task_screens/DeadlineScreen.dart';
 import '../models/employee.dart';
 import '../models/task.dart';
+import '../models/task_team.dart';
 
 class EmployeeSelectionScreen extends StatefulWidget {
   final Task taskData;
@@ -10,15 +11,13 @@ class EmployeeSelectionScreen extends StatefulWidget {
   const EmployeeSelectionScreen(this.taskData, {super.key});
 
   @override
-  _EmployeeSelectionScreenState createState() =>
-      _EmployeeSelectionScreenState();
+  _EmployeeSelectionScreenState createState() => _EmployeeSelectionScreenState();
 }
 
 class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
   late Future<List<Employee>> employeesFuture;
   Employee? selectedPerformer;
   Employee? selectedCommunicator;
-  Employee? selectedObserver;
   final TaskService _database = TaskService();
 
   @override
@@ -43,11 +42,11 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
           future: employeesFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              return Center(child: Text('Ошибка загрузки сотрудников'));
+              return const Center(child: Text('Ошибка загрузки сотрудников'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text('Нет доступных сотрудников'));
+              return const Center(child: Text('Нет доступных сотрудников'));
             }
 
             final employees = snapshot.data!;
@@ -60,7 +59,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   onSelected: (Employee? employee) {
                     if (_isEmployeeAlreadySelected(employee)) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Этот сотрудник уже выбран')),
+                        const SnackBar(content: Text('Этот сотрудник уже выбран')),
                       );
                     } else {
                       setState(() {
@@ -77,50 +76,48 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   onSelected: (Employee? employee) {
                     if (_isEmployeeAlreadySelected(employee)) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Этот сотрудник уже выбран')),
+                        const SnackBar(content: Text('Этот сотрудник уже выбран')),
                       );
                     } else {
                       setState(() {
-                        selectedPerformer = employee;
+                        selectedCommunicator = employee;
                       });
                     }
                   },
                   employees: employees,
                 ),
                 const SizedBox(height: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Наблюдатели',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      // Чтобы список правильно встраивался в Column
-                      physics: const NeverScrollableScrollPhysics(),
-                      // Отключаем отдельный скроллинг
-                      itemCount: widget.taskData.project?.observers.length,
-                      itemBuilder: (context, index) {
-                        final observer =
-                            widget.taskData.project?.observers[index];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: NetworkImage(_database
-                                .getAvatarUrl(observer!.avatarUrl)),
-                          ),
-                          title: Text(
-                            observer.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(observer.position),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                if (widget.taskData.team.teamMembers.isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Текущая команда',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: widget.taskData.team.teamMembers.length,
+                        itemBuilder: (context, index) {
+                          final member = widget.taskData.team.teamMembers[index];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: NetworkImage(
+                                  _database.getAvatarUrl(member.avatarUrl)),
+                            ),
+                            title: Text(
+                              member.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(member.position),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 const Spacer(),
                 SizedBox(
                   width: double.infinity,
@@ -128,11 +125,21 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                     onPressed: () {
                       if (selectedPerformer != null &&
                           selectedCommunicator != null) {
-                        widget.taskData.team = [
-                          selectedPerformer,
-                          selectedCommunicator,
-                          selectedObserver,
-                        ].whereType<Employee>().toList();
+                        // Создаем новую команду или обновляем существующую
+                        final newTeam = TaskTeam(
+                          teamId: widget.taskData.team.teamId,
+                          taskId: widget.taskData.id,
+                          communicatorId: selectedCommunicator!,
+                          creatorId: widget.taskData.team.creatorId,
+                          teamMembers: [
+                            ...widget.taskData.team.teamMembers,
+                            selectedPerformer!,
+                            selectedCommunicator!,
+                          ],
+                        );
+
+                        widget.taskData.team = newTeam;
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -159,15 +166,13 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
 
   bool _isEmployeeAlreadySelected(Employee? employee) {
     if (employee == null) return false;
-    return employee == selectedPerformer ||
-        employee == selectedCommunicator ||
-        employee == selectedObserver;
+    return employee == selectedPerformer || employee == selectedCommunicator;
   }
 
   Widget _buildEmployeeSelectionTile({
     required String title,
     required Employee? selectedEmployee,
-    required ValueChanged<Employee?> onSelected, // Изменено на Employee?
+    required ValueChanged<Employee?> onSelected,
     required List<Employee> employees,
   }) {
     return Column(

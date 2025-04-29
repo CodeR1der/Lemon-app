@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:just_audio/just_audio.dart';
@@ -11,6 +12,8 @@ import 'package:get_thumbnail_video/index.dart';
 import 'package:get_thumbnail_video/video_thumbnail.dart';
 
 import '../models/task.dart';
+import '../models/task_status.dart';
+import '../widgets/customPlayer.dart';
 
 class TaskDescriptionTab extends StatelessWidget {
   final Task task;
@@ -32,150 +35,315 @@ class TaskDescriptionTab extends StatelessWidget {
     return await VideoThumbnail.thumbnailData(
       video: videoUrl,
       imageFormat: ImageFormat.PNG,
-      maxWidth: 128, // Размер миниатюры
+      maxWidth: 128,
       quality: 75,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Проект: ${task.project!.name}',
-              style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8.0),
-          Text('Название задачи: ${task.taskName}'),
-          const SizedBox(height: 8.0),
-          Text('Описание задачи: ${task.description}'),
-          const SizedBox(height: 16.0),
-          const Text('Фотографии:',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8.0),
-          task.attachments.where((file) => _isImage(file)).isNotEmpty
-              ? GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 8.0,
-                    mainAxisSpacing: 8.0,
+    return Container(
+      color: Colors.white, // Белый фон для всего контейнера
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Статус задачи
+            Text(
+              'Статус',
+              style: Theme.of(context).textTheme.titleSmall
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEBEDF0),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    StatusHelper.getStatusIcon(task.status),
+                    size: 16,
                   ),
-                  itemCount:
-                      task.attachments.where((file) => _isImage(file)).length,
-                  itemBuilder: (context, index) {
-                    final photo = task.attachments
-                        .where((file) => _isImage(file))
-                        .toList()[index];
+                  const SizedBox(width: 6),
+                  Text(
+                    StatusHelper.displayName(task.status),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+
+            // Проект
+            Text(
+              'Проект',
+              style: Theme.of(context).textTheme.titleSmall
+            ),
+            const SizedBox(height: 4),
+            Text(
+              task.project?.name ?? 'Не указан',
+              style: Theme.of(context).textTheme.bodyMedium
+            ),
+            const SizedBox(height: 16),
+
+            // Название задачи
+            Text(
+              'Название задачи',
+              style: Theme.of(context).textTheme.titleSmall
+            ),
+            const SizedBox(height: 4),
+            Text(
+              task.taskName,
+              style: Theme.of(context).textTheme.bodyMedium
+            ),
+            const SizedBox(height: 16),
+
+            // Описание задачи
+            Text(
+              'Описание задачи',
+              style: Theme.of(context).textTheme.titleSmall
+            ),
+            const SizedBox(height: 4),
+            Text(
+              task.description,
+              style: Theme.of(context).textTheme.bodyMedium
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                // Фотографии
+                Text(
+                    'Фотографии',
+                    style: Theme.of(context).textTheme.titleSmall
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFF9F9F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    task.attachments.length.toString(),
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            task.attachments.where((file) => _isImage(file)).isNotEmpty
+                ? GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8.0,
+                mainAxisSpacing: 8.0,
+              ),
+              itemCount: task.attachments.where((file) => _isImage(file)).length,
+              itemBuilder: (context, index) {
+                final photo = task.attachments
+                    .where((file) => _isImage(file))
+                    .toList()[index];
+                return GestureDetector(
+                  onTap: () => _openPhotoGallery(
+                    context,
+                    index,
+                    task.attachments.where((file) => _isImage(file)).toList(),
+                  ),
+                  child: Hero(
+                    tag: 'photo_$index',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: Container(
+                        color: Colors.white, // Белый фон для изображения
+                        child: Image.network(
+                          _database.getTaskAttachment(photo),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: Colors.grey.shade200,
+                                child: const Icon(Icons.broken_image, size: 32),
+                              ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            )
+                : const Text('Нет фотографий'),
+            const SizedBox(height: 16),
+
+            // Аудиозаписи
+            Text(
+              'Аудиозаписи ',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            if (task.audioMessage != null)
+              Container(
+                color: Colors.white,
+                child: AudioPlayerWidget(
+                  audioUrl: _database.getTaskAttachment(task.audioMessage!),
+                ),
+              )
+            else
+              const Text('Нет аудиозаписей'),
+            const SizedBox(height: 16),
+
+            // Видео
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                // Фотографии
+                Text(
+                    'Видео',
+                    style: Theme.of(context).textTheme.titleSmall
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFF9F9F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    task.videoMessage!.length.toString(),
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            task.videoMessage!.where((file) => _isVideo(file)).isNotEmpty
+                ? GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 8.0,
+                mainAxisSpacing: 8.0,
+              ),
+              itemCount: task.videoMessage!.where((file) => _isVideo(file)).length,
+              itemBuilder: (context, index) {
+                final video = task.videoMessage!
+                    .where((file) => _isVideo(file))
+                    .toList()[index];
+                final videoUrl = _database.getTaskAttachment(video);
+
+                return FutureBuilder<Uint8List?>(
+                  future: _generateThumbnail(videoUrl),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Container(
+                        color: Colors.white,
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (snapshot.hasError || snapshot.data == null) {
+                      return Container(
+                        color: Colors.grey.shade200,
+                        child: const Icon(Icons.broken_image, size: 32),
+                      );
+                    }
                     return GestureDetector(
-                      onTap: () => _openPhotoGallery(
+                      onTap: () => _openVideoGallery(
                         context,
                         index,
-                        task.attachments
-                            .where((file) => _isImage(file))
+                        task.videoMessage!
+                            .where((file) => _isVideo(file))
                             .toList(),
                       ),
-                      child: Hero(
-                        tag: 'photo_$index',
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8.0),
-                          child: Image.network(
-                            _database.getTaskAttachment(photo),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.broken_image, size: 32),
-                          ),
+                      child: Container(
+                        color: Colors.white, // Белый фон для видео
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
+                              child: Image.memory(
+                                snapshot.data!,
+                                fit: BoxFit.contain,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
+                            ),
+                            Icon(
+                              Iconsax.play_circle,
+                              color: const Color(0xFF049FFF),
+                              size: 48.0,
+                            ),
+                          ],
                         ),
                       ),
                     );
                   },
-                )
-              : const Text('Нет фотографий'),
-          const SizedBox(height: 16.0),
-          const Text('Аудиозаписи:',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8.0),
-          if (task.audioMessage != null)
-            AudioPlayerWidget(
-                audioUrl: _database.getTaskAttachment(task.audioMessage!))
-          else
-            const Text('Нет аудиозаписей'),
-          const SizedBox(height: 16.0),
-          const Text('Видео:', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8.0),
-          task.videoMessage!.where((file) => _isVideo(file)).isNotEmpty
-              ? GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 8.0,
-                    mainAxisSpacing: 8.0,
-                  ),
-                  itemCount:
-                      task.videoMessage!.where((file) => _isVideo(file)).length,
-                  itemBuilder: (context, index) {
-                    final video = task.videoMessage!
-                        .where((file) => _isVideo(file))
-                        .toList()[index];
-                    final videoUrl = _database.getTaskAttachment(video);
+                );
+              },
+            )
+                : const Text('Нет видео'),
+            const Divider(),
 
-                    return FutureBuilder<Uint8List?>(
-                      future: _generateThumbnail(videoUrl),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                        if (snapshot.hasError || snapshot.data == null) {
-                          return const Icon(Icons.broken_image, size: 48);
-                        }
-                        return GestureDetector(
-                          onTap: () => _openVideoGallery(
-                            context,
-                            index,
-                            task.videoMessage!
-                                .where((file) => _isVideo(file))
-                                .toList(),
-                          ),
-                          child: Hero(
-                            tag: 'video_$index',
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  child: Image.memory(
-                                    snapshot.data!,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.play_circle_fill,
-                                  color: Colors.white,
-                                  size: 48.0,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                )
-              : const Text('Нет видео'),
-        ],
+            _buildSectionItem(icon: Iconsax.clock_copy, title: 'Контрольные точки'),
+            const Divider(),
+            _buildSectionItem(icon: Iconsax.edit_copy,title:'Доработки и запросы'),
+            const Divider(),
+            _buildSectionItem(icon:Iconsax.clock_copy,title:'История задачи'),
+            const Divider(),
+          ],
+        ),
       ),
     );
   }
 
-  void _openPhotoGallery(
-      BuildContext context, int initialIndex, List<String> files) {
+  Widget _buildSectionItem({
+    required IconData icon,
+    required String title,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        child: Row(
+          children: [
+            Icon(icon, size: 24, color: Color(0xFF6D7885)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+            if(title == 'История задачи')
+              Icon(
+                Icons.chevron_right,
+                size: 24,
+                color: Colors.orange,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+  void _openPhotoGallery(BuildContext context, int initialIndex, List<String> files) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -187,8 +355,7 @@ class TaskDescriptionTab extends StatelessWidget {
     );
   }
 
-  void _openVideoGallery(
-      BuildContext context, int initialIndex, List<String> videoUrls) {
+  void _openVideoGallery(BuildContext context, int initialIndex, List<String> videoUrls) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -214,13 +381,11 @@ class PhotoGalleryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white, // Белый фон для галереи
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        elevation: 0,
       ),
       body: PhotoViewGallery.builder(
         itemCount: photos.length,
@@ -233,110 +398,18 @@ class PhotoGalleryScreen extends StatelessWidget {
         },
         scrollPhysics: const BouncingScrollPhysics(),
         loadingBuilder: (context, event) => Center(
-          child: CircularProgressIndicator(
-            value: event == null
-                ? null
-                : event.cumulativeBytesLoaded / (event.expectedTotalBytes ?? 1),
+          child: Container(
+            color: Colors.white,
+            child: CircularProgressIndicator(
+              value: event == null
+                  ? null
+                  : event.cumulativeBytesLoaded / (event.expectedTotalBytes ?? 1),
+            ),
           ),
         ),
-        backgroundDecoration: const BoxDecoration(color: Colors.black),
+        backgroundDecoration: const BoxDecoration(color: Colors.white),
       ),
     );
-  }
-}
-
-class AudioPlayerWidget extends StatefulWidget {
-  final String audioUrl;
-
-  const AudioPlayerWidget({super.key, required this.audioUrl});
-
-  @override
-  _AudioPlayerWidgetState createState() => _AudioPlayerWidgetState();
-}
-
-class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
-  late AudioPlayer _audioPlayer;
-
-  @override
-  void initState() {
-    super.initState();
-    _audioPlayer = AudioPlayer();
-    _audioPlayer.setUrl(widget.audioUrl);
-    _audioPlayer.playerStateStream.listen((playerState) {
-      // Обновляем состояние плеера, чтобы кнопка переключалась правильно
-      if (playerState.processingState == ProcessingState.completed) {
-        setState(() {
-          _audioPlayer.pause();
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        StreamBuilder<Duration>(
-          stream: _audioPlayer.positionStream, // Подписываемся на поток позиции
-          builder: (context, snapshot) {
-            final position = snapshot.data ?? Duration.zero;
-            final duration = _audioPlayer.duration ?? Duration.zero;
-            final isPlaying = _audioPlayer.playerState.playing;
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-                      onPressed: () {
-                        if (isPlaying) {
-                          _audioPlayer.pause();
-                        } else {
-                          _audioPlayer.play();
-                        }
-                      },
-                    ),
-                    Expanded(
-                      child: Slider(
-                        value: position.inMilliseconds.toDouble(),
-                        max: duration.inMilliseconds.toDouble(),
-                        min: 0.0,
-                        onChanged: (value) {
-                          _audioPlayer
-                              .seek(Duration(milliseconds: value.toInt()));
-                        },
-                      ),
-                    ),
-                    Text(_formatDuration(position)),
-                  ],
-                ),
-                if (_audioPlayer.playerState.processingState ==
-                    ProcessingState.completed)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8.0),
-                    child: Text('Завершено'),
-                  ),
-              ],
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes);
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
   }
 }
 
@@ -398,24 +471,25 @@ class _VideoGalleryScreenState extends State<VideoGalleryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        elevation: 0,
       ),
       body: PageView.builder(
         controller: _pageController,
         onPageChanged: (index) => _changeVideo(index),
         itemCount: widget.videoUrls.length,
         itemBuilder: (context, index) {
-          return Center(
-            child: _chewieController != null &&
-                    _chewieController!.videoPlayerController.value.isInitialized
-                ? Chewie(controller: _chewieController!)
-                : const CircularProgressIndicator(),
+          return Container(
+            color: Colors.white,
+            child: Center(
+              child: _chewieController != null &&
+                  _chewieController!.videoPlayerController.value.isInitialized
+                  ? Chewie(controller: _chewieController!)
+                  : const CircularProgressIndicator(),
+            ),
           );
         },
       ),

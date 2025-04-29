@@ -53,18 +53,6 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
     );
   }
 
-  Widget _buildBorders(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          height: 0.5,
-          width: MediaQuery.of(context).size.width,
-          color: Colors.grey.withOpacity(0.5),
-        ),
-      ],
-    );
-  }
-
   Widget _buildProfileSection(String title, String content) {
     bool isLink = title == 'Имя пользователя в Телеграм' ||
         title == 'Адрес страницы в VK';
@@ -255,13 +243,13 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                       children: [
                         _buildAvatar(),
                         _buildProfileSection('ФИО', widget.employee.name),
-                        _buildBorders(context),
+                        const Divider(),
                         _buildProfileSection('Должность', widget.employee.position),
-                        _buildBorders(context),
+                        const Divider(),
                         _buildProfileSection('Контактный телефон', widget.employee.phone ?? ''),
-                        _buildBorders(context),
+                        const Divider(),
                         _buildProfileSection('Имя пользователя в Телеграм', widget.employee.telegramId ?? ''),
-                        _buildBorders(context),
+                        const Divider(),
                         _buildProfileSection('Адрес страницы в VK', widget.employee.vkId ?? ''),
                       ],
                     ),

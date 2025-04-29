@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/screens/task_details_screen.dart';
 import '../models/task.dart';
 import '../models/task_status.dart';
 import '../services/task_operations.dart';
@@ -39,7 +40,14 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
   Widget _buildTaskCard(Task task) {
     return GestureDetector(
       onTap: () {
-
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskDetailsScreen(
+              task: task,
+            ),
+          ),
+        );
       },
       child: Card(
         color: Colors.white,

@@ -34,7 +34,7 @@ class Project{
           return Employee.fromJson(observer['employee']);
         }),
       )
-          : <Employee>[], // Если project_observers равен null, возвращаем пустой список
+          : <Employee>[],
     );
   }
 
