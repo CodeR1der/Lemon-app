@@ -45,7 +45,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
     _taskService = TaskService();
     _employeeService = EmployeeService();
     _projectDescription =
-        ProjectService().getProjectDescription(widget.project.projectId);
+        ProjectService().getProjectDescription(widget.project.projectDescription!.projectDescriptionId);
     _initializeData();
   }
 
@@ -63,15 +63,32 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   }
 
   Future<void> _loadTeam() async {
-    final employees = await _taskService.getUniqueEmployees(_taskList);
+    try {
+      final employees = await _taskService.getUniqueEmployees(_taskList);
 
-    if (mounted) {
-      setState(() {
-        _communicators =
-            employees.where((e) => e.role == 'Коммуникатор').toList();
-        _otherEmployees =
-            employees.where((e) => e.role != 'Коммуникатор').toList();
-      });
+      if (mounted) {
+        setState(() {
+          // Коммуникаторы - сотрудники с ролью "Коммуникатор" или те, кто указан как коммуникатор в задачах
+          _communicators = employees.where((e) =>
+          e.role == 'Коммуникатор' ||
+              _taskList.any((task) => task.team?.communicatorId?.userId == e.userId)
+          ).toList();
+
+          // Остальные участники (исключая коммуникаторов)
+          _otherEmployees = employees.where((e) =>
+          e.role != 'Коммуникатор' &&
+              !_communicators.any((c) => c.userId == e.userId)
+          ).toList();
+        });
+      }
+    } catch (e) {
+      print('Ошибка при загрузке команды: $e');
+      if (mounted) {
+        setState(() {
+          _communicators = [];
+          _otherEmployees = [];
+        });
+      }
     }
   }
 

@@ -391,47 +391,22 @@ class TaskService {
     try {
       final List<Map<String, dynamic>> response =
           await _client.from('task').select('''
-          id,
-          task_name,
-          description,
-          project:project_id (
-            project_id,
-            name,
-            avatar_url,
-            project_observers (
-              employee_id,
-              employee (
-                user_id,
-                name,
-                avatar_url,
-                position,
-                phone,
-                telegram_id,
-                vk_id,
-                role
-              )
-            )
-          ),
-          start_date,
-          end_date,
-          priority,
-          attachments,
-          audio_message,
-          video_message,
-          project_id,
-          task_team:task_team (  
-            employee:employee_id (  
-              user_id,
-              avatar_url,
-              name,
-              position,
-              phone,
-              telegram_id,
-              vk_id,
-              role
-            )
-          )
-        ''').eq('project_id', projectId);
+      *,
+      project:project_id(*,
+        project_description_id:project_description_id(*),
+        project_observers:project_observers(
+          *,
+          employee:employee_id(*)
+        )
+      ),
+      task_team: id(*,
+        creator_id:creator_id(*),
+        communicator_id:communicator_id(*),
+        team_members:team_id(*,
+          employee_id:employee_id(*)
+        )
+      )
+    ''').eq('project_id', projectId);
 
       List<Task> taskList = response.map((data) {
         return Task.fromJson(data);
@@ -445,17 +420,23 @@ class TaskService {
   }
 
   Future<List<Employee>> getUniqueEmployees(List<Task> tasks) async {
-    // Используем Set для хранения уникальных сотрудников
     final Set<Employee> uniqueEmployees = {};
-    // Проходим по каждой задаче
+
     for (final task in tasks) {
-      // Добавляем всех сотрудников из команды задачи в Set
-      //uniqueEmployees.addAll(task.team);
+      // Добавляем коммуникатора, если он есть
+      if (task.team?.communicatorId != null) {
+        uniqueEmployees.add(task.team!.communicatorId!);
+      }
+
+      // Добавляем всех членов команды
+      if (task.team?.teamMembers != null) {
+        uniqueEmployees.addAll(task.team!.teamMembers!);
+      }
     }
 
-    // Преобразуем Set обратно в List и возвращаем
     return uniqueEmployees.toList();
   }
+
 
   Future<List<Project>> getAllProjects() async {
     try {

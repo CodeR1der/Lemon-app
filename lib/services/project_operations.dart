@@ -59,13 +59,13 @@ class ProjectService {
     return Project.fromJson(response);
   }
 
-  // Получение данных описания проекта по projectId
-  Future<ProjectDescription?> getProjectDescription(String projectId) async {
+  // Получение данных описания проекта по projectDescriptionId
+  Future<ProjectDescription?> getProjectDescription(String projectDescriptionId) async {
     try {
       final response = await _client
           .from('project_description')
           .select()
-          .eq('project_id', projectId)
+          .eq('project_description_id', projectDescriptionId)
           .single() as Map<String, dynamic>;
       return ProjectDescription.fromJson(response);
     } on PostgrestException catch (error) {
