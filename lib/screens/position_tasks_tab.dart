@@ -3,20 +3,20 @@ import 'package:task_tracker/screens/tasks_list_screen.dart';
 
 import '../models/task_category.dart';
 import '../models/task_status.dart';
-import '../services/task_operations.dart';
 
 class PositionTasksTab extends StatelessWidget {
-  final String position;
-  final String employeeId;
+  final String? position;
+  final String? employeeId;
+  final String? projectId;
   final List<TaskCategory> categories;
-  final TaskService _taskOperations = TaskService();
 
-  PositionTasksTab(
-      {Key? key,
-      required this.position,
-      required this.employeeId,
-      required this.categories})
-      : super(key: key);
+  const PositionTasksTab({
+    Key? key,
+    this.position,
+    this.employeeId,
+    this.projectId,
+    required this.categories,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,10 @@ class PositionTasksTab extends StatelessWidget {
       body: ListView.separated(
         padding: const EdgeInsets.all(1.0),
         itemCount: categories.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+        separatorBuilder: (context, index) => const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0), // Добавляем отступы по бокам
+          child: Divider(),
+        ),
         itemBuilder: (context, index) {
           final category = categories[index];
           return _buildCategoryItem(context, category);
@@ -35,14 +38,11 @@ class PositionTasksTab extends StatelessWidget {
   }
 
   Widget _buildCategoryItem(BuildContext context, TaskCategory category) {
-    // Получаем иконку для статуса
     final icon = StatusHelper.getStatusIcon(category.status);
 
     return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       leading: Icon(icon, color: Colors.blue),
-      // Простая иконка без кружка
       title: Text(
         category.title,
         style: const TextStyle(fontSize: 16.0),
@@ -62,33 +62,49 @@ class PositionTasksTab extends StatelessWidget {
           ),
         ),
       ),
-      onTap: () async {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) =>
-              const Center(child: CircularProgressIndicator()),
-        );
-
-        try {
-          Navigator.of(context).pop();
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskListByStatusScreen(
-                position: position,
-                userId: employeeId,
-                status: category.status,
-              ),
-            ),
-          );
-        } catch (e) {
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка загрузки задач: ${e.toString()}')),
-          );
-        }
-      },
+      onTap: () => _handleCategoryTap(context, category),
     );
+  }
+
+  void _handleCategoryTap(BuildContext context, TaskCategory category) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      Navigator.of(context).pop();
+
+      if (projectId != null) {
+        // Навигация для проекта
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskListByStatusScreen(
+              projectId: projectId!,
+              status: category.status,
+            ),
+          ),
+        );
+      } else if (position != null && employeeId != null) {
+        // Навигация для сотрудника
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskListByStatusScreen(
+              position: position!,
+              userId: employeeId!,
+              status: category.status,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки задач: ${e.toString()}')),
+      );
+    }
   }
 }

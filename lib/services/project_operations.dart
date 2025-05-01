@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '/models/project.dart';
 import '../models/project_description.dart';
+import '../models/task_status.dart';
 
 class ProjectService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -29,19 +30,11 @@ class ProjectService {
   Future<List<Project>> getAllProjects() async {
     try {
       final response = await _client.from('project').select('''
-          project_id,
-          name,
-          avatar_url,
+          *,
+          project_description_id: project_description_id(*),
           observers:project_observers (  
             employee:employee_id (  
-              user_id,
-              avatar_url,
-              name,
-              position,
-              phone,
-              telegram_id,
-              vk_id,
-              role
+              *
             )
           )
         ''');
@@ -128,6 +121,52 @@ class ProjectService {
     }
   }
 
+  Future<Map<String, int>> getTasksByProject(String projectId) async {
+    try {
+      final tasksResponse = await _client
+          .from('task')
+          .select('''
+      *,
+      project:project_id(*,
+        project_description_id:project_description_id(*),
+        project_observers:project_observers(
+          *,
+          employee:employee_id(*)
+        )
+      ),
+      task_team: id(*,
+        creator_id:creator_id(*),
+        communicator_id:communicator_id(*),
+        team_members:team_id(*,
+          employee_id:employee_id(*)
+        )
+      )
+    ''')
+          .eq('project_id', projectId);
+
+      final statusCounts = <String, int>{};
+
+      // Инициализируем все возможные статусы с нулевым счетчиком
+      for (final status in TaskStatus.values) {
+        statusCounts[StatusHelper.displayName(status)] = 0;
+      }
+
+      // Считаем задачи по статусам
+      for (final task in tasksResponse) {
+        if (task != null && task['status'] != null) {
+          final status = task['status'] as String;
+          final taskStatus = StatusHelper.toTaskStatus(status);
+          final statusName = StatusHelper.displayName(taskStatus);
+          statusCounts[statusName] = (statusCounts[statusName] ?? 0) + 1;
+        }
+      }
+
+      return statusCounts;
+    } catch (e) {
+      print('Error getting tasks by project: $e');
+      return {};
+    }
+  }
   // Получение публичного URL для аватара проекта
   String getAvatarUrl(String? fileName) {
     return _client.storage.from('Avatars').getPublicUrl(fileName!);
@@ -174,5 +213,11 @@ class ProjectService {
       print('Error getting count of project workers: $e');
       throw Exception('Error getting count of project workers: $e');
     }
+  }
+
+  Map<String, int> _initializeEmptyStatusMap() {
+    return {
+      for (var status in TaskStatus.values) StatusHelper.displayName(status): 0
+    };
   }
 }

@@ -1,5 +1,5 @@
 class ProjectDescription {
-  late String project_description_id;
+  late String projectDescriptionId;
   late String description;
   late String goals;
   final String projectLink;
@@ -7,7 +7,7 @@ class ProjectDescription {
 
   // Конструктор
   ProjectDescription({
-    required this.project_description_id,
+    required this.projectDescriptionId,
     required this.description,
     required this.goals,
     required this.projectLink,
@@ -17,7 +17,7 @@ class ProjectDescription {
   // Преобразование объекта в JSON для хранения в Supabase
   Map<String, dynamic> toJson() {
     return {
-      'project_description_id': project_description_id,
+      'project_description_id': projectDescriptionId,
       'description': description,
       'goals': goals,
       'project_link': projectLink,
@@ -28,7 +28,7 @@ class ProjectDescription {
   // Создание объекта Employee из JSON
   factory ProjectDescription.fromJson(Map<String, dynamic> json) {
     return ProjectDescription(
-      project_description_id: json['project_description_id'],
+      projectDescriptionId: json['project_description_id'],
       description: json['description'],
       goals: json['goals'],
       projectLink: json['project_link'],

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:task_tracker/screens/position_tasks_tab.dart';
 import 'package:task_tracker/task_screens/taskTitleScreen.dart';
 
 import '../models/employee.dart';
+import '../models/project.dart';
+import '../models/task.dart';
+import '../models/task_category.dart';
 import '../services/employee_operations.dart';
+import '../services/task_categories.dart';
+import '../services/task_operations.dart';
 
 class EmployeeDetailScreen extends StatefulWidget {
   final Employee employee;
@@ -17,14 +22,48 @@ class EmployeeDetailScreen extends StatefulWidget {
 
 class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
     with SingleTickerProviderStateMixin {
-  late ScrollController _scrollController;
-  late TabController _tabController;
+  final EmployeeService _employeeService = EmployeeService();
+  final TaskService _taskService = TaskService();
+  late final ScrollController _scrollController;
+  late final TabController _tabController;
+  late Future<List<Project>> _projectsFuture;
+  List<Project> _projects = [];
+  Map<String, List<Task>> _projectTasks = {};
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController(initialScrollOffset: 0.0);
-    _tabController = TabController(length: 2, vsync: this);
+    _scrollController = ScrollController();
+    _loadProjects();
+  }
+
+  Future<void> _loadProjects() async {
+    try {
+      final projects = await _employeeService.getEmployeeProjects(widget.employee.userId);
+      final tasksMap = <String, List<Task>>{};
+
+      // Загружаем задачи для каждого проекта
+      for (final project in projects) {
+        final tasks = await _employeeService.getEmployeeTasksByProject(
+          widget.employee.userId,
+          project.projectId,
+        );
+        tasksMap[project.projectId] = tasks;
+      }
+
+      setState(() {
+        _projects = projects;
+        _projectTasks = tasksMap;
+        _tabController = TabController(length: _projects.length, vsync: this);
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки проектов: $e')),
+      );
+    }
   }
 
   @override
@@ -40,14 +79,13 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
         alignment: Alignment.centerLeft,
         child: CircleAvatar(
           radius: 50,
-          backgroundImage: widget.employee.avatarUrl != ''
+          backgroundImage: widget.employee.avatarUrl!.isNotEmpty
               ? NetworkImage(
-                  widget._employeeService
-                      .getAvatarUrl(widget.employee.avatarUrl),
-                )
+            widget._employeeService.getAvatarUrl(widget.employee.avatarUrl),
+          ) as ImageProvider
               : null,
-          child: widget.employee.avatarUrl == ''
-              ? Icon(Icons.person, size: 50)
+          child: widget.employee.avatarUrl!.isEmpty
+              ? const Icon(Icons.person, size: 50)
               : null,
         ),
       ),
@@ -55,15 +93,15 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
   }
 
   Widget _buildProfileSection(String title, String content) {
-    bool isLink = title == 'Имя пользователя в Телеграм' ||
+    final bool isLink = title == 'Имя пользователя в Телеграм' ||
         title == 'Адрес страницы в VK';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 13),
+        const SizedBox(height: 13),
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
             color: Colors.grey,
@@ -76,164 +114,69 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
             fontSize: 16,
             fontFamily: 'Roboto',
             color: isLink ? Colors.blue : Colors.black,
+            decoration: isLink ? TextDecoration.underline : null,
           ),
         ),
-        SizedBox(height: 13),
+        const SizedBox(height: 13),
       ],
     );
   }
 
-  Widget _buildTaskItem({
-    required IconData icon,
-    required String title,
-    required int count,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: Color(0xFF2688EB)),
-      title: Text(title),
-      trailing: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.grey[300],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          count.toString(),
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
+  Widget _buildProjectTab(String projectName, int taskCount) {
+    return Tab(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(projectName),
+
+        ],
       ),
     );
   }
 
-  Widget _buildS3StoresTasks() {
-    final List<Map<String, dynamic>> tasks = [
-      {
-        'icon': Iconsax.archive_tick_copy,
-        'title': 'В работе',
-        'count': 12,
-      },
-      {
-        'icon': Iconsax.timer_copy,
-        'title': 'Подходит время сдачи',
-        'count': 5,
-      },
-      {
-        'icon': Iconsax.calendar_remove_copy,
-        'title': 'Просроченные задачи',
-        'count': 2,
-      },
-      {
-        'icon': Iconsax.task_square_copy,
-        'title': 'Поставить в очередь на выполнение',
-        'count': 0,
-      },
-      {
-        'icon': Iconsax.eye_copy,
-        'title': 'Не прочитал / не понял',
-        'count': 8,
-      },
-      {
-        'icon': Iconsax.search_normal_copy,
-        'title': 'Завершенные задачи на проверке',
-        'count': 3,
-      },
-      {
-        'icon': Iconsax.microscope_copy,
-        'title': 'Наблюдатель',
-        'count': 1,
-      },
-      {
-        'icon': Iconsax.folder_open_copy,
-        'title': 'Архив задач',
-        'count': 15,
-      },
-    ];
+  Widget _buildFutureTab(String position, String employeeId) {
+    return FutureBuilder<List<TaskCategory>>(
+      future: TaskCategories().getCategories(position, employeeId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Ошибка: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('Нет данных'));
+        }
 
-    return ListView.builder(
-      shrinkWrap: true,
-      padding: EdgeInsets.zero,
-      itemCount: tasks.length,
-      itemBuilder: (context, index) {
-        final task = tasks[index];
-        return _buildTaskItem(
-          icon: task['icon'],
-          title: task['title'],
-          count: task['count'],
+        return PositionTasksTab(
+          position: position,
+          employeeId: employeeId,
+          categories: snapshot.data!,
         );
       },
     );
   }
 
-  Widget _buildPRTTasks() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        _buildTaskItem(
-          icon: Iconsax.archive_tick_copy,
-          title: 'В работе',
-          count: 7,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.timer_copy,
-          title: 'Подходит время сдачи',
-          count: 4,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.calendar_remove_copy,
-          title: 'Просроченные задачи',
-          count: 1,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.task_square_copy,
-          title: 'Поставить в очередь на выполнение',
-          count: 0,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.eye_copy,
-          title: 'Не прочитал / не понял',
-          count: 2,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.search_normal_copy,
-          title: 'Завершенные задачи на проверке',
-          count: 6,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.microscope_copy,
-          title: 'Наблюдатель',
-          count: 0,
-        ),
-        _buildTaskItem(
-          icon: Iconsax.folder_open_copy,
-          title: 'Архив задач',
-          count: 9,
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final shortName = widget.employee.name.split(' ').take(2).join(' ');
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
         children: [
           NestedScrollView(
+            controller: _scrollController,
             floatHeaderSlivers: true,
             headerSliverBuilder: (BuildContext context, bool boxIsScrolled) {
-              return <Widget>[
+              return [
                 SliverAppBar(
                   pinned: true,
                   floating: true,
                   forceElevated: boxIsScrolled,
                   backgroundColor: Colors.white,
                   flexibleSpace: FlexibleSpaceBar(
-                    title:
-                        Text(widget.employee.name.split(' ').take(2).join(' ')),
+                    title: Text(shortName),
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -251,7 +194,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                         _buildProfileSection(
                             'Контактный телефон', widget.employee.phone ?? ''),
                         const Divider(),
-                        _buildProfileSection('Имя пользователя в Телеграм',
+                        _buildProfileSection('Имя пользователя в Теле-грам',
                             widget.employee.telegramId ?? ''),
                         const Divider(),
                         _buildProfileSection(
@@ -260,28 +203,32 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                     ),
                   ),
                 ),
-                SliverPersistentHeader(
-                  delegate: _SliverAppBarDelegate(
-                    TabBar(
-                      controller: _tabController,
-                      labelColor: Color(0xFF6750A4),
-                      indicatorColor: Color(0xFF6750A4),
-                      tabs: const [
-                        Tab(text: 'S3 Stores Inc'),
-                        Tab(text: 'PRT'),
-                      ],
+                if (_projects.isNotEmpty)
+                  SliverPersistentHeader(
+                    delegate: _SliverAppBarDelegate(
+                      TabBar(
+                        controller: _tabController,
+                        isScrollable: _projects.length > 2,
+                        labelColor: const Color(0xFF6750A4),
+                        unselectedLabelColor: Colors.grey,
+                        indicatorColor: const Color(0xFF6750A4),
+                        tabs: _projects.map((project) {
+                          final taskCount = _projectTasks[project.projectId]?.length ?? 0;
+                          return _buildProjectTab(project.name, taskCount);
+                        }).toList(),
+                      ),
                     ),
+                    pinned: true,
                   ),
-                  pinned: true,
-                ),
               ];
             },
-            body: TabBarView(
+            body: _projects.isEmpty
+                ? const Center(child: Text('Сотрудник не участвует в проектах'))
+                : TabBarView(
               controller: _tabController,
-              children: <Widget>[
-                _buildS3StoresTasks(),
-                _buildPRTTasks(),
-              ],
+              children: _projects.map((project) {
+                return _buildFutureTab('Исполнитель', widget.employee.userId);
+              }).toList(),
             ),
           ),
           Positioned(
@@ -299,21 +246,17 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFFF9700), // Цвет кнопки
-                padding: EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: const Color(0xFFFF9700),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.add_circle,
-                    color: Colors.white, // Цвет иконки
-                    size: 24, // Размер иконки
-                  ),
-                  SizedBox(width: 8), // Отступ между иконкой и текстом
+                  Icon(Icons.add_circle, color: Colors.white, size: 24),
+                  SizedBox(width: 8),
                   Text(
                     'Поставить задачу',
                     style: TextStyle(

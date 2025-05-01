@@ -29,11 +29,11 @@ class MyApp extends StatelessWidget {
 
   Future<void> _initializeApp() async {
     try {
-      const userId = 'e50629e9-fef5-472f-b798-58fedc9739be';
+      const userId =
       //'e50629e9-fef5-472f-b798-58fedc9739be'; наблюдатель
       //'d1e6c36b-0fb1-4686-9ccd-a062bd95011d'; сотрудник
       //'d6c99c8b-fd07-4702-b849-71cd603eab0b'; владислав
-      //'71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; никита
+      '71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; //никита
       await UserService.to.initializeUser(userId);
     } catch (e) {
       print('Ошибка инициализации приложения: $e');
@@ -53,7 +53,10 @@ class MyApp extends StatelessWidget {
             titleMedium: TextStyle(
                 fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
             titleSmall: TextStyle(fontSize: 14, color: Colors.grey),
-            displayMedium: TextStyle(fontSize: 13, color: Colors.grey)),
+            displayMedium: TextStyle(fontSize: 13, color: Colors.grey),
+            displaySmall: TextStyle(fontSize: 12, color: Colors.grey)
+        ),
+
       ),
       debugShowCheckedModeBanner: false,
       home: FutureBuilder(

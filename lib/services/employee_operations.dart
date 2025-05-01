@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '/models/employee.dart';
 import '/models/project.dart';
+import '/models/task.dart';
 
 abstract class EmployeeDataStrategy {
   Future<Employee?> getEmployee(String userId);
@@ -118,6 +119,70 @@ class EmployeeService {
   // Получение публичного URL для аватара
   String getAvatarUrl(String? fileName) {
     return _client.storage.from('Avatars').getPublicUrl(fileName!);
+  }
+
+  Future<List<Project>> getEmployeeProjects(String employeeId) async {
+    try {
+      // Получаем проекты, где сотрудник является членом команды
+      final teamProjects = await _client.from('team_members').select('''
+          team_id,
+          task_team:team_id(
+            task_id,
+            task:task_id(
+              project_id,
+              project:project_id(*,
+              project_description_id:project_description_id(*),
+              project_observers:project_observers(
+              *,
+              employee:employee_id(*)
+              )
+             )
+            )
+          )
+          ''').eq('employee_id', employeeId);
+
+      // Объединяем все проекты и убираем дубликаты
+      final allProjects = <dynamic>{
+        ..._extractProjectsFromResponse(teamProjects),
+      }.toList();
+
+      return allProjects.map((json) => Project.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Error getting projects: $e');
+    }
+  }
+
+  Future<List<Task>> getEmployeeTasksByProject(
+      String employeeId, String projectId) async {
+    try {
+      final tasksResponse = await _client.from('task').select('''
+  *,
+  project:project_id(*,
+    project_description_id:project_description_id(*),
+    project_observers:project_observers(
+      *,
+      employee:employee_id(*)
+    )
+  ),
+  task_team:task_team(
+    *,
+    creator_id:creator_id(*),
+    communicator_id:communicator_id(*),
+    team_members:team_members(
+      *,
+      employee_id:employee_id(*)
+    )
+  )
+''')
+          .eq('project_id', projectId)
+          .eq('task_team.team_members.employee_id', employeeId);
+
+      if (tasksResponse.isEmpty) return [];
+
+      return tasksResponse.map((taskData) => Task.fromJson(taskData)).toList();
+    } catch (e) {
+      throw Exception('Error getting tasks by project: $e');
+    }
   }
 
   Future<List<Project>> getAllProjects(String employeeId) async {

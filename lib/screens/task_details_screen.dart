@@ -38,7 +38,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
         body: TabBarView(
           children: [
             TaskDescriptionTab(task: widget.task),
-            ChatTab(), // Переименовал ChatTab в TaskChatTab для единообразия
+            ChatTab(),
             TaskPeriodTab(task: widget.task),
             TaskTeamTab(task: widget.task),
           ],

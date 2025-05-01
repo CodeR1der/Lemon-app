@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../models/employee.dart';
 import '../models/task.dart';
-import '../services/task_operations.dart'; // Import the Employee model (assuming you have it)
+import '../services/task_operations.dart';
 
 class TaskTeamTab extends StatelessWidget {
   final Task task;
+  final TaskService _database = TaskService();
 
   TaskTeamTab({super.key, required this.task});
-
-  final TaskService _database = TaskService();
 
   @override
   Widget build(BuildContext context) {
@@ -17,69 +16,84 @@ class TaskTeamTab extends StatelessWidget {
     final hasTeamMembers = team.teamMembers.isNotEmpty;
     final hasObservers = task.project?.observers.isNotEmpty ?? false;
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Постановщик (creator)
-          if (hasTeamMembers)
-            _buildTeamMemberSection(
-              title: 'Постановщик',
-              employees: [team.creatorId],
-            ),
-          const SizedBox(height: 16.0),
+    return Container(
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Постановщик (creator)
+            if (hasTeamMembers)
+              _buildTeamMemberSection(
+                context: context,
+                title: 'Постановщик',
+                employees: [team.creatorId],
+              ),
 
-          // Коммуникатор
-          if (hasTeamMembers)
-            _buildTeamMemberSection(
-              title: 'Коммуникатор',
-              employees: [team.communicatorId],
-            ),
-          const SizedBox(height: 16.0),
+            // Коммуникатор
+            if (hasTeamMembers)
+              _buildTeamMemberSection(
+                context: context,
+                title: 'Коммуникатор',
+                employees: [team.communicatorId],
+              ),
 
-          // Исполнители (все кроме creator и communicator)
-          if (hasTeamMembers)
-            _buildTeamMemberSection(
-              title: 'Исполнители',
-              employees: team.teamMembers
-                  .where((member) =>
-                      member.userId != team.creatorId &&
-                      member.userId != team.communicatorId)
-                  .toList(),
-            ),
-          const SizedBox(height: 16.0),
+            // Исполнители (все кроме creator и communicator)
+            if (hasTeamMembers)
+              _buildTeamMemberSection(
+                context: context,
+                title: 'Исполнители',
+                employees: team.teamMembers
+                    .where((member) =>
+                member.userId != team.creatorId.userId &&
+                    member.userId != team.communicatorId.userId)
+                    .toList(),
+              ),
 
-          // Наблюдатели из проекта
-          if (hasObservers)
-            _buildTeamMemberSection(
-              title: 'Наблюдатели',
-              employees: task.project!.observers,
-            ),
-        ],
+            // Наблюдатели из проекта
+            if (hasObservers)
+              _buildTeamMemberSection(
+                context: context,
+                title: 'Наблюдатели',
+                employees: task.project!.observers,
+              ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildTeamMemberSection({
+    required BuildContext context,
     required String title,
     required List<Employee> employees,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 8.0),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         for (var employee in employees)
           ListTile(
+            contentPadding: EdgeInsets.zero, // Убраны внутренние отступы ListTile
             leading: CircleAvatar(
               backgroundImage:
-                  NetworkImage(_database.getAvatarUrl(employee.avatarUrl)),
+              NetworkImage(_database.getAvatarUrl(employee.avatarUrl)),
+              radius: 20,
             ),
-            title: Text(employee.name,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(employee.position),
+            title: Text(
+              employee.name,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            subtitle: Text(
+              employee.position,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade600,
+              ),
+            ),
           ),
       ],
     );

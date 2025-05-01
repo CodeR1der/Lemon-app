@@ -126,6 +126,43 @@ class TaskService {
     };
   }
 
+  Future<List<Task>> getProjectTasksByStatus({
+    required TaskStatus status,
+    required String projectId,
+  }) async {
+    try {
+      final statusString = status.toString().substring(11);
+
+      final tasksResponse = await _client.from('task').select('''
+      *,
+      project:project_id(*,
+        project_description_id:project_description_id(*),
+        project_observers:project_observers(
+          *,
+          employee:employee_id(*)
+        )
+      ),
+      task_team: id(*,
+        creator_id:creator_id(*),
+        communicator_id:communicator_id(*),
+        team_members:team_id(*,
+          employee_id:employee_id(*)
+        )
+      )
+    ''')
+          .eq('project_id', projectId)
+          .eq('status', statusString);
+
+      if (tasksResponse.isEmpty) return [];
+
+      return tasksResponse.map((taskData) => Task.fromJson(taskData)).toList();
+    } catch (e) {
+      print('Error getting project tasks by status: $e');
+      return [];
+    }
+  }
+
+
   Future<List<Task>> getTasksByStatus({
     required String position,
     required TaskStatus status,

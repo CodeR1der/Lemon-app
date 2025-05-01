@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/models/project_description.dart';
+import 'package:task_tracker/screens/position_tasks_tab.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,6 +9,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/employee.dart';
 import '../models/project.dart';
 import '../models/task.dart';
+import '../models/task_category.dart';
+import '../services/task_categories.dart';
 import '../services/task_operations.dart';
 import 'employee_details_screen.dart';
 
@@ -104,7 +107,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
         children: [
           Padding(
             padding: EdgeInsets.only(bottom: bottomPadding),
-            child: _buildTasksTab(),
+            child: _buildFutureTab(widget.project.projectId),
           ),
           Padding(
             padding: EdgeInsets.only(bottom: bottomPadding),
@@ -119,50 +122,23 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
     );
   }
 
-  Widget _buildTasksTab() {
-    final taskCategories = [
-      _TaskCategory(
-          icon: Iconsax.d_cube_scan_copy, title: 'Новые задачи', count: 9),
-      _TaskCategory(
-          icon: Iconsax.box_search_copy,
-          title: 'Подходит время сдачи',
-          count: 4),
-      _TaskCategory(
-          icon: Iconsax.task_square_copy,
-          title: 'Просроченные задачи',
-          count: 1),
-      _TaskCategory(
-          icon: Iconsax.eye_copy,
-          title: 'Поставить в очередь на выполнение',
-          count: 0),
-      _TaskCategory(
-          icon: Iconsax.stickynote_copy,
-          title: 'Не прочитал / не понял',
-          count: 2),
-      _TaskCategory(
-          icon: Iconsax.arrow_square_copy,
-          title: 'Завершенные задачи на проверке',
-          count: 6),
-      _TaskCategory(icon: Iconsax.timer_copy, title: 'Наблюдатель', count: 0),
-      _TaskCategory(icon: Iconsax.edit_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(icon: Iconsax.timer_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(
-          icon: Iconsax.arrow_square_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(
-          icon: Iconsax.calendar_remove_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(
-          icon: Iconsax.search_normal_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(
-          icon: Iconsax.calendar_copy, title: 'Архив задач', count: 9),
-      _TaskCategory(
-          icon: Iconsax.folder_open_copy, title: 'Архив задач', count: 9),
-    ];
+  Widget _buildFutureTab(String projectId) {
+    return FutureBuilder<List<TaskCategory>>(
+      future: TaskCategories().getCategoriesProject( projectId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Ошибка: ${snapshot.error}'));
+        } else if (!snapshot.hasData) {
+          return const Center(child: Text('Нет данных'));
+        }
 
-    return ListView.separated(
-      padding: EdgeInsets.zero,
-      itemCount: taskCategories.length,
-      separatorBuilder: (context, index) => _buildDivider(),
-      itemBuilder: (context, index) => _buildTaskItem(taskCategories[index]),
+        return PositionTasksTab(
+          projectId: projectId,
+          categories: snapshot.data!,
+        );
+      },
     );
   }
 

@@ -72,7 +72,10 @@ class TaskDescriptionTab extends StatelessWidget {
                 ],
               ),
             ),
-            const Divider(),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.0), // Добавляем отступы по бокам
+              child: Divider(),
+            ),
 
             // Проект
             Text('Проект', style: Theme.of(context).textTheme.titleSmall),
@@ -284,6 +287,8 @@ class TaskDescriptionTab extends StatelessWidget {
                     },
                   )
                 : const Text('Нет видео'),
+
+            const SizedBox(height: 16),
             const Divider(),
 
             _buildSectionItem(

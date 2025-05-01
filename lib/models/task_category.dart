@@ -10,4 +10,16 @@ class TaskCategory {
     required this.count,
     required this.status,
   });
+
+  TaskCategory copyWith({
+    String? title,
+    int? count,
+    TaskStatus? status,
+  }) {
+    return TaskCategory(
+      title: title ?? this.title,
+      count: count ?? this.count,
+      status: status ?? this.status,
+    );
+  }
 }

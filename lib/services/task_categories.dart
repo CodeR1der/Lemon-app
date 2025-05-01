@@ -1,3 +1,4 @@
+import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
 
 import '../models/task_category.dart';
@@ -88,6 +89,27 @@ class TaskCategories {
     // TaskCategory(title: 'Повторяющиеся задачи', count: 0, status: ),
     TaskCategory(title: 'Архив задач', count: 0, status: TaskStatus.completed),
   ];
+
+  Future<List<TaskCategory>> getCategoriesProject(String projectId) async {
+    try {
+      // Создаем копию списка категорий
+      final categories = List<TaskCategory>.from(_communicatorCategories);
+
+      // Получаем задачи проекта
+      final tasksData = await ProjectService().getTasksByProject(projectId);
+
+      // Обновляем категории с данными о количестве задач
+      return categories.map((category) {
+        final count = tasksData[StatusHelper.displayName(category.status)] ?? 0;
+        return category.copyWith(count: count);
+      }).toList();
+
+    } catch (e) {
+      print('Error getting categories: $e');
+      // В случае ошибки возвращаем пустые категории
+      return List<TaskCategory>.from(_communicatorCategories);
+    }
+  }
 
   Future<List<TaskCategory>> getCategories(
       String position, String employeeId) async {

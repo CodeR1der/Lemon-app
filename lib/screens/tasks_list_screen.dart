@@ -6,13 +6,15 @@ import '../models/task_status.dart';
 import '../services/task_operations.dart';
 
 class TaskListByStatusScreen extends StatefulWidget {
-  final String position;
-  final String userId;
+  final String? position;
+  final String? userId;
+  final String? projectId;
   final TaskStatus status;
 
   const TaskListByStatusScreen({
-    required this.position,
-    required this.userId,
+    this.position,
+    this.userId,
+    this.projectId,
     required this.status,
     Key? key,
   }) : super(key: key);
@@ -32,11 +34,18 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
   }
 
   void _loadTasks() {
-    _tasksFuture = _taskService.getTasksByStatus(
-      position: widget.position,
-      status: widget.status,
-      employeeId: widget.userId,
-    );
+    if (widget.projectId != null) {
+      _tasksFuture = _taskService.getProjectTasksByStatus(
+        status: widget.status,
+        projectId: widget.projectId!,
+      );
+    } else if (widget.userId != null && widget.position != null) {
+      _tasksFuture = _taskService.getTasksByStatus(
+        position: widget.position!,
+        status: widget.status,
+        employeeId: widget.userId!,
+      );
+    }
   }
 
   Widget _buildTaskCard(Task task) {
