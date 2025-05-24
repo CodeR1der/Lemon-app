@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/screens/correction_screen.dart';
+import 'package:task_tracker/screens/queue_screen.dart';
 import 'package:task_tracker/services/correction_operation.dart';
 import 'package:task_tracker/widgets/revision_section.dart';
 
@@ -124,7 +125,37 @@ class TaskLayoutBuilder extends StatelessWidget {
                 const Divider(),
                 _buildSectionItem(
                     icon: Iconsax.clock_copy, title: 'История задачи'),
-                const Divider(),
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      task.changeStatus(TaskStatus.notRead);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: Colors.grey, width: 1),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Выставить в очередь на выполнение',
+                          style: TextStyle(
+                            color: Colors.black, // Белый текст
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+
               ]);
             case TaskRole.creator:
               return Column(
@@ -388,7 +419,8 @@ class TaskLayoutBuilder extends StatelessWidget {
           }
 
           final revisions = snapshot.data ?? [];
-          final notDoneRevision = revisions.where((revision) => !revision.isDone).first;
+          final notDoneRevision =
+              revisions.where((revision) => !revision.isDone).first;
 
           switch (role) {
             case TaskRole.executor:
@@ -407,12 +439,16 @@ class TaskLayoutBuilder extends StatelessWidget {
                 Column(children: [
                   ElevatedButton(
                     onPressed: () {
-                      CorrectionService().updateCorrection(notDoneRevision..isDone=true);
-                      
-                      CorrectionService().addCorrection( Correction(date: DateTime.now(), taskId: task.id, status: TaskStatus.needExplanation, description: 'Прислать письмо-решение'));
+                      CorrectionService()
+                          .updateCorrection(notDoneRevision..isDone = true);
+
+                      CorrectionService().addCorrection(Correction(
+                          date: DateTime.now(),
+                          taskId: task.id,
+                          status: TaskStatus.needExplanation,
+                          description: 'Прислать письмо-решение'));
 
                       task.changeStatus(TaskStatus.needTicket);
-
                       print('Жалоба на некорректную постановку задачи');
                     },
                     style: ElevatedButton.styleFrom(
@@ -445,7 +481,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                     },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      side: const BorderSide(color:  Colors.orange, width: 1),
+                      side: const BorderSide(color: Colors.orange, width: 1),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -490,14 +526,83 @@ class TaskLayoutBuilder extends StatelessWidget {
   }
 
   Widget _buildInOrderLayout(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.purple.shade50, Colors.white],
-        ),
-      ),
-      child: _buildCommonLayout(context),
-    );
+    return FutureBuilder<List<Correction>>(
+        future: _loadCorrections(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          }
+
+          final revisions = snapshot.data ?? [];
+
+
+          switch (role) {
+            case TaskRole.executor:
+              return Column();
+            case TaskRole.communicator:
+              return Column(children: [
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'Контрольные точки'),
+                const Divider(),
+                _buildSectionItem(
+                    icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                const Divider(),
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'История задачи'),
+                const Divider(),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => QueueScreen(task: task),
+                      ),
+                    );
+                    print('Жалоба на некорректную постановку задачи');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(width: 8),
+                      Text(
+                        'Выставить в очередь',
+                        style: TextStyle(
+                          color: Colors.white, // Белый текст
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ]);
+            case TaskRole.creator:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                      icon: Iconsax.clock_copy, title: 'История задачи'),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.none:
+              // TODO: Handle this case.
+              throw UnimplementedError();
+          }
+        });
   }
 
   Widget _buildAtWorkLayout(BuildContext context) {

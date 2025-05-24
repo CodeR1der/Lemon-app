@@ -16,6 +16,7 @@ class Task {
   List<String> attachments;
   String? audioMessage;
   List<String>? videoMessage;
+  String? queuePosition;
   Priority priority;
   TaskStatus status;
 
@@ -67,6 +68,7 @@ class Task {
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
       'priority': priority.displayName,
+      'queue_position': queuePosition,
       'attachments': attachments,
       'audio_message': audioMessage,
       'video_message': videoMessage,
