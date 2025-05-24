@@ -36,6 +36,8 @@ class TaskLayoutBuilder extends StatelessWidget {
         return _buildNotReadLayout(context);
       case TaskStatus.needExplanation:
         return _buildNeedExplanationLayout(context);
+      case TaskStatus.needTicket:
+        return _buildNeedTicketLayout(context);
       case TaskStatus.inOrder:
         return _buildInOrderLayout(context);
       case TaskStatus.atWork:
@@ -62,6 +64,7 @@ class TaskLayoutBuilder extends StatelessWidget {
           }
 
           final revisions = snapshot.data ?? [];
+
           switch (role) {
             case TaskRole.executor:
               return Column(
@@ -82,24 +85,59 @@ class TaskLayoutBuilder extends StatelessWidget {
                 if (revisions.isNotEmpty &&
                     revisions.any((revision) => !revision.isDone))
                   RevisionsCard(revisions: revisions, task: task, role: role)
-                else
+                else ...[
                   _buildSectionItem(
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 0, vertical: 8.0),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CorrectionScreen(task: task),
+                          ),
+                        );
+                        print('Жалоба на некорректную постановку задачи');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(width: 8),
+                          Text(
+                            'Задача поставлена плохо / некорректно',
+                            style: TextStyle(
+                              color: Colors.white, // Белый текст
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                const Divider(),
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'История задачи'),
+                const Divider(),
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 16.0),
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CorrectionScreen(task: task),
-                        ),
-                      );
-                      print('Жалоба на некорректную постановку задачи');
+                      task.changeStatus(TaskStatus.notRead);
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: Colors.grey, width: 1),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -111,9 +149,9 @@ class TaskLayoutBuilder extends StatelessWidget {
                       children: [
                         SizedBox(width: 8),
                         Text(
-                          'Задача поставлена плохо / некорректно',
+                          'Принять',
                           style: TextStyle(
-                            color: Colors.white, // Белый текст
+                            color: Colors.black, // Белый текст
                             fontSize: 16,
                           ),
                         ),
@@ -121,9 +159,6 @@ class TaskLayoutBuilder extends StatelessWidget {
                     ),
                   ),
                 ),
-                const Divider(),
-                _buildSectionItem(
-                    icon: Iconsax.clock_copy, title: 'История задачи'),
                 const Divider(),
               ]);
             case TaskRole.creator:
@@ -157,6 +192,8 @@ class TaskLayoutBuilder extends StatelessWidget {
         }
 
         final revisions = snapshot.data ?? [];
+        final notDoneRevision =
+            revisions.where((revision) => !revision.isDone).first;
 
         switch (role) {
           case TaskRole.executor:
@@ -179,11 +216,15 @@ class TaskLayoutBuilder extends StatelessWidget {
                   title: 'Контрольные точки',
                 ),
                 const Divider(),
-                RevisionsCard(revisions: revisions, task: task, role: role),
+                if (notDoneRevision.status != TaskStatus.newTask) ...[
+                  RevisionsCard(revisions: revisions, task: task, role: role),
+                ] else
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                 const Divider(),
                 _buildSectionItem(
-                  icon: Iconsax.edit_copy,
-                  title: 'Дополнительные запросы',
+                  icon: Iconsax.clock_copy,
+                  title: 'История задачи',
                 ),
               ],
             );
@@ -202,7 +243,6 @@ class TaskLayoutBuilder extends StatelessWidget {
                   icon: Iconsax.clock_copy,
                   title: 'История задачи',
                 ),
-                const Divider(),
               ],
             );
 
@@ -388,7 +428,8 @@ class TaskLayoutBuilder extends StatelessWidget {
           }
 
           final revisions = snapshot.data ?? [];
-          final notDoneRevision = revisions.where((revision) => !revision.isDone).first;
+          final notDoneRevision =
+              revisions.where((revision) => !revision.isDone).first;
 
           switch (role) {
             case TaskRole.executor:
@@ -407,9 +448,14 @@ class TaskLayoutBuilder extends StatelessWidget {
                 Column(children: [
                   ElevatedButton(
                     onPressed: () {
-                      CorrectionService().updateCorrection(notDoneRevision..isDone=true);
-                      
-                      CorrectionService().addCorrection( Correction(date: DateTime.now(), taskId: task.id, status: TaskStatus.needExplanation, description: 'Прислать письмо-решение'));
+                      CorrectionService()
+                          .updateCorrection(notDoneRevision..isDone = true);
+
+                      CorrectionService().addCorrection(Correction(
+                          date: DateTime.now(),
+                          taskId: task.id,
+                          status: TaskStatus.needExplanation,
+                          description: 'Прислать письмо-решение'));
 
                       task.changeStatus(TaskStatus.needTicket);
 
@@ -445,7 +491,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                     },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      side: const BorderSide(color:  Colors.orange, width: 1),
+                      side: const BorderSide(color: Colors.orange, width: 1),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -466,6 +512,61 @@ class TaskLayoutBuilder extends StatelessWidget {
                     ),
                   ),
                 ]),
+                const Divider(),
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'История задачи'),
+                const Divider(),
+              ]);
+            case TaskRole.creator:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                      icon: Iconsax.clock_copy, title: 'История задачи'),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.none:
+              // TODO: Handle this case.
+              throw UnimplementedError();
+          }
+        });
+  }
+
+  Widget _buildNeedTicketLayout(BuildContext context) {
+    return FutureBuilder<List<Correction>>(
+        future: _loadCorrections(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          }
+
+          final revisions = snapshot.data ?? [];
+          final notDoneRevision =
+              revisions.where((revision) => !revision.isDone).first;
+
+          switch (role) {
+            case TaskRole.executor:
+              return Column(children: [
+                RevisionsCard(revisions: revisions, task: task, role: role),
+                const Divider(),
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'История задачи'),
+                const Divider(),
+              ]);
+            case TaskRole.communicator:
+              return Column(children: [
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'Контрольные точки'),
+                const Divider(),
+                _buildSectionItem(
+                    icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                 const Divider(),
                 _buildSectionItem(
                     icon: Iconsax.clock_copy, title: 'История задачи'),

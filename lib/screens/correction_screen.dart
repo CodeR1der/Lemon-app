@@ -9,10 +9,12 @@ import '../models/task_status.dart';
 
 class CorrectionScreen extends StatefulWidget {
   final Task task;
+  final Correction? prevCorrection;
 
   const CorrectionScreen({
     super.key,
     required this.task,
+    this.prevCorrection,
   });
 
   @override
@@ -55,12 +57,18 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
 
       await CorrectionService().addCorrection(correction);
 
-      if (widget.task.status == TaskStatus.newTask) {
-        await widget.task.changeStatus(TaskStatus.revision);
-      } else if (widget.task.status == TaskStatus.notRead) {
+      if (widget.task.status == TaskStatus.notRead) {
         await widget.task.changeStatus(TaskStatus.needExplanation);
+      } else {
+        if (widget.task.status == TaskStatus.needTicket) {
+          CorrectionService()
+              .updateCorrection(widget.prevCorrection!..isDone = true);
+        }
+        await widget.task.changeStatus(TaskStatus.revision);
+
+        CorrectionService().updateCorrection(correction);
       }
-        // 4. Показываем уведомление
+      // 4. Показываем уведомление
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Задача отправлена на доработку')),
       );
@@ -81,20 +89,31 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text('Задача поставлена плохо / некорректно'),
+        title: Text(_getAppBarTitle(widget.task.status)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Описание ошибок
-          const Text(
-            'Описание ошибок в постановке задачи',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+          if (widget.task.status == TaskStatus.needTicket) ...[
+            const Text(
+              'Решение',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
+          ] else ...[
+            const Text(
+              'Описание ошибок в постановке задачи',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
 
           // Поле ввода описания
           Container(
@@ -113,8 +132,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
                 decoration: const InputDecoration(
                   contentPadding: EdgeInsets.all(12),
                   border: InputBorder.none,
-                  hintText:
-                      'Опишите подробно, что именно сделано неправильно...',
+                  hintText: 'Описание',
                   hintStyle: TextStyle(color: Colors.grey),
                 ),
                 onChanged: (text) {
@@ -136,7 +154,8 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
             ),
           ),
 
-          if (widget.task.status == TaskStatus.newTask) ...[
+          if (widget.task.status == TaskStatus.newTask ||
+              widget.task.status == TaskStatus.needTicket) ...[
             const SizedBox(height: 24),
             // Секция с прикрепленными файлами
             if (_attachments.isNotEmpty) ...[
@@ -209,7 +228,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: const Text('Отправить на доработку'),
+          child: const Text('Отправить'),
         ),
       ),
     );
@@ -219,5 +238,20 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
   void dispose() {
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  String _getAppBarTitle(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.newTask || TaskStatus.needExplanation:
+        return "Задача поставлена плохо / некорректно";
+      case TaskStatus.needTicket:
+        return "Письмо-решение";
+      case TaskStatus.notRead:
+        return "Причина разъяснения";
+      case TaskStatus.needTicket:
+        return "Письмо-решение";
+      default:
+        return "Письмо-решение";
+    }
   }
 }
