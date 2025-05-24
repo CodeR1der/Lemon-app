@@ -189,23 +189,35 @@ class EmployeeService {
     try {
       // Получаем проекты, где сотрудник является членом команды
       final teamProjects = await _client.from('team_members').select('''
-          team_id,
-          task_team:team_id(
-            task_id,
-            task:task_id(
-              project_id,
-              project:project_id(*)
+        team_id,
+        task_team:team_id(
+          task_id,
+          task:task_id(
+            project_id,
+            project:project_id(*,
+              project_description_id:project_description_id(*),
+              project_observers:project_observers(
+                *,
+                employee:employee_id(*)
+              )
             )
           )
-          ''').eq('employee_id', employeeId);
+        )
+        ''').eq('employee_id', employeeId);
 
       // Получаем проекты, где сотрудник является коммуникатором
       final communicatorProjects = await _client.from('task_team').select('''
-          task_id,
-          task:task_id(
-            project_id
-            project:project_id(*)
+        task_id,
+        task:task_id(
+          project_id
+          project:project_id(*,
+            project_description_id:project_description_id(*),
+            project_observers:project_observers(
+              *,
+              employee:employee_id(*)
+            )
           )
+        )
         ''').eq('communicator_id', employeeId);
 
       // Получаем проекты, где сотрудник является создателем
@@ -213,16 +225,37 @@ class EmployeeService {
           task_id,
           task:task_id(
             project_id
-            project:project_id(*)
+            project:project_id(*,
+              project_description_id:project_description_id(*),
+              project_observers:project_observers(
+                *,
+                employee:employee_id(*)
+              )
+            )
           )
         ''').eq('creator_id', employeeId);
+
+      final observerProjects =
+          await _client.from('project_observers').select('''
+          project_id,
+          project:project_id(*,
+            project_description_id:project_description_id(*),
+            project_observers:project_observers(
+              *,
+              employee:employee_id(*)
+            )
+          )
+        ''').eq('employee_id', employeeId);
 
       // Объединяем все проекты и убираем дубликаты
       final allProjects = <dynamic>{
         ..._extractProjectsFromResponse(teamProjects),
         ..._extractProjectsFromResponse(communicatorProjects),
         ..._extractProjectsFromResponse(creatorProjects),
+        ..._extractProjectsFromResponse(observerProjects),
       }.toList();
+
+      //observerProjects.map((obs) => allProjects.add(obs['project']));
 
       return allProjects.map((json) => Project.fromJson(json)).toList();
     } catch (e) {
@@ -241,6 +274,8 @@ class EmployeeService {
         }
       } else if (item['task'] != null && item['task']['project'] != null) {
         projects.add(item['task']['project']);
+      } else if (item['project'] != null) {
+        projects.add(item['project']);
       }
     }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/screens/project_details_screen.dart';
 import 'package:task_tracker/screens/tasks_list_screen.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/project_operations.dart';
@@ -9,6 +10,7 @@ import '../models/project.dart';
 import '../models/task_category.dart';
 import '../models/task_status.dart';
 import '../services/task_categories.dart';
+import 'employee_details_screen.dart';
 import '../task_screens/taskTitleScreen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,12 +23,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<ProjectInformation> _projects = [];
   List<Employee> _employees = [];
+  late final Future<List<TaskCategory>> _categoriesFuture;
 
   @override
   void initState() {
     super.initState();
     _loadProjects();
     _loadEmployees();
+    _categoriesFuture = TaskCategories().getCategories(
+      'Исполнитель',
+      UserService.to.currentUser!.userId,
+    );
   }
 
   Future<void> _loadProjects() async {
@@ -437,49 +444,69 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildEmployeeCell(Employee employee) {
-    return SizedBox(
-      width: 120, // Фиксированная ширина каждой ячейки
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 12),
-            CircleAvatar(
-              radius: 34,
-              backgroundImage: (employee.avatarUrl != null &&
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmployeeDetailScreen(employee: employee),
+          ),
+        );
+      },
+      child: SizedBox(
+        width: 120,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 12),
+              // Фиксированный контейнер для аватарки
+              SizedBox(
+                height: 68, // Радиус 34 * 2
+                child: CircleAvatar(
+                  radius: 34,
+                  backgroundImage: (employee.avatarUrl != null &&
                       employee.avatarUrl!.isNotEmpty)
-                  ? NetworkImage(
-                      ProjectService().getAvatarUrl(employee.avatarUrl!),
-                    )
-                  : null,
-              child: (employee.avatarUrl == null || employee.avatarUrl!.isEmpty)
-                  ? const Icon(Icons.account_box, size: 34)
-                  : null,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              employee.name.split(' ').take(2).join(' '),
-              style: const TextStyle(
-                fontWeight: FontWeight.normal,
-                fontSize: 12,
+                      ? NetworkImage(
+                    ProjectService().getAvatarUrl(employee.avatarUrl!) ?? '',
+                  )
+                      : null,
+                  child: (employee.avatarUrl == null ||
+                      employee.avatarUrl!.isEmpty)
+                      ? const Icon(Icons.account_box, size: 34)
+                      : null,
+                ),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
+              const SizedBox(height: 12),
+              // Фиксированная высота для имени (2 строки)
+              SizedBox(
+                height: 32, // Примерная высота для 2 строк текста
+                child: Text(
+                  employee.name.split(' ').take(2).join(' '),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.normal,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Фиксированная высота для должности
+              SizedBox(
+                height: 20, // Примерная высота для 1 строки текста
+                child: Text(
                   employee.position,
                   style: const TextStyle(fontSize: 10),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -527,64 +554,75 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProjectCell(ProjectInformation project) {
-    return SizedBox(
-      width: 150, // Фиксированная ширина каждой ячейки
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 10,
-              spreadRadius: 2,
+    return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ProjectDetailsScreen(project: project.project),
             ),
-          ],
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 12),
-            CircleAvatar(
-              radius: 17,
-              backgroundImage: (project.project.avatarUrl != null &&
-                      project.project.avatarUrl!.isNotEmpty)
-                  ? NetworkImage(
-                      ProjectService()
-                              .getAvatarUrl(project.project.avatarUrl!),
-                    )
-                  : null,
-              child: (project.project.avatarUrl == null ||
-                      project.project.avatarUrl!.isEmpty)
-                  ? const Icon(Icons.account_box, size: 17)
-                  : null,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              project.project.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.account_circle_sharp, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  project.employees.toString(),
-                  style: const TextStyle(fontSize: 14),
+          );
+        },
+        child: SizedBox(
+          width: 150, // Фиксированная ширина каждой ячейки
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 10,
+                  spreadRadius: 2,
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+                CircleAvatar(
+                  radius: 17,
+                  backgroundImage: (project.project.avatarUrl != null &&
+                          project.project.avatarUrl!.isNotEmpty)
+                      ? NetworkImage(
+                          ProjectService()
+                                  .getAvatarUrl(project.project.avatarUrl!) ??
+                              '',
+                        )
+                      : null,
+                  child: (project.project.avatarUrl == null ||
+                          project.project.avatarUrl!.isEmpty)
+                      ? const Icon(Icons.account_box, size: 17)
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  project.project.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.account_circle_sharp, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      project.employees.toString(),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ));
   }
 }
 

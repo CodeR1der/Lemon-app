@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/screens/correction_screen.dart';
+import 'package:task_tracker/services/correction_operation.dart';
+import 'package:task_tracker/widgets/revision_section.dart';
 
+import '../models/correction.dart';
 import '../models/task.dart';
 import '../models/task_role.dart';
 import '../models/task_status.dart';
@@ -15,6 +18,12 @@ class TaskLayoutBuilder extends StatelessWidget {
     required this.task,
     required this.role,
   });
+
+  Future<List<Correction>> _loadCorrections() {
+    final corrections = CorrectionService().getCorrection(task.id, task.status);
+
+    return corrections;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +49,16 @@ class TaskLayoutBuilder extends StatelessWidget {
   Widget _buildNewTaskLayout(BuildContext context) {
     switch (role) {
       case TaskRole.executor:
-        // TODO: Handle this case.
-        throw UnimplementedError();
+        return Column(
+          children: [
+            _buildSectionItem(
+                icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+            const Divider(),
+            _buildSectionItem(
+                icon: Iconsax.clock_copy, title: 'История задачи'),
+            const Divider(),
+          ],
+        );
       case TaskRole.communicator:
         return Column(children: [
           _buildSectionItem(
@@ -56,8 +73,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        CorrectionScreen(task: task),
+                    builder: (context) => CorrectionScreen(task: task),
                   ),
                 );
                 print('Жалоба на некорректную постановку задачи');
@@ -90,8 +106,16 @@ class TaskLayoutBuilder extends StatelessWidget {
           const Divider(),
         ]);
       case TaskRole.creator:
-        // TODO: Handle this case.
-        throw UnimplementedError();
+        return Column(
+          children: [
+            _buildSectionItem(
+                icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+            const Divider(),
+            _buildSectionItem(
+                icon: Iconsax.clock_copy, title: 'История задачи'),
+            const Divider(),
+          ],
+        );
       case TaskRole.none:
         // TODO: Handle this case.
         throw UnimplementedError();
@@ -99,13 +123,80 @@ class TaskLayoutBuilder extends StatelessWidget {
   }
 
   Widget _buildRevisionLayout(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.orange.shade50, Colors.white],
-        ),
-      ),
-      child: _buildCommonLayout(context),
+    return FutureBuilder<List<Correction>>(
+      future: _loadCorrections(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('Ошибка: ${snapshot.error}'));
+        }
+
+        final revisions = snapshot.data ?? [];
+
+        switch (role) {
+          case TaskRole.executor:
+            return Column(
+              children: [
+                _buildSectionItem(
+                  icon: Iconsax.clock_copy,
+                  title: 'Контрольные точки',
+                ),
+                const Divider(),
+                RevisionsCard(revisions: revisions),
+              ],
+            );
+
+          case TaskRole.communicator:
+            return Column(
+              children: [
+                _buildSectionItem(
+                  icon: Iconsax.clock_copy,
+                  title: 'Контрольные точки',
+                ),
+                const Divider(),
+                RevisionsCard(revisions: revisions),
+                const Divider(),
+                _buildSectionItem(
+                  icon: Iconsax.edit_copy,
+                  title: 'Дополнительные запросы',
+                ),
+              ],
+            );
+
+          case TaskRole.creator:
+            return Column(
+              children: [
+                _buildSectionItem(
+                  icon: Iconsax.clock_copy,
+                  title: 'Контрольные точки',
+                ),
+                const Divider(),
+                RevisionsCard(revisions: revisions),
+                const Divider(),
+                _buildSectionItem(
+                  icon: Iconsax.clock_copy,
+                  title: 'История задачи',
+                ),
+                const Divider(),
+              ],
+            );
+
+          case TaskRole.none:
+            return Column(
+              children: [
+                _buildSectionItem(
+                  icon: Iconsax.clock_copy,
+                  title: 'История задачи',
+                ),
+                const Divider(),
+                RevisionsCard(revisions: revisions),
+              ],
+            );
+        }
+      },
     );
   }
 

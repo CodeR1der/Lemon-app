@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:task_tracker/services/correction_operation.dart';
 
 import '../models/correction.dart';
 import '../models/task.dart';
@@ -9,7 +10,7 @@ import '../models/task_status.dart';
 class CorrectionScreen extends StatefulWidget {
   final Task task;
 
-  const CorrectionScreen({
+  const  CorrectionScreen({
     super.key,
     required this.task,
   });
@@ -37,11 +38,13 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
   }
 
   Correction _createCorrection() {
-    return Correction()
-      ..date = DateTime.now()
-      ..taskId = widget.task.id
-      ..body = _descriptionController.text
-      ..attachments = _attachments;
+    return Correction(
+        date: DateTime.now(),
+        taskId: widget.task.id,
+        description: _descriptionController.text,
+        attachments: _attachments,
+        isDone: false,
+        status: widget.task.status);
   }
 
   void _submitCorrection() async {
@@ -50,11 +53,9 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
     try {
       final correction = _createCorrection();
 
-      // 2. Меняем статус задачи
-      await widget.task.changeStatus(TaskStatus.revision);
+      await CorrectionService().addCorrection(correction);
 
-      // 3. Сохраняем рекламацию (если нужно)
-      // await _saveCorrectionToDatabase(correction);
+      await widget.task.changeStatus(TaskStatus.revision);
 
       // 4. Показываем уведомление
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,7 +63,13 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
       );
 
       // 5. Закрываем экран и возвращаем результат
-      Navigator.pop(context, correction);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              CorrectionScreen(task: widget.task),
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Ошибка: ${e.toString()}')),
@@ -109,7 +116,8 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
                   decoration: const InputDecoration(
                     contentPadding: EdgeInsets.all(12),
                     border: InputBorder.none,
-                    hintText: 'Опишите подробно, что именно сделано неправильно...',
+                    hintText:
+                    'Опишите подробно, что именно сделано неправильно...',
                     hintStyle: TextStyle(color: Colors.grey),
                   ),
                   onChanged: (text) {

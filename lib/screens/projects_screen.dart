@@ -42,9 +42,9 @@ class _ProjectScreenState extends State<ProjectScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: _projects.isEmpty
-            ? Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator())
             : GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
@@ -59,7 +59,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
                             color: Colors.black12,
                             blurRadius: 10,
@@ -82,7 +82,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                       .getAvatarUrl(project.avatarUrl))
                                   : null,
                               child: project.avatarUrl == null
-                                  ? Icon(Icons.business,
+                                  ? const Icon(Icons.business,
                                       size: 20, color: Colors.grey)
                                   : null,
                             ),
@@ -94,7 +94,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                             // Отступы вокруг текста
                             child: Text(
                               project.name,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),

@@ -29,14 +29,13 @@ class ProjectService {
   // Получение списка всех проектов
   Future<List<Project>> getAllProjects() async {
     try {
-      final response = await _client.from('project').select('''
+      final response = await _client.from('project').select('''*,
+        project_description_id:project_description_id(*),
+        project_observers:project_observers(
           *,
-          project_description_id: project_description_id(*),
-          observers:project_observers (  
-            employee:employee_id (  
-              *
-            )
-          )
+          employee:employee_id(*)
+        )
+      )
         ''');
 
       List<Project> projectList = (response as List<dynamic>).map((data) {
@@ -182,7 +181,12 @@ class ProjectService {
           )
           ''').eq('project_id', projectId);
 
-      if (teamResponce.isEmpty) {
+      final observersResponse = await _client
+          .from('project_observers')
+          .select('employee_id')
+          .eq('project_id', projectId);
+
+      if ((teamResponce == null || teamResponce.isEmpty) && (observersResponse == null || observersResponse.isEmpty)) {
         return 0;
       }
 
@@ -205,6 +209,13 @@ class ProjectService {
               }
             }
           }
+        }
+      }
+
+      for (final obs in observersResponse) {
+        final employeeId = obs['employee_id'];
+        if (employeeId != null) {
+          uniqueWorkerIds.add(employeeId);
         }
       }
 

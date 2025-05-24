@@ -58,16 +58,16 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     return Row(
       children: [
         Icon(icon, size: 16, color: Colors.grey),
-        SizedBox(width: 4),
+        const SizedBox(width: 4),
         Text(
           count.toString(),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
             color: Colors.black54,
           ),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
       ],
     );
   }
@@ -78,7 +78,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          SizedBox(height: 40),
+          const SizedBox(height: 40),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             // Уменьшен до горизонтального отступа
@@ -86,7 +86,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Поиск',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
                 ),
@@ -105,7 +105,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                         ? NetworkImage(
                             _employeeService.getAvatarUrl(employee.avatarUrl))
                         : null,
-                    child: employee.avatarUrl == '' ? Icon(Icons.person) : null,
+                    child: employee.avatarUrl == '' ? const Icon(Icons.person) : null,
                   ),
                   title: Text(employee.name,
                       style: Theme.of(context).textTheme.bodyLarge),
@@ -114,13 +114,13 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                     children: [
                       Text(
                         employee.position,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.black38,
                           fontSize: 13,
                           fontFamily: 'Roboto',
                         ),
                       ),
-                      SizedBox(height: 4), // Отступ между текстом и иконками
+                      const SizedBox(height: 4), // Отступ между текстом и иконками
                       _buildEmployeeIcons(employee),
                     ],
                   ),

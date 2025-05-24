@@ -25,7 +25,7 @@ class TaskService {
       *
     )
   ),
-  task_team: task_id(
+  task_team: task_team!task_team_task_id_fkey(
     *,
     employee: creator_id(*),
     employee: communicator_id(*),
@@ -142,7 +142,7 @@ class TaskService {
           employee:employee_id(*)
         )
       ),
-      task_team: id(*,
+      task_team: task_id(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
         team_members:team_id(*,
@@ -192,7 +192,7 @@ class TaskService {
           employee:employee_id(*)
         )
       ),
-      task_team: id(*,
+      task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
         team_members:team_id(*,
@@ -225,7 +225,7 @@ class TaskService {
           employee:employee_id(*)
         )
       ),
-      task_team: id(*,
+      task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
         team_members:team_id(*,
@@ -259,7 +259,7 @@ class TaskService {
           employee:employee_id(*)
         )
       ),
-      task_team: id(*,
+      task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
         team_members:team_id(*,
@@ -292,7 +292,7 @@ class TaskService {
           employee:employee_id(*)
         )
       ),
-      task_team: id(*,
+      task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
         team_members:team_id(*,
