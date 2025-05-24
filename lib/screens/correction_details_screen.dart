@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../models/correction.dart';
+import '../models/task.dart';
+import '../models/task_status.dart';
 import '../services/correction_operation.dart';
 import '../task_screens/TaskDescriptionTab.dart';
+import '../task_screens/taskTitleScreen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {  // Добавлено наследование
   final Correction correction;
-
-  const CorrectionDetailsScreen({super.key, required this.correction});  // Добавлен const конструктор
+  final Task task;
+  const CorrectionDetailsScreen({super.key, required this.correction, required this.task});  // Добавлен const конструктор
 
   bool _isImage(String fileName) {
     return fileName.endsWith('.jpg') ||
@@ -130,9 +133,80 @@ class CorrectionDetailsScreen extends StatelessWidget {  // Добавлено �
                   );
                 },
               ),
+
+            const SizedBox(height: 12),
+
           ],
         ),
       ),
+        bottomSheet: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Первая кнопка
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    task.changeStatus(TaskStatus.newTask);
+                    Navigator.pop(
+                      context,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    'Принять',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Вторая кнопка
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Другое действие
+                    Navigator.pop(
+                      context,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.grey,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    'Отредактировать задачу',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8), // Дополнительный отступ снизу
+            ],
+          ),
+        )
     );
   }
 

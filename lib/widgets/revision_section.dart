@@ -4,12 +4,14 @@ import 'package:intl/intl.dart';
 import 'package:task_tracker/models/correction.dart';
 import 'package:task_tracker/screens/correction_details_screen.dart';
 
+import '../models/task.dart';
 import '../screens/correction_screen.dart';
 
 class RevisionsCard extends StatelessWidget {
   final List<Correction> revisions;
+  final Task task;
 
-  const RevisionsCard({super.key, required this.revisions});
+  const RevisionsCard({super.key, required this.revisions, required this.task});
 
   @override
   Widget build(BuildContext context) {
@@ -108,27 +110,29 @@ class RevisionsCard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CorrectionDetailsScreen(correction: correction),
+                      builder: (context) => CorrectionDetailsScreen(correction: correction, task: task),
                     ),
                   );
-                  print('Жалоба на некорректную постановку задачи');
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  backgroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.orange, width: 1),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius:
+                    BorderRadius.circular(12), // закругление углов
                   ),
+                  padding:
+                  const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(width: 8),
                     Text(
-                      'Задача поставлена плохо / некорректно',
+                      'Подробнее',
                       style: TextStyle(
-                        color: Colors.white, // Белый текст
+                        color: Colors.black, // Белый текст
                         fontSize: 16,
                       ),
                     ),

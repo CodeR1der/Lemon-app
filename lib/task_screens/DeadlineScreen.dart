@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/models/priority.dart';
+import 'package:task_tracker/screens/task_details_screen.dart';
 import 'package:task_tracker/services/task_operations.dart';
 
 import '../models/task.dart';
-import '../task_screens/TaskDetailsScreen.dart';
 import 'SelectPeriodScreen.dart';
 
 class DeadlineScreen extends StatefulWidget {
@@ -173,7 +173,7 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => TaskDetailsScreen(
-                                          id: widget.taskData.id),
+                                          task: widget.taskData),
                                     ),
                                   );
                                 },

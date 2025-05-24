@@ -145,7 +145,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                   title: 'Контрольные точки',
                 ),
                 const Divider(),
-                RevisionsCard(revisions: revisions),
+                RevisionsCard(revisions: revisions, task: task),
               ],
             );
 
@@ -157,7 +157,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                   title: 'Контрольные точки',
                 ),
                 const Divider(),
-                RevisionsCard(revisions: revisions),
+                RevisionsCard(revisions: revisions, task: task),
                 const Divider(),
                 _buildSectionItem(
                   icon: Iconsax.edit_copy,
@@ -174,7 +174,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                   title: 'Контрольные точки',
                 ),
                 const Divider(),
-                RevisionsCard(revisions: revisions),
+                RevisionsCard(revisions: revisions, task: task),
                 const Divider(),
                 _buildSectionItem(
                   icon: Iconsax.clock_copy,
@@ -192,7 +192,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                   title: 'История задачи',
                 ),
                 const Divider(),
-                RevisionsCard(revisions: revisions),
+                RevisionsCard(revisions: revisions, task: task),
               ],
             );
         }

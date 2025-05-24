@@ -16,24 +16,20 @@ class TaskService {
     try {
       final response = await _client.from('task').select('''
   *,
-  project: project_id(
-    *,
-    project_description: project_id(
-      *
-    ),
-    project_observers: project_id(
-      *
-    )
-  ),
-  task_team: task_team!task_team_task_id_fkey(
-    *,
-    employee: creator_id(*),
-    employee: communicator_id(*),
-    team_members: team_id(
-      *,
-      employee: employee_id(*),
-    )   
-  )
+      project:project_id(*,
+        project_description_id:project_description_id(*),
+        project_observers:project_observers(
+          *,
+          employee:employee_id(*)
+        )
+      ),
+      task_team: task_team!task_team_task_id_fkey(*,
+        creator_id:creator_id(*),
+        communicator_id:communicator_id(*),
+        team_members:team_id(*,
+          employee_id:employee_id(*)
+        )
+      )
 ''').eq('id', taskId).single();
 
       return Task.fromJson(response);
@@ -142,7 +138,7 @@ class TaskService {
           employee:employee_id(*)
         )
       ),
-      task_team: task_id(*,
+      task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
         team_members:team_id(*,
@@ -515,14 +511,10 @@ class TaskService {
     // }
 
     // Обновляем в Supabase
-    final response = await Supabase.instance.client
-        .from('tasks')
-        .update({'status': newStatus.toString()})
+    await Supabase.instance.client
+        .from('task')
+        .update({'status': newStatus.toString().substring(11)})
         .eq('id', taskId);
-
-    if (response.error != null) {
-      throw Exception('Ошибка обновления статуса: ${response.error!.message}');
-    }
 
     return newStatus;
   }
