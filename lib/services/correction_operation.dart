@@ -27,7 +27,7 @@ class CorrectionService {
           .from('correction')
           .select('*')
           .eq('task_id', task_id);
-          //.eq('status', statusString);
+      //.eq('status', statusString);
 
       return correctionResponse.map((data) => Correction.fromJson(data)).toList();
     } on PostgrestException catch (error) {
@@ -35,6 +35,19 @@ class CorrectionService {
       return [];
     }
   }
+
+  Future<void> updateCorrection(Correction correction) async {
+    try {
+      await _client.from('correction')
+          .update({'is_done': correction.isDone})
+          .eq('id', correction.id!);
+      print('Корректировка успешно добавлена');
+    } on PostgrestException catch (error) {
+      print('Ошибка при добавлении корректировки: ${error.message}');
+    }
+  }
+
+
 
   String getAttachment(String? fileName) {
     return _client.storage.from('CorrectionAttachments').getPublicUrl(fileName!);

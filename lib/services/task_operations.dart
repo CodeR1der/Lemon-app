@@ -505,10 +505,7 @@ class TaskService {
   }
 
   Future<TaskStatus> changeStatus(TaskStatus newStatus, String taskId) async {
-    // Проверяем допустимость перехода статуса
-    // if (!_isStatusTransitionAllowed(status, newStatus)) {
-    //   throw Exception('Недопустимый переход статуса');
-    // }
+
 
     // Обновляем в Supabase
     await Supabase.instance.client

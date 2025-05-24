@@ -57,6 +57,9 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
 
       await widget.task.changeStatus(TaskStatus.revision);
 
+      // 3. Сохраняем рекламацию (если нужно)
+      // await _saveCorrectionToDatabase(correction);
+
       // 4. Показываем уведомление
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Задача отправлена на доработку')),

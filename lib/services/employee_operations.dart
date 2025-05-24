@@ -8,18 +8,6 @@ import '/models/employee.dart';
 import '/models/project.dart';
 import '/models/task.dart';
 
-abstract class EmployeeDataStrategy {
-  Future<Employee?> getEmployee(String userId);
-
-  Future<List<Employee>> getAllEmployees();
-
-  Future<void> updateEmployee(Employee employee);
-
-  Future<String?> uploadAvatar(File file, String userId);
-
-  String getAvatarUrl(String? avatarUrl);
-}
-
 class EmployeeService {
   final SupabaseClient _client = Supabase.instance.client;
   final _uuid = Uuid();

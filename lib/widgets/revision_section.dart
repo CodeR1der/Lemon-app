@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:task_tracker/models/correction.dart';
+import 'package:task_tracker/models/task_role.dart';
 import 'package:task_tracker/screens/correction_details_screen.dart';
 
 import '../models/task.dart';
-import '../screens/correction_screen.dart';
 
 class RevisionsCard extends StatelessWidget {
   final List<Correction> revisions;
   final Task task;
-
-  const RevisionsCard({super.key, required this.revisions, required this.task});
+  final TaskRole role;
+  const RevisionsCard({super.key, required this.revisions, required this.task, required this.role});
 
   @override
   Widget build(BuildContext context) {
@@ -73,24 +73,24 @@ class RevisionsCard extends StatelessWidget {
         Text(
           DateFormat('dd.MM.yyyy').format(correction.date),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.black,
-              ),
+            color: Colors.black,
+          ),
         ),
         const SizedBox(height: 4),
 
         Text(
           'Описание ошибок в постановке задачи',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+            color: Colors.grey.shade600,
+          ),
         ),
         const SizedBox(height: 4),
         // Описание доработки
         Text(
           correction.description!,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.black,
-              ),
+            color: Colors.black,
+          ),
         ),
 
         // Кнопка "Подробнее"
@@ -110,7 +110,7 @@ class RevisionsCard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CorrectionDetailsScreen(correction: correction, task: task),
+                      builder: (context) => CorrectionDetailsScreen(correction: correction, task: task, role: role,),
                     ),
                   );
                 },
@@ -167,8 +167,8 @@ class RevisionsCard extends StatelessWidget {
               Text(
                 'Подробности доработки',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -209,8 +209,8 @@ class RevisionsCard extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+              color: Colors.grey.shade600,
+            ),
           ),
         ),
         const SizedBox(width: 8),
