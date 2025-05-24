@@ -153,7 +153,7 @@ class ProjectService {
 
       // Считаем задачи по статусам
       for (final task in tasksResponse) {
-        if (task != null && task['status'] != null) {
+        if (task['status'] != null) {
           final status = task['status'] as String;
           final taskStatus = StatusHelper.toTaskStatus(status);
           final statusName = StatusHelper.displayName(taskStatus);
@@ -182,7 +182,7 @@ class ProjectService {
           )
           ''').eq('project_id', projectId);
 
-      if (teamResponce == null || teamResponce.isEmpty) {
+      if (teamResponce.isEmpty) {
         return 0;
       }
 

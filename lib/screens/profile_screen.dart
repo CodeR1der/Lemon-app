@@ -150,18 +150,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserProfile() async {
     try {
-      if (widget.user != null) {
-        setState(() {
-          name = widget.user.name;
-          position = widget.user.position;
-          _phoneController.text = widget.user.phone ?? '';
-          _telegramController.text = widget.user.telegramId ?? '';
-          _vkController.text = widget.user.vkId ?? '';
-          avatarUrl = widget.user.avatarUrl;
-          isLoading = false;
-        });
-      }
-    } catch (e) {
+      setState(() {
+        name = widget.user.name;
+        position = widget.user.position;
+        _phoneController.text = widget.user.phone ?? '';
+        _telegramController.text = widget.user.telegramId ?? '';
+        _vkController.text = widget.user.vkId ?? '';
+        avatarUrl = widget.user.avatarUrl;
+        isLoading = false;
+      });
+        } catch (e) {
       print('Ошибка при загрузке данных профиля: $e');
       setState(() {
         isLoading = false;

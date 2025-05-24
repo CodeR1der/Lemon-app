@@ -8,7 +8,6 @@ import '../models/task.dart';
 import '../models/task_category.dart';
 import '../services/employee_operations.dart';
 import '../services/task_categories.dart';
-import '../services/task_operations.dart';
 
 class EmployeeDetailScreen extends StatefulWidget {
   final Employee employee;
@@ -23,10 +22,8 @@ class EmployeeDetailScreen extends StatefulWidget {
 class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
     with SingleTickerProviderStateMixin {
   final EmployeeService _employeeService = EmployeeService();
-  final TaskService _taskService = TaskService();
   late final ScrollController _scrollController;
   late final TabController _tabController;
-  late Future<List<Project>> _projectsFuture;
   List<Project> _projects = [];
   Map<String, List<Task>> _projectTasks = {};
   bool _isLoading = true;

@@ -9,6 +9,7 @@ import '../models/project.dart';
 import '../models/task_category.dart';
 import '../models/task_status.dart';
 import '../services/task_categories.dart';
+import '../task_screens/taskTitleScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -53,7 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadEmployees() async {
     try {
-      final currentUser = UserService.to.currentUser!;
       final employees = await EmployeeService().getAllEmployees();
 
       setState(() {
@@ -175,7 +175,13 @@ class _HomeScreenState extends State<HomeScreen> {
       width: double.infinity, // занимает всю доступную ширину
       child: ElevatedButton(
         onPressed: () {
-          // действие
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  TaskTitleScreen(),
+            ),
+          );
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.orange,
@@ -445,7 +451,7 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundImage: (employee.avatarUrl != null &&
                       employee.avatarUrl!.isNotEmpty)
                   ? NetworkImage(
-                      ProjectService().getAvatarUrl(employee.avatarUrl!) ?? '',
+                      ProjectService().getAvatarUrl(employee.avatarUrl!),
                     )
                   : null,
               child: (employee.avatarUrl == null || employee.avatarUrl!.isEmpty)
@@ -546,8 +552,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       project.project.avatarUrl!.isNotEmpty)
                   ? NetworkImage(
                       ProjectService()
-                              .getAvatarUrl(project.project.avatarUrl!) ??
-                          '',
+                              .getAvatarUrl(project.project.avatarUrl!),
                     )
                   : null,
               child: (project.project.avatarUrl == null ||

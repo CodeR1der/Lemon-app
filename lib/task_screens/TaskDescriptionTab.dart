@@ -8,10 +8,13 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:task_tracker/services/task_operations.dart';
+import 'package:task_tracker/services/user_service.dart';
 import 'package:video_player/video_player.dart';
 
 import '../models/task.dart';
+import '../models/task_role.dart';
 import '../models/task_status.dart';
+import '../widgets/TaskLayout.dart';
 import '../widgets/customPlayer.dart';
 
 class TaskDescriptionTab extends StatelessWidget {
@@ -42,13 +45,12 @@ class TaskDescriptionTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white, // Белый фон для всего контейнера
+      color: Colors.white,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Статус задачи
             Text('Статус', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
             Container(
@@ -291,53 +293,13 @@ class TaskDescriptionTab extends StatelessWidget {
             const SizedBox(height: 16),
             const Divider(),
 
-            _buildSectionItem(
-                icon: Iconsax.clock_copy, title: 'Контрольные точки'),
-            const Divider(),
-            _buildSectionItem(
-                icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
-            const Divider(),
-            _buildSectionItem(
-                icon: Iconsax.clock_copy, title: 'История задачи'),
-            const Divider(),
+            TaskLayoutBuilder(task: task, role: RoleHelper.determineUserRoleInTask(currentUserId: UserService.to.currentUser!.userId, task: task))
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionItem({
-    required IconData icon,
-    required String title,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        child: Row(
-          children: [
-            Icon(icon, size: 24, color: Color(0xFF6D7885)),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-            if (title == 'История задачи')
-              Icon(
-                Icons.chevron_right,
-                size: 24,
-                color: Colors.orange,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _openPhotoGallery(
       BuildContext context, int initialIndex, List<String> files) {
@@ -379,7 +341,7 @@ class PhotoGalleryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Белый фон для галереи
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),

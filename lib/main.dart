@@ -45,6 +45,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       theme: ThemeData(
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: IconThemeData(color: Colors.black),
+        ),
+        scaffoldBackgroundColor: Colors.white, // Белый фон для всех Scaffold
         fontFamily: 'Roboto',
         textTheme: const TextTheme(
             bodyMedium: TextStyle(fontSize: 15, color: Colors.black),

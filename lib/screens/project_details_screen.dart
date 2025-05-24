@@ -27,7 +27,6 @@ class ProjectDetailsScreen extends StatefulWidget {
 class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
     with SingleTickerProviderStateMixin {
   static const _primaryColor = Color(0xFF6750A4);
-  static const _accentColor = Color(0xFF2688EB);
 
   late final TabController _tabController;
   late final TaskService _taskService;
@@ -71,7 +70,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
           // Коммуникаторы - сотрудники с ролью "Коммуникатор" или те, кто указан как коммуникатор в задачах
           _communicators = employees.where((e) =>
           e.role == 'Коммуникатор' ||
-              _taskList.any((task) => task.team?.communicatorId?.userId == e.userId)
+              _taskList.any((task) => task.team.communicatorId.userId == e.userId)
           ).toList();
 
           // Остальные участники (исключая коммуникаторов)
@@ -312,27 +311,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
     );
   }
 
-  Widget _buildTaskItem(_TaskCategory category) {
-    return ListTile(
-      leading: Icon(category.icon, color: _accentColor),
-      title: Text(category.title),
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.grey[300],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          category.count.toString(),
-          style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildEmployeeItem(Employee employee) {
     return ListTile(
@@ -369,13 +348,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
     );
   }
 
-  Widget _buildDivider() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Divider(height: 0.5, color: Colors.grey.withOpacity(0.5)),
-    );
-  }
-
   Future<void> _launchUrl(String url) async {
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
@@ -383,14 +355,3 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   }
 }
 
-class _TaskCategory {
-  final IconData icon;
-  final String title;
-  final int count;
-
-  _TaskCategory({
-    required this.icon,
-    required this.title,
-    required this.count,
-  });
-}

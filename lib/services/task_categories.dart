@@ -103,7 +103,6 @@ class TaskCategories {
         final count = tasksData[StatusHelper.displayName(category.status)] ?? 0;
         return category.copyWith(count: count);
       }).toList();
-
     } catch (e) {
       print('Error getting categories: $e');
       // В случае ошибки возвращаем пустые категории
@@ -156,4 +155,5 @@ class TaskCategories {
       }
     }
   }
+
 }

@@ -21,12 +21,8 @@ class UserService extends GetxService {
           .eq('user_id', userId)
           .single();
 
-      if (currentUser != null) {
-        _currentUser.value = Employee.fromJson(currentUser);
-      } else {
-        print('Пользователь с ID $userId не найден');
-      }
-    } on PostgrestException catch (error) {
+      _currentUser.value = Employee.fromJson(currentUser);
+        } on PostgrestException catch (error) {
       print('Ошибка при получении данных сотрудника: ${error.message}');
     }
   }

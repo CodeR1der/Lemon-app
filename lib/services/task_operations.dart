@@ -314,7 +314,7 @@ class TaskService {
   Future<void> addNewTask(Task task) async {
     try {
       // Генерируем ID для задачи
-      if (task.id.isEmpty || task.id == null) {
+      if (task.id.isEmpty) {
         task.id = const Uuid().v4();
       }
 
@@ -424,15 +424,11 @@ class TaskService {
 
     for (final task in tasks) {
       // Добавляем коммуникатора, если он есть
-      if (task.team?.communicatorId != null) {
-        uniqueEmployees.add(task.team!.communicatorId!);
-      }
+      uniqueEmployees.add(task.team.communicatorId);
 
       // Добавляем всех членов команды
-      if (task.team?.teamMembers != null) {
-        uniqueEmployees.addAll(task.team!.teamMembers!);
-      }
-    }
+      uniqueEmployees.addAll(task.team.teamMembers);
+        }
 
     return uniqueEmployees.toList();
   }
@@ -510,6 +506,25 @@ class TaskService {
       print('Error fetching communicator tasks count: $e');
       rethrow;
     }
+  }
+
+  Future<TaskStatus> changeStatus(TaskStatus newStatus, String taskId) async {
+    // Проверяем допустимость перехода статуса
+    // if (!_isStatusTransitionAllowed(status, newStatus)) {
+    //   throw Exception('Недопустимый переход статуса');
+    // }
+
+    // Обновляем в Supabase
+    final response = await Supabase.instance.client
+        .from('tasks')
+        .update({'status': newStatus.toString()})
+        .eq('id', taskId);
+
+    if (response.error != null) {
+      throw Exception('Ошибка обновления статуса: ${response.error!.message}');
+    }
+
+    return newStatus;
   }
 
   String getTaskAttachment(String? fileName) {

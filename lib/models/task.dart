@@ -1,5 +1,6 @@
 import 'package:task_tracker/models/task_status.dart';
 import 'package:task_tracker/models/task_team.dart';
+import 'package:task_tracker/services/task_operations.dart';
 
 import 'priority.dart';
 import 'project.dart';
@@ -54,9 +55,7 @@ class Task {
         return 'Средний';
       case Priority.high:
         return 'Высокий';
-      default:
-        return 'Низкий';
-    }
+      }
   }
 
   Map<String, dynamic> toMap() {
@@ -91,6 +90,10 @@ class Task {
       videoMessage: List<String>.from(json['video_message'] ?? []),
       status: StatusHelper.toTaskStatus(json['status']),
     );
+  }
+
+  Future<void> changeStatus(TaskStatus newStatus) async {
+    status = await TaskService().changeStatus(newStatus, id);
   }
 
   // Метод для добавления прикрепленного файла
