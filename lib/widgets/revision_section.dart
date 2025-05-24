@@ -3,6 +3,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:task_tracker/models/correction.dart';
 import 'package:task_tracker/models/task_role.dart';
+import 'package:task_tracker/models/task_status.dart';
 import 'package:task_tracker/screens/correction_details_screen.dart';
 
 import '../models/task.dart';
@@ -56,7 +57,8 @@ class RevisionsCard extends StatelessWidget {
               children: [
                 // Список доработок
                 ...revisions
-                    .map((revision) => _buildRevisionItem(context, revision))
+                    .where((revision) => !revision.isDone)  // Фильтруем только невыполненные ревизии
+                    .map((revision) =>  _buildRevisionItem(context, revision))
                     .toList(),
               ],
             ),
@@ -67,7 +69,7 @@ class RevisionsCard extends StatelessWidget {
 
   Widget _buildRevisionItem(BuildContext context, Correction correction) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Дата создания
         Text(
@@ -93,55 +95,60 @@ class RevisionsCard extends StatelessWidget {
           ),
         ),
 
-        // Кнопка "Подробнее"
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () => _showRevisionDetails(context, correction),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(50, 30),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CorrectionDetailsScreen(correction: correction, task: task, role: role,),
-                    ),
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.orange, width: 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                    BorderRadius.circular(12), // закругление углов
-                  ),
-                  padding:
-                  const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(width: 8),
-                    Text(
-                      'Изучить правки',
-                      style: TextStyle(
-                        color: Colors.black, // Белый текст
-                        fontSize: 16,
+        if(task.status == TaskStatus.needExplanation) ...[
+
+        ]
+        else...[
+          // Кнопка "Подробнее"
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => _showRevisionDetails(context, correction),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(50, 30),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CorrectionDetailsScreen(correction: correction, task: task, role: role,),
                       ),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.orange, width: 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.circular(12), // закругление углов
                     ),
-                  ],
+                    padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(width: 8),
+                      Text(
+                        'Подробнее',
+                        style: TextStyle(
+                          color: Colors.black, // Белый текст
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
 
         // Разделитель (кроме последнего элемента)
         if (correction != revisions.last) ...[

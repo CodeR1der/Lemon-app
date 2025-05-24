@@ -32,6 +32,10 @@ class TaskLayoutBuilder extends StatelessWidget {
         return _buildNewTaskLayout(context);
       case TaskStatus.revision:
         return _buildRevisionLayout(context);
+      case TaskStatus.notRead:
+        return _buildNotReadLayout(context);
+      case TaskStatus.needExplanation:
+        return _buildNeedExplanationLayout(context);
       case TaskStatus.inOrder:
         return _buildInOrderLayout(context);
       case TaskStatus.atWork:
@@ -40,8 +44,6 @@ class TaskLayoutBuilder extends StatelessWidget {
         return _buildOverdueLayout(context);
       case TaskStatus.completed:
         return _buildCompletedLayout(context);
-      case TaskStatus.notRead:
-        return _buildNotReadLayout(context);
       default:
         return _buildNewTaskLayout(context);
     }
@@ -77,46 +79,48 @@ class TaskLayoutBuilder extends StatelessWidget {
                 _buildSectionItem(
                     icon: Iconsax.clock_copy, title: 'Контрольные точки'),
                 const Divider(),
-
-                if (revisions.isNotEmpty && revisions.any((revision) => !revision.isDone))
+                if (revisions.isNotEmpty &&
+                    revisions.any((revision) => !revision.isDone))
                   RevisionsCard(revisions: revisions, task: task, role: role)
                 else
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 0, vertical: 8.0),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CorrectionScreen(task: task),
-                          ),
-                        );
-                        print('Жалоба на некорректную постановку задачи');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CorrectionScreen(task: task),
                         ),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(width: 8),
-                          Text(
-                            'Задача поставлена плохо / некорректно',
-                            style: TextStyle(
-                              color: Colors.white, // Белый текст
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+                      );
+                      print('Жалоба на некорректную постановку задачи');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Задача поставлена плохо / некорректно',
+                          style: TextStyle(
+                            color: Colors.white, // Белый текст
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                ),
                 const Divider(),
                 _buildSectionItem(
                     icon: Iconsax.clock_copy, title: 'История задачи'),
@@ -291,10 +295,10 @@ class TaskLayoutBuilder extends StatelessWidget {
                         side: const BorderSide(color: Colors.orange, width: 1),
                         shape: RoundedRectangleBorder(
                           borderRadius:
-                          BorderRadius.circular(12), // закругление углов
+                              BorderRadius.circular(12), // закругление углов
                         ),
-                        padding:
-                        const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 24),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -318,12 +322,10 @@ class TaskLayoutBuilder extends StatelessWidget {
                 _buildSectionItem(
                     icon: Iconsax.clock_copy, title: 'Контрольные точки'),
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 0, vertical: 8.0),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
                   child: ElevatedButton(
-                    onPressed: () {
-
-                    },
+                    onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       foregroundColor: Colors.white,
@@ -367,7 +369,121 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-            // TODO: Handle this case.
+              // TODO: Handle this case.
+              throw UnimplementedError();
+          }
+        });
+  }
+
+  Widget _buildNeedExplanationLayout(BuildContext context) {
+    return FutureBuilder<List<Correction>>(
+        future: _loadCorrections(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          }
+
+          final revisions = snapshot.data ?? [];
+          final notDoneRevision = revisions.where((revision) => !revision.isDone).first;
+
+          switch (role) {
+            case TaskRole.executor:
+              return Column();
+            case TaskRole.communicator:
+              return Column(children: [
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'Контрольные точки'),
+                const Divider(),
+                if (revisions.isNotEmpty &&
+                    revisions.any((revision) => !revision.isDone))
+                  RevisionsCard(revisions: revisions, task: task, role: role)
+                else
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                Column(children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      CorrectionService().updateCorrection(notDoneRevision..isDone=true);
+                      
+                      CorrectionService().addCorrection( Correction(date: DateTime.now(), taskId: task.id, status: TaskStatus.needExplanation, description: 'Прислать письмо-решение'));
+
+                      task.changeStatus(TaskStatus.needTicket);
+
+                      print('Жалоба на некорректную постановку задачи');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Прислать письмо-решение',
+                          style: TextStyle(
+                            color: Colors.white, // Белый текст
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      task.changeStatus(TaskStatus.revision);
+                      print('Жалоба на некорректную постановку задачи');
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color:  Colors.orange, width: 1),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Отправить на доработку',
+                          style: TextStyle(
+                            color: Colors.black, // Белый текст
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ]),
+                const Divider(),
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'История задачи'),
+                const Divider(),
+              ]);
+            case TaskRole.creator:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                      icon: Iconsax.clock_copy, title: 'История задачи'),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.none:
+              // TODO: Handle this case.
               throw UnimplementedError();
           }
         });
