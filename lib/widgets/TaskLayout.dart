@@ -241,6 +241,70 @@ class TaskLayoutBuilder extends StatelessWidget {
                   _buildSectionItem(
                       icon: Iconsax.clock_copy, title: 'История задачи'),
                   const Divider(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 0, vertical: 8.0),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        task.changeStatus(TaskStatus.inOrder);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(width: 8),
+                          Text(
+                            'Прочитал и понял',
+                            style: TextStyle(
+                              color: Colors.white, // Белый текст
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 0, vertical: 8.0),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        task.changeStatus(TaskStatus.needExplanation);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.black,
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.orange, width: 1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                          BorderRadius.circular(12), // закругление углов
+                        ),
+                        padding:
+                        const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(width: 8),
+                          Text(
+                            'Нужно разъяснение',
+                            style: TextStyle(
+                              color: Colors.black, // Белый текст
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               );
             case TaskRole.communicator:

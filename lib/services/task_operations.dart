@@ -243,7 +243,7 @@ class TaskService {
         if (teamsResponse.isEmpty) return [];
 
         final taskIds = (teamsResponse as List)
-            .map((team) => team['team_id']['task_id'] as String)
+            .map((team) => team['task_team']['task_id'] as String)
             .toList();
 
         final tasksResponse = await _client.from('task').select('''

@@ -130,7 +130,7 @@ class RevisionsCard extends StatelessWidget {
                   children: [
                     SizedBox(width: 8),
                     Text(
-                      'Подробнее',
+                      'Изучить правки',
                       style: TextStyle(
                         color: Colors.black, // Белый текст
                         fontSize: 16,
