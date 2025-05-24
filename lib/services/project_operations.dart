@@ -175,7 +175,7 @@ class ProjectService {
     try {
       final teamResponce = await _client.from('task').select('''
           id,
-          task_team:id(
+          task_team: task_team!task_team_task_id_fkey(
             *,
             team_members:team_id(employee_id)
           )
