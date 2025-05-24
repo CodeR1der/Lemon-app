@@ -277,7 +277,13 @@ class TaskLayoutBuilder extends StatelessWidget {
                         horizontal: 0, vertical: 8.0),
                     child: ElevatedButton(
                       onPressed: () {
-                        task.changeStatus(TaskStatus.needExplanation);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CorrectionScreen(task: task),
+                          ),
+                        );
+                        //task.changeStatus(TaskStatus.needExplanation);
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.black,

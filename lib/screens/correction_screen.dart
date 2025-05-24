@@ -10,7 +10,7 @@ import '../models/task_status.dart';
 class CorrectionScreen extends StatefulWidget {
   final Task task;
 
-  const  CorrectionScreen({
+  const CorrectionScreen({
     super.key,
     required this.task,
   });
@@ -55,23 +55,19 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
 
       await CorrectionService().addCorrection(correction);
 
-      await widget.task.changeStatus(TaskStatus.revision);
-
-      // 3. Сохраняем рекламацию (если нужно)
-      // await _saveCorrectionToDatabase(correction);
-
-      // 4. Показываем уведомление
+      if (widget.task.status == TaskStatus.newTask) {
+        await widget.task.changeStatus(TaskStatus.revision);
+      } else if (widget.task.status == TaskStatus.notRead) {
+        await widget.task.changeStatus(TaskStatus.needExplanation);
+      }
+        // 4. Показываем уведомление
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Задача отправлена на доработку')),
       );
 
       // 5. Закрываем экран и возвращаем результат
-      Navigator.push(
+      Navigator.pop(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              CorrectionScreen(task: widget.task),
-        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -89,61 +85,59 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Описание ошибок
-            const Text(
-              'Описание ошибок в постановке задачи',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Описание ошибок
+          const Text(
+            'Описание ошибок в постановке задачи',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(height: 8),
+          ),
+          const SizedBox(height: 8),
 
-            // Поле ввода описания
-            Container(
-              constraints: BoxConstraints(
-                minHeight: _textFieldHeight,
-              ),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: SingleChildScrollView(
-                child: TextField(
-                  controller: _descriptionController,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.all(12),
-                    border: InputBorder.none,
-                    hintText:
-                    'Опишите подробно, что именно сделано неправильно...',
-                    hintStyle: TextStyle(color: Colors.grey),
-                  ),
-                  onChanged: (text) {
-                    final textPainter = TextPainter(
-                      text: TextSpan(
-                        text: text,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      maxLines: null,
-                      textDirection: TextDirection.ltr,
-                    )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
-
-                    setState(() {
-                      _textFieldHeight = textPainter.size.height + 24;
-                      if (_textFieldHeight < 60) _textFieldHeight = 60;
-                    });
-                  },
+          // Поле ввода описания
+          Container(
+            constraints: BoxConstraints(
+              minHeight: _textFieldHeight,
+            ),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: SingleChildScrollView(
+              child: TextField(
+                controller: _descriptionController,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                decoration: const InputDecoration(
+                  contentPadding: EdgeInsets.all(12),
+                  border: InputBorder.none,
+                  hintText:
+                      'Опишите подробно, что именно сделано неправильно...',
+                  hintStyle: TextStyle(color: Colors.grey),
                 ),
+                onChanged: (text) {
+                  final textPainter = TextPainter(
+                    text: TextSpan(
+                      text: text,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    maxLines: null,
+                    textDirection: TextDirection.ltr,
+                  )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
+
+                  setState(() {
+                    _textFieldHeight = textPainter.size.height + 24;
+                    if (_textFieldHeight < 60) _textFieldHeight = 60;
+                  });
+                },
               ),
             ),
+          ),
 
+          if (widget.task.status == TaskStatus.newTask) ...[
             const SizedBox(height: 24),
-
             // Секция с прикрепленными файлами
             if (_attachments.isNotEmpty) ...[
               const Text(
@@ -198,8 +192,8 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
               ),
             ),
             const SizedBox(height: 24),
-          ],
-        ),
+          ]
+        ]),
       ),
       bottomSheet: Container(
         color: Colors.white,
