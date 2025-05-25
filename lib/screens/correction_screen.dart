@@ -55,13 +55,13 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
     try {
       final correction = _createCorrection();
 
-      await CorrectionService().addCorrection(correction);
+      await RequestService().addCorrection(correction);
 
       if (widget.task.status == TaskStatus.notRead) {
         await widget.task.changeStatus(TaskStatus.needExplanation);
       } else {
         if (widget.task.status == TaskStatus.needTicket) {
-          CorrectionService()
+          RequestService()
               .updateCorrection(widget.prevCorrection!..isDone = true);
         }
         await widget.task.changeStatus(TaskStatus.revision);
@@ -153,7 +153,6 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
               ),
             ),
           ),
-
           if (widget.task.status == TaskStatus.newTask ||
               widget.task.status == TaskStatus.needTicket) ...[
             const SizedBox(height: 24),

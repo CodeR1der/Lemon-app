@@ -150,7 +150,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
                         child: Container(
                           color: Colors.grey.shade100,
                           child: Image.network(
-                            CorrectionService().getAttachment(photo),
+                            RequestService().getAttachment(photo),
                             fit: BoxFit.cover,
                             loadingBuilder: (context, child, loadingProgress) {
                               if (loadingProgress == null) return child;
@@ -191,7 +191,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) => PhotoGalleryScreen(
-          photos: files.map(CorrectionService().getAttachment).toList(),
+          photos: files.map(RequestService().getAttachment).toList(),
           initialIndex: initialIndex,
         ),
       ),
@@ -215,7 +215,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
               onPressed: () {
                 if (correction.status == TaskStatus.needTicket) {
                   task.changeStatus(TaskStatus.notRead);
-                  CorrectionService()
+                  RequestService()
                       .updateCorrection(correction..isDone = true);
                 } else {
                   task.changeStatus(TaskStatus.newTask);
@@ -250,9 +250,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
               onPressed: () {
                 if (correction.status == TaskStatus.needTicket) {
                   task.changeStatus(TaskStatus.needExplanation);
-                  CorrectionService()
+                  RequestService()
                       .updateCorrection(correction..isDone = true);
-                  CorrectionService()
+                  RequestService()
                       .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                 }
                 Navigator.pop(
@@ -300,7 +300,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {
                 task.changeStatus(TaskStatus.notRead);
-                CorrectionService().updateCorrection(correction..isDone = true);
+                RequestService().updateCorrection(correction..isDone = true);
                 Navigator.pop(
                   context,
                 );
@@ -330,9 +330,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
               onPressed: () {
                 if (correction.status == TaskStatus.needTicket) {
                   task.changeStatus(TaskStatus.needExplanation);
-                  CorrectionService()
+                  RequestService()
                       .updateCorrection(correction..isDone = true);
-                  CorrectionService()
+                  RequestService()
                       .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                 } else {
                   task.changeStatus(TaskStatus.revision);

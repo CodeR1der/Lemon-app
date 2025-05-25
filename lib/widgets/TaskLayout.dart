@@ -956,7 +956,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      //task.changeStatus(TaskStatus.extraTime);
+                      task.changeStatus(TaskStatus.extraTime);
                     },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,

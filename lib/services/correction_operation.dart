@@ -1,12 +1,25 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/models/correction.dart';
+import 'package:task_tracker/models/task_validate.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/task_status.dart';
 
-class CorrectionService {
+class RequestService {
   final SupabaseClient _client = Supabase.instance.client;
   final _uuid = Uuid();
+
+  Future<void> addTaskValidate(TaskValidate taskValidate) async {
+    taskValidate.id = _uuid.v4();
+
+    try {
+      await _client.from('task_validate').insert(taskValidate.toJson());
+      print('Запрос на проверку задачи успешно добавлена');
+    } on PostgrestException catch (error) {
+      print('Ошибка при добавлении запроса на проверку: ${error.message}');
+    }
+  }
+
 
   Future<void> addCorrection(Correction correction) async {
     correction.id = _uuid.v4();
