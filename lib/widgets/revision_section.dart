@@ -202,8 +202,6 @@ class RevisionsCard extends StatelessWidget {
           ),
         ] else if (task.status == TaskStatus.atWork)
           ...[]
-        else ...[
-        ]
         else if (task.status == TaskStatus.overdue) ...[
             Align(
               alignment: Alignment.centerRight,
