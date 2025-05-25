@@ -2,7 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:task_tracker/screens/home_page.dart';
+import 'package:task_tracker/screens/task_details_screen.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/task_screens/taskTitleScreen.dart';
 import 'package:task_tracker/widgets/navigation_panel.dart';
 
 void main() async {
@@ -32,8 +35,8 @@ class MyApp extends StatelessWidget {
       const userId =
       //'e50629e9-fef5-472f-b798-58fedc9739be'; //наблюдатель
       //'d1e6c36b-0fb1-4686-9ccd-a062bd95011d'; //сотрудник исполнитель
-      //'d6c99c8b-fd07-4702-b849-71cd603eab0b'; //владислав постановщик
-      '71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; //никита коммуникатор
+      'd6c99c8b-fd07-4702-b849-71cd603eab0b'; //владислав постановщик
+      //'71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; //никита коммуникатор
       await UserService.to.initializeUser(userId);
     } catch (e) {
       print('Ошибка инициализации приложения: $e');
@@ -44,6 +47,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      routes: {
+        HomeScreen.routeName: (context) => const HomeScreen(),
+        TaskTitleScreen.routeName: (context) => const TaskTitleScreen(),
+        // Добавляй другие экраны здесь
+      },
       theme: ThemeData(
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,

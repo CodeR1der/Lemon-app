@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/task_screens/addedFilesScreen.dart';
 
@@ -17,7 +18,7 @@ class ProjectSelectionScreen extends StatefulWidget {
 class _ProjectSelectionScreenState extends State<ProjectSelectionScreen> {
   late Future<List<Project>> projectsFuture;
   Project? selectedProject; // Храним выбранный проект
-  final TaskService _database = TaskService();
+  final _database = ProjectService();
 
   @override
   void initState() {

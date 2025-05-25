@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/employee.dart';
 import '../models/task.dart';
 import '../services/task_operations.dart';
@@ -46,8 +45,8 @@ class TaskTeamTab extends StatelessWidget {
                 title: 'Исполнители',
                 employees: team.teamMembers
                     .where((member) =>
-                member.userId != team.creatorId.userId &&
-                    member.userId != team.communicatorId.userId)
+                        member.userId != team.creatorId.userId &&
+                        member.userId != team.communicatorId.userId)
                     .toList(),
               ),
 
@@ -78,10 +77,11 @@ class TaskTeamTab extends StatelessWidget {
         ),
         for (var employee in employees)
           ListTile(
-            contentPadding: EdgeInsets.zero, // Убраны внутренние отступы ListTile
+            contentPadding: EdgeInsets.zero,
+            // Убраны внутренние отступы ListTile
             leading: CircleAvatar(
               backgroundImage:
-              NetworkImage(_database.getAvatarUrl(employee.avatarUrl)),
+                  NetworkImage(_database.getAvatarUrl(employee.avatarUrl)),
               radius: 20,
             ),
             title: Text(
@@ -91,8 +91,8 @@ class TaskTeamTab extends StatelessWidget {
             subtitle: Text(
               employee.position,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+                    color: Colors.grey.shade600,
+                  ),
             ),
           ),
       ],

@@ -39,8 +39,7 @@ class TaskService {
     }
   }
 
-  Future<Map<String, int>> getCountOfTasksByStatus(
-      String position, String employeeId) async {
+  Future<Map<String, int>> getCountOfTasksByStatus(String position, String employeeId) async {
     try {
       late List<dynamic> tasksResponse;
 
@@ -122,10 +121,7 @@ class TaskService {
     };
   }
 
-  Future<List<Task>> getProjectTasksByStatus({
-    required TaskStatus status,
-    required String projectId,
-  }) async {
+  Future<List<Task>> getProjectTasksByStatus({required TaskStatus status, required String projectId,}) async {
     try {
       final statusString = status.toString().substring(11);
 
@@ -145,9 +141,7 @@ class TaskService {
           employee_id:employee_id(*)
         )
       )
-    ''')
-          .eq('project_id', projectId)
-          .eq('status', statusString);
+    ''').eq('project_id', projectId).eq('status', statusString);
 
       if (tasksResponse.isEmpty) return [];
 
@@ -158,12 +152,7 @@ class TaskService {
     }
   }
 
-
-  Future<List<Task>> getTasksByStatus({
-    required String position,
-    required TaskStatus status,
-    required String employeeId,
-  }) async {
+  Future<List<Task>> getTasksByStatus({required String position, required TaskStatus status, required String employeeId,}) async {
     try {
       final statusString = status.toString().substring(11);
 
@@ -339,16 +328,21 @@ class TaskService {
       }
       task.videoMessage = uploadedVideo;
 
-      print('Все файлы успешно загружены!');
+      print('Все файлы успешно загруженыs!');
 
       // Преобразуем задачу в JSON
       final taskJson = task.toMap();
       final teamJson = task.team.toJson();
 
-      await _client.rpc('add_task_with_team', params: {
-        '_task': taskJson,
-        '_team': teamJson,
-      });
+      await _client.from('task').insert(taskJson);
+      await _client.from('task_team').insert(teamJson);
+
+      for (var member in task.team.teamMembers) {
+        await _client.from('team_members').insert(
+            {'team_id': task.team.teamId, 'employee_id': member.userId});
+      }
+
+
 
       print('Задача и команда успешно добавлены!');
     } catch (e) {
@@ -424,31 +418,15 @@ class TaskService {
 
       // Добавляем всех членов команды
       uniqueEmployees.addAll(task.team.teamMembers);
-        }
+    }
 
     return uniqueEmployees.toList();
   }
 
-
   Future<List<Project>> getAllProjects() async {
     try {
       final response = await _client.from('project').select('''
-          id,
-          name,
-          description,
-          project_observers (
-            employee_id,
-            employee (
-              id,
-              name,
-              avatar_url,
-              position,
-              phone,
-              telegram_id,
-              vk_id,
-              role
-            )
-          )
+          *
         ''');
 
       // Преобразуем данные в список объектов Project
@@ -463,8 +441,7 @@ class TaskService {
     }
   }
 
-  Future<Map<TaskStatus, int>> fetchCommunicatorTasksCount(
-      communicatorId) async {
+  Future<Map<TaskStatus, int>> fetchCommunicatorTasksCount(communicatorId) async {
     try {
       // Запрос для получения количества задач по статусам
       final response = await _client.from('task_team').select('''
@@ -505,13 +482,9 @@ class TaskService {
   }
 
   Future<TaskStatus> changeStatus(TaskStatus newStatus, String taskId) async {
-
-
     // Обновляем в Supabase
-    await Supabase.instance.client
-        .from('task')
-        .update({'status': newStatus.toString().substring(11)})
-        .eq('id', taskId);
+    await Supabase.instance.client.from('task').update(
+        {'status': newStatus.toString().substring(11)}).eq('id', taskId);
 
     return newStatus;
   }

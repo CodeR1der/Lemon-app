@@ -18,8 +18,8 @@ class TaskTeam {
     return {
       'team_id': teamId,
       'task_id': taskId,
-      'communicator_id': communicatorId,
-      'creator_id': creatorId
+      'communicator_id': communicatorId.userId,
+      'creator_id': creatorId.userId
     };
   }
 

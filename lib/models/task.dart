@@ -64,7 +64,7 @@ class Task {
       'id': id,
       'task_name': taskName,
       'description': description,
-      'project': project!.projectId,
+      'project_id': project!.projectId,
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
       'priority': priority.displayName,
@@ -72,7 +72,7 @@ class Task {
       'attachments': attachments,
       'audio_message': audioMessage,
       'video_message': videoMessage,
-      'status': status
+      'status': status.toString().substring(11)
     };
   }
 

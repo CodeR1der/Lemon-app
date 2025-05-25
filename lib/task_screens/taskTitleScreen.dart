@@ -10,9 +10,11 @@ import '../models/task_status.dart';
 import 'projectSelectionScreen.dart';
 
 class TaskTitleScreen extends StatefulWidget {
+  static const routeName = '/createTaskStart';
+
   final Employee? employee;
 
-  TaskTitleScreen({Key? key, this.employee}) : super(key: key);
+  const TaskTitleScreen({super.key, this.employee});
 
   @override
   _TaskTitleScreenState createState() => _TaskTitleScreenState();

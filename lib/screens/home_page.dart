@@ -10,10 +10,11 @@ import '../models/project.dart';
 import '../models/task_category.dart';
 import '../models/task_status.dart';
 import '../services/task_categories.dart';
-import 'employee_details_screen.dart';
 import '../task_screens/taskTitleScreen.dart';
+import 'employee_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  static const routeName = '/homePage';
   const HomeScreen({super.key});
 
   @override
@@ -182,12 +183,8 @@ class _HomeScreenState extends State<HomeScreen> {
       width: double.infinity, // занимает всю доступную ширину
       child: ElevatedButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  TaskTitleScreen(),
-            ),
+          Navigator.pushNamed(context, TaskTitleScreen.routeName
+            //MaterialPageRoute(builder: (context) => const TaskTitleScreen())
           );
         },
         style: ElevatedButton.styleFrom(
@@ -468,13 +465,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: CircleAvatar(
                   radius: 34,
                   backgroundImage: (employee.avatarUrl != null &&
-                      employee.avatarUrl!.isNotEmpty)
+                          employee.avatarUrl!.isNotEmpty)
                       ? NetworkImage(
-                    ProjectService().getAvatarUrl(employee.avatarUrl!) ?? '',
-                  )
+                          ProjectService().getAvatarUrl(employee.avatarUrl!) ??
+                              '',
+                        )
                       : null,
                   child: (employee.avatarUrl == null ||
-                      employee.avatarUrl!.isEmpty)
+                          employee.avatarUrl!.isEmpty)
                       ? const Icon(Icons.account_box, size: 34)
                       : null,
                 ),
