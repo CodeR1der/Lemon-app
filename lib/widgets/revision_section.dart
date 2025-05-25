@@ -203,6 +203,61 @@ class RevisionsCard extends StatelessWidget {
         ] else if (task.status == TaskStatus.atWork)
           ...[]
         else ...[
+        ]
+        else if (task.status == TaskStatus.overdue) ...[
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => _showRevisionDetails(context, correction),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(50, 30),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Padding(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CorrectionScreen(
+                            task: task,
+                            prevCorrection: correction,
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.black,
+                      backgroundColor: Colors.orange,
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                        BorderRadius.circular(12), // закругление углов
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 24),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Запрос на объяснительную',
+                          style: TextStyle(
+                            color: Colors.white, // Белый текст
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ]
+        else ...[
           // Кнопка "Подробнее"
           Align(
             alignment: Alignment.centerRight,

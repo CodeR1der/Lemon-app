@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/models/task_validate.dart';
 import 'package:task_tracker/services/request_operation.dart';
+import 'package:task_tracker/services/request_operation.dart';
 
 import '../models/correction.dart';
 import '../models/task.dart';
 import '../models/task_status.dart';
+import '../models/task_validate.dart';
 
 class CorrectionScreen extends StatefulWidget {
   final Task task;
@@ -64,15 +66,21 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
         await widget.task.changeStatus(TaskStatus.needExplanation);
       } else if (widget.task.status == TaskStatus.completedUnderReview) {
         Navigator.pop(context);
-        RequestService()
-            .updateValidate(widget.validate!..isDone = true);
+        RequestService().updateValidate(widget.validate!..isDone = true);
         await widget.task.changeStatus(TaskStatus.atWork);
+      } else if (widget.task.status == TaskStatus.atWork) {
+        await widget.task.changeStatus(TaskStatus.extraTime);
+      } else if (widget.task.status == TaskStatus.overdue) {
+        RequestService()
+            .updateCorrection(widget.prevCorrection!..isDone = true);
       } else {
         if (widget.task.status == TaskStatus.needTicket) {
           RequestService()
               .updateCorrection(widget.prevCorrection!..isDone = true);
         }
         await widget.task.changeStatus(TaskStatus.revision);
+
+        //CorrectionService().updateCorrection(correction);
       }
       // 4. Показываем уведомление
       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,7 +109,8 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Описание ошибок
-          if (widget.task.status == TaskStatus.needTicket) ...[
+          if (widget.task.status == TaskStatus.needTicket ||
+              widget.task.status == TaskStatus.overdue) ...[
             const Text(
               'Решение',
               style: TextStyle(
@@ -160,7 +169,8 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
             ),
           ),
           if (widget.task.status == TaskStatus.newTask ||
-              widget.task.status == TaskStatus.needTicket) ...[
+              widget.task.status == TaskStatus.needTicket ||
+              widget.task.status == TaskStatus.overdue) ...[
             const SizedBox(height: 24),
             // Секция с прикрепленными файлами
             if (_attachments.isNotEmpty) ...[
@@ -216,7 +226,54 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
               ),
             ),
             const SizedBox(height: 24),
-          ]
+          ] else if (widget.task.status == TaskStatus.atWork) ...[
+            const Text(
+              'Причина запроса',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Поле ввода описания
+            Container(
+              constraints: BoxConstraints(
+                minHeight: _textFieldHeight,
+              ),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                child: TextField(
+                  controller: _descriptionController,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.all(12),
+                    border: InputBorder.none,
+                    hintText: 'Описание',
+                    hintStyle: TextStyle(color: Colors.grey),
+                  ),
+                  onChanged: (text) {
+                    final textPainter = TextPainter(
+                      text: TextSpan(
+                        text: text,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      maxLines: null,
+                      textDirection: TextDirection.ltr,
+                    )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
+
+                    setState(() {
+                      _textFieldHeight = textPainter.size.height + 24;
+                      if (_textFieldHeight < 60) _textFieldHeight = 60;
+                    });
+                  },
+                ),
+              ),
+            ),
+          ],
         ]),
       ),
       bottomSheet: Container(
@@ -257,6 +314,10 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
         return "Письмо-решение";
       case TaskStatus.completedUnderReview:
         return "Задача выполнена некорректно";
+      case TaskStatus.atWork:
+        return "Запрос на дополнительное время";
+      case TaskStatus.overdue:
+        return "Объяснительная";
       default:
         return "Письмо-решение";
     }
