@@ -25,7 +25,7 @@ class StatusHelper {
       case TaskStatus.revision:
         return 'Задача на доработке';
       case TaskStatus.queue:
-        return 'Выставить в очередь на выполнение';
+        return 'В очереди на выполнение';
       case TaskStatus.notRead:
         return 'Не прочитано / не понято';
       case TaskStatus.needExplanation:

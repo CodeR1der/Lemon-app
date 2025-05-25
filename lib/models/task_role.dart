@@ -8,6 +8,19 @@ enum TaskRole {
 }
 
 class RoleHelper {
+
+  static String convertToString(TaskRole role) {
+    switch (role) {
+      case TaskRole.communicator:
+        return 'Коммуникатор';
+      case TaskRole.creator:
+        return 'Постановщик';
+      case TaskRole.executor:
+        return 'Исполнитель';
+      case TaskRole.none:
+        return 'Не имеет отношения к задаче';
+    }
+  }
   static TaskRole determineUserRoleInTask({
     required String currentUserId,
     required Task task,

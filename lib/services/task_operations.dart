@@ -504,9 +504,39 @@ class TaskService {
     }
   }
 
+  Future<void> updateTask(Task task) async {
+    try {
+      await Supabase.instance.client.from('task').update({
+        'queue_position': task.queuePosition,
+      }).eq('id', task.id); // Условие: обновляем задачу с конкретным ID
+    } catch (e) {
+      throw Exception('Ошибка при обновлении задачи: $e');
+    }
+  }
+
+  Future<void> batchUpdateTasks(List<Map<String, dynamic>> updates) async {
+    try {
+       await Supabase.instance.client.from('task').upsert(updates);
+    } catch (e) {
+      throw Exception('Failed to batch update tasks: $e');
+    }
+  }
+
+  Future<void> updateDeadline(DateTime deadline, String taskId) async {
+    try {
+      await Supabase.instance.client
+          .from('task')
+          .update({
+        'deadline': deadline.toUtc().toIso8601String() // Конвертируем в UTC строку
+      })
+          .eq('id', taskId);
+    } catch (e) {
+      throw Exception('Failed to update deadline: $e');
+    }
+  }
+
+
   Future<TaskStatus> changeStatus(TaskStatus newStatus, String taskId) async {
-
-
     // Обновляем в Supabase
     await Supabase.instance.client
         .from('task')

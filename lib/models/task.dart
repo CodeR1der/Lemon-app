@@ -13,6 +13,7 @@ class Task {
   TaskTeam team;
   DateTime startDate;
   DateTime endDate;
+  DateTime? deadline;
   List<String> attachments;
   String? audioMessage;
   List<String>? videoMessage;
@@ -20,19 +21,19 @@ class Task {
   Priority priority;
   TaskStatus status;
 
-  Task(
-      {required this.id,
-      required this.taskName,
-      required this.description,
-      required this.project,
-      required this.team,
-      required this.startDate,
-      required this.endDate,
-      required this.attachments,
-      this.audioMessage,
-      this.videoMessage,
-      this.priority = Priority.low, // Значение по умолчанию
-      this.status = TaskStatus.newTask});
+  Task({required this.id,
+    required this.taskName,
+    required this.description,
+    required this.project,
+    required this.team,
+    required this.startDate,
+    required this.endDate,
+    required this.attachments,
+    this.deadline,
+    this.audioMessage,
+    this.videoMessage,
+    this.priority = Priority.low, // Значение по умолчанию
+    this.status = TaskStatus.newTask});
 
   // Метод для преобразования строки из базы данных в Priority
   static Priority parsePriority(String priority) {
@@ -56,7 +57,7 @@ class Task {
         return 'Средний';
       case Priority.high:
         return 'Высокий';
-      }
+    }
   }
 
   Map<String, dynamic> toMap() {
@@ -70,6 +71,7 @@ class Task {
       'priority': priority.displayName,
       'queue_position': queuePosition,
       'attachments': attachments,
+      'deadline': deadline?.toIso8601String(),
       'audio_message': audioMessage,
       'video_message': videoMessage,
       'status': status
@@ -89,6 +91,7 @@ class Task {
           .single,
       attachments: List<String>.from(json['attachments'] ?? []),
       audioMessage: json['audio_message'],
+      deadline: DateTime.parse(json['deadline']),
       videoMessage: List<String>.from(json['video_message'] ?? []),
       status: StatusHelper.toTaskStatus(json['status']),
     );

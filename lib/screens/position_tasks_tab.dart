@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:task_tracker/screens/tasks_list_screen.dart';
 
 import '../models/task_category.dart';
+import '../models/task_role.dart';
 import '../models/task_status.dart';
+import 'employee_queue_screen.dart';
 
 class PositionTasksTab extends StatelessWidget {
   final String? position;
@@ -88,18 +90,31 @@ class PositionTasksTab extends StatelessWidget {
           ),
         );
       } else if (position != null && employeeId != null) {
-        // Навигация для сотрудника
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TaskListByStatusScreen(
-              position: position!,
-              userId: employeeId!,
-              status: category.status,
+        if((position == RoleHelper.convertToString(TaskRole.executor) || position == RoleHelper.convertToString(TaskRole.creator)) && category.status == TaskStatus.queue){
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => QueueScreen(
+                position: position!,
+                userId: employeeId!,
+              ),
             ),
-          ),
-        );
+          );
+        }
+        else{// Навигация для сотрудника
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskListByStatusScreen(
+                position: position!,
+                userId: employeeId!,
+                status: category.status,
+              ),
+            ),
+          );
+        }
       }
+
     } catch (e) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(

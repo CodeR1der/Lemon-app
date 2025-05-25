@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:task_tracker/models/priority.dart';
 import 'package:task_tracker/models/task_status.dart';
-import 'package:task_tracker/services/user_service.dart';
 
 import '../models/task.dart';
+import '../models/task_role.dart';
 import '../services/task_operations.dart';
+import 'choose_task_deadline_screen.dart';
 
 class QueueScreen extends StatefulWidget {
   final Task task;
@@ -18,6 +20,7 @@ class QueueScreen extends StatefulWidget {
 class _QueueScreenState extends State<QueueScreen> {
   late Future<List<Task>> _queuedTasks;
   final TaskService _taskService = TaskService();
+  int? _selectedPosition;
 
   @override
   void initState() {
@@ -28,12 +31,107 @@ class _QueueScreenState extends State<QueueScreen> {
   void _loadQueuedTasks() {
     setState(() {
       _queuedTasks = _taskService.getTasksByStatus(
-        position: UserService.to.currentUser!.role,
+        position: RoleHelper.determineUserRoleInTask(task: widget.task, currentUserId: widget.task.team.teamMembers.first.userId).toString(),
         status: TaskStatus.queue,
-        employeeId: UserService.to.currentUser!.userId,
+        employeeId: widget.task.team.teamMembers.first.userId,
       );
     });
   }
+
+  String formatDeadline(DateTime? dateTime) {
+    final dateFormat = DateFormat('dd.MM.yyyy');
+    final timeFormat = DateFormat('HH:mm');
+
+    return '${dateFormat.format(dateTime!)}, до ${timeFormat.format(dateTime)}';
+  }
+
+  Future<void> _addToQueue(int selectedPosition) async {
+    try {
+      // Получаем список задач из Future
+      final tasks = await _queuedTasks ?? [];
+
+      // Обновляем позиции существующих задач
+      for (var task in tasks) {
+        if (int.parse(task.queuePosition!)  >= selectedPosition) {
+          task.queuePosition = (int.parse(task.queuePosition!)+1).toString();
+          await _taskService.updateTask(task); // Обновляем задачу в Supabase
+        }
+      }
+
+      // Устанавливаем позицию и статус для новой задачи
+      widget.task.queuePosition = selectedPosition.toString();
+      widget.task.status = TaskStatus.queue;
+      await _taskService.updateTask(widget.task); // Сохраняем новую задачу
+
+      // Перезагружаем список задач
+      _loadQueuedTasks();
+    } catch (e) {
+      // Обработка ошибок
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка при добавлении в очередь: $e')),
+      );
+    }
+  }
+  void _showPositionSelectionDialog(int tasksCount) {
+    final maxPosition = tasksCount + 1;
+    const itemHeight = 48.0;
+    const headerHeight = 80.0;
+
+    final contentHeight = headerHeight +
+        ( maxPosition * itemHeight);
+
+
+    showModalBottomSheet(
+      backgroundColor: Colors.white,
+      context: context,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: contentHeight,
+        minHeight: 100,
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                width: 32,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: maxPosition,
+                  itemBuilder: (context, index) {
+                    final position = index + 1;
+                    return RadioListTile<int>(
+                      title: Text('$position'),
+                      value: position,
+                      groupValue: _selectedPosition,
+                      onChanged: (value) {
+                        if (value != null) {
+                          _addToQueue(value);
+                          Navigator.pop(context);
+                          widget.task.changeStatus(TaskStatus.queue);
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,9 +158,8 @@ class _QueueScreenState extends State<QueueScreen> {
               children: [
                 // Карточка текущей задачи
                 _buildTaskCard(
-                  status: widget.task.status,
-                  title: widget.task.taskName,
-                  project: widget.task.project?.name ?? 'Без проекта',
+                  task: widget.task,
+                  count: tasks.length
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12.0),
@@ -96,9 +193,8 @@ class _QueueScreenState extends State<QueueScreen> {
   }
 
   Widget _buildTaskCard({
-    required TaskStatus status,
-    required String title,
-    required String project,
+    required Task task,
+    required int count,
   }) {
     return Card(
       color: Colors.white,
@@ -121,12 +217,12 @@ class _QueueScreenState extends State<QueueScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  StatusHelper.getStatusIcon(status),
+                  StatusHelper.getStatusIcon(task.status),
                   size: 16,
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  StatusHelper.displayName(status),
+                  StatusHelper.displayName(task.status),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -139,7 +235,7 @@ class _QueueScreenState extends State<QueueScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            title,
+            task.taskName,
             style: const TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 16),
@@ -149,13 +245,27 @@ class _QueueScreenState extends State<QueueScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            project,
+            task.project!.name,
             style: const TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
 
+          if(task.deadline != null) ...[
+            Text(
+              'Сделать до',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              formatDeadline(task.deadline),
+              style: const TextStyle(fontSize: 16),
+            ),
+
+            const SizedBox(height: 16),
+
+            ElevatedButton(
+            onPressed: () {
+              _showPositionSelectionDialog(count);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
@@ -178,7 +288,41 @@ class _QueueScreenState extends State<QueueScreen> {
                 ),
               ],
             ),
-          ),
+          ),]
+          else ...[
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TaskCompletionPage(task: task),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(width: 8),
+                  Text(
+                    'Выставить дату завершения задачи',
+                    style: TextStyle(
+                      color: Colors.white, // Белый текст
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ]
+
         ]),
       ),
     );
@@ -240,7 +384,7 @@ class _QueueScreenState extends State<QueueScreen> {
             if (deadline != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Сделать до: $deadline',
+                formatDeadline(widget.task.deadline),
                 style: Theme.of(context).textTheme.titleSmall,
               ),
             ],
