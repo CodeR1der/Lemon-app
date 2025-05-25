@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/models/task_role.dart';
+import 'package:task_tracker/screens/change_executer_screen.dart';
 import 'package:task_tracker/screens/tasks_screen.dart';
 import 'package:task_tracker/services/user_service.dart';
 
@@ -340,10 +341,11 @@ class CorrectionDetailsScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  task.changeStatus(TaskStatus.inOrder);
-                  RequestService().updateCorrection(correction..isDone = true);
-                  Navigator.pop(
+                  Navigator.push(
                     context,
+                    MaterialPageRoute(
+                      builder: (context) => ChangeExecuterScreen(task: task,correction: correction),
+                    ),
                   );
                 },
                 style: OutlinedButton.styleFrom(

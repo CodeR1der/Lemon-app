@@ -1,16 +1,18 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:task_tracker/models/correction.dart';
 import 'package:task_tracker/models/task_status.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 
 import '../models/employee.dart';
 import '../models/task.dart';
+import '../services/request_operation.dart';
 import '../services/user_service.dart';
 
 class ChangeExecuterScreen extends StatefulWidget {
   final Task task;
+  final Correction correction;
 
-  const ChangeExecuterScreen({super.key, required this.task});
+  const ChangeExecuterScreen({super.key, required this.task, required this.correction});
 
   @override
   _ChangeExecuterScreen createState() => _ChangeExecuterScreen();
@@ -79,6 +81,7 @@ class _ChangeExecuterScreen extends State<ChangeExecuterScreen> {
                         // Создаем новую команду или обновляем существующую
                         widget.task.team.teamMembers.first = selectedPerformer!;
                         widget.task.changeStatus(TaskStatus.inOrder);
+                        RequestService().updateCorrection(widget.correction..isDone = true);
                         Navigator.pop(context);
                       }
                     },
