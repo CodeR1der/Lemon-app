@@ -31,7 +31,10 @@ class _QueueScreenState extends State<QueueScreen> {
   void _loadQueuedTasks() {
     setState(() {
       _queuedTasks = _taskService.getTasksByStatus(
-        position: RoleHelper.determineUserRoleInTask(task: widget.task, currentUserId: widget.task.team.teamMembers.first.userId).toString(),
+        position: RoleHelper.determineUserRoleInTask(
+                task: widget.task,
+                currentUserId: widget.task.team.teamMembers.first.userId)
+            .toString(),
         status: TaskStatus.queue,
         employeeId: widget.task.team.teamMembers.first.userId,
       );
@@ -52,8 +55,8 @@ class _QueueScreenState extends State<QueueScreen> {
 
       // Обновляем позиции существующих задач
       for (var task in tasks) {
-        if (int.parse(task.queuePosition!)  >= selectedPosition) {
-          task.queuePosition = (int.parse(task.queuePosition!)+1).toString();
+        if (int.parse(task.queuePosition!) >= selectedPosition) {
+          task.queuePosition = (int.parse(task.queuePosition!) + 1).toString();
           await _taskService.updateTask(task); // Обновляем задачу в Supabase
         }
       }
@@ -72,14 +75,13 @@ class _QueueScreenState extends State<QueueScreen> {
       );
     }
   }
+
   void _showPositionSelectionDialog(int tasksCount) {
     final maxPosition = tasksCount + 1;
     const itemHeight = 48.0;
     const headerHeight = 80.0;
 
-    final contentHeight = headerHeight +
-        ( maxPosition * itemHeight);
-
+    final contentHeight = headerHeight + (maxPosition * itemHeight);
 
     showModalBottomSheet(
       backgroundColor: Colors.white,
@@ -157,10 +159,7 @@ class _QueueScreenState extends State<QueueScreen> {
             child: Column(
               children: [
                 // Карточка текущей задачи
-                _buildTaskCard(
-                  task: widget.task,
-                  count: tasks.length
-                ),
+                _buildTaskCard(task: widget.task, count: tasks.length),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12.0),
                   child: Divider(),
@@ -179,7 +178,7 @@ class _QueueScreenState extends State<QueueScreen> {
                         queueNumber: queueTask.queuePosition,
                         title: queueTask.taskName,
                         deadline: queueTask.endDate,
-                        priority:  queueTask.priority,
+                        priority: queueTask.priority,
                         project: queueTask.project!.name,
                       ),
                     );
@@ -249,8 +248,7 @@ class _QueueScreenState extends State<QueueScreen> {
             style: const TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 16),
-
-          if(task.deadline != null) ...[
+          if (task.deadline != null) ...[
             Text(
               'Сделать до',
               style: Theme.of(context).textTheme.titleSmall,
@@ -260,36 +258,34 @@ class _QueueScreenState extends State<QueueScreen> {
               formatDeadline(task.deadline),
               style: const TextStyle(fontSize: 16),
             ),
-
             const SizedBox(height: 16),
-
             ElevatedButton(
-            onPressed: () {
-              _showPositionSelectionDialog(count);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              onPressed: () {
+                _showPositionSelectionDialog(count);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(width: 8),
+                  Text(
+                    'Выставить в очередь',
+                    style: TextStyle(
+                      color: Colors.white, // Белый текст
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(width: 8),
-                Text(
-                  'Выставить в очередь',
-                  style: TextStyle(
-                    color: Colors.white, // Белый текст
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),]
-          else ...[
+          ] else ...[
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -322,7 +318,6 @@ class _QueueScreenState extends State<QueueScreen> {
               ),
             ),
           ]
-
         ]),
       ),
     );

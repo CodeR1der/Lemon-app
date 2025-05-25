@@ -34,9 +34,9 @@ class MyApp extends StatelessWidget {
     try {
       const userId =
       //'e50629e9-fef5-472f-b798-58fedc9739be'; //наблюдатель
-      'd1e6c36b-0fb1-4686-9ccd-a062bd95011d'; //сотрудник исполнитель
+      //'d1e6c36b-0fb1-4686-9ccd-a062bd95011d'; //сотрудник исполнитель
       //'d6c99c8b-fd07-4702-b849-71cd603eab0b'; //владислав постановщик
-      //'71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; //никита коммуникатор
+      '71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; //никита коммуникатор
       await UserService.to.initializeUser(userId);
     } catch (e) {
       print('Ошибка инициализации приложения: $e');

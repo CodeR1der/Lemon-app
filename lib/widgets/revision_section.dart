@@ -200,7 +200,9 @@ class RevisionsCard extends StatelessWidget {
               ),
             ),
           ),
-        ] else ...[
+        ] else if (task.status == TaskStatus.atWork)
+          ...[]
+        else ...[
           // Кнопка "Подробнее"
           Align(
             alignment: Alignment.centerRight,
@@ -348,7 +350,8 @@ class RevisionsCard extends StatelessWidget {
         return 'Причина разъяснения';
       case TaskStatus.needTicket:
         return 'Письмо-решение';
-      // Добавьте другие статусы по необходимости
+      case TaskStatus.completedUnderReview:
+        return "Задача выполнена некорректно";
       default:
         return 'Изменение статуса';
     }

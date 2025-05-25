@@ -1,7 +1,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:task_tracker/services/correction_operation.dart';
+import 'package:task_tracker/models/task_validate.dart';
+import 'package:task_tracker/services/request_operation.dart';
 
 import '../models/correction.dart';
 import '../models/task.dart';
@@ -10,11 +11,13 @@ import '../models/task_status.dart';
 class CorrectionScreen extends StatefulWidget {
   final Task task;
   final Correction? prevCorrection;
+  final TaskValidate? validate;
 
   const CorrectionScreen({
     super.key,
     required this.task,
     this.prevCorrection,
+    this.validate,
   });
 
   @override
@@ -59,14 +62,17 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
 
       if (widget.task.status == TaskStatus.notRead) {
         await widget.task.changeStatus(TaskStatus.needExplanation);
+      } else if (widget.task.status == TaskStatus.completedUnderReview) {
+        Navigator.pop(context);
+        RequestService()
+            .updateValidate(widget.validate!..isDone = true);
+        await widget.task.changeStatus(TaskStatus.atWork);
       } else {
         if (widget.task.status == TaskStatus.needTicket) {
           RequestService()
               .updateCorrection(widget.prevCorrection!..isDone = true);
         }
         await widget.task.changeStatus(TaskStatus.revision);
-
-        //CorrectionService().updateCorrection(correction);
       }
       // 4. Показываем уведомление
       ScaffoldMessenger.of(context).showSnackBar(
@@ -105,9 +111,9 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
             ),
             const SizedBox(height: 8),
           ] else ...[
-            const Text(
-              'Описание ошибок в постановке задачи',
-              style: TextStyle(
+            Text(
+              widget.task.status == TaskStatus.completedUnderReview ? 'Описание ошибок в задаче' : 'Описание ошибок в постановке задачи',
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -249,6 +255,8 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
         return "Причина разъяснения";
       case TaskStatus.needTicket:
         return "Письмо-решение";
+      case TaskStatus.completedUnderReview:
+        return "Задача выполнена некорректно";
       default:
         return "Письмо-решение";
     }

@@ -20,6 +20,35 @@ class RequestService {
     }
   }
 
+  Future<TaskValidate?> getValidate(
+      String task_id, TaskStatus status) async {
+    try {
+      final validateResponse =
+      await _client.from('task_validate').select('*').eq('task_id', task_id);
+
+      return validateResponse
+          .map((data) => TaskValidate.fromJson(data)).first;
+    } on PostgrestException catch (error) {
+      print('Ошибка при получении корректировки: ${error.message}');
+      return null;
+    }
+  }
+
+  Future<void> updateValidate(TaskValidate validate) async {
+    try {
+      await _client
+          .from('task_validate')
+          .update({'is_done': validate.isDone}).eq('id', validate.id!);
+      print('Корректировка успешно добавлена');
+    } on PostgrestException catch (error) {
+      print('Ошибка при добавлении корректировки: ${error.message}');
+    }
+  }
+
+  String getValidateAttachment(String? fileName) {
+    return _client.storage.from('ValidateAttachments').getPublicUrl(fileName!);
+  }
+
 
   Future<void> addCorrection(Correction correction) async {
     correction.id = _uuid.v4();

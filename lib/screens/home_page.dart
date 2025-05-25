@@ -183,9 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
       width: double.infinity, // занимает всю доступную ширину
       child: ElevatedButton(
         onPressed: () {
-          Navigator.pushNamed(context, TaskTitleScreen.routeName
-            //MaterialPageRoute(builder: (context) => const TaskTitleScreen())
-          );
+          Navigator.pushNamed(context, TaskTitleScreen.routeName);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.orange,

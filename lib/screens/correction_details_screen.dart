@@ -4,7 +4,7 @@ import 'package:task_tracker/models/task_role.dart';
 import '../models/correction.dart';
 import '../models/task.dart';
 import '../models/task_status.dart';
-import '../services/correction_operation.dart';
+import '../services/request_operation.dart';
 import '../task_screens/TaskDescriptionTab.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {

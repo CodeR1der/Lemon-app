@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:task_tracker/models/task_validate.dart';
 import 'package:task_tracker/screens/correction_screen.dart';
 import 'package:task_tracker/screens/queue_screen.dart';
 import 'package:task_tracker/screens/task_validate_screen.dart';
-import 'package:task_tracker/services/correction_operation.dart';
+import 'package:task_tracker/services/request_operation.dart';
 import 'package:task_tracker/widgets/revision_section.dart';
 
 import '../models/correction.dart';
@@ -11,6 +12,7 @@ import '../models/task.dart';
 import '../models/task_role.dart';
 import '../models/task_status.dart';
 import '../screens/task_history.dart';
+import '../screens/task_validate_details_screen.dart';
 
 class TaskLayoutBuilder extends StatelessWidget {
   final Task task;
@@ -26,6 +28,12 @@ class TaskLayoutBuilder extends StatelessWidget {
     final corrections = RequestService().getCorrection(task.id, task.status);
 
     return corrections;
+  }
+
+  Future<TaskValidate?> _loadValidates() {
+    final validates = RequestService().getValidate(task.id, task.status);
+
+    return validates;
   }
 
   @override
@@ -49,6 +57,8 @@ class TaskLayoutBuilder extends StatelessWidget {
         return _buildAtWorkLayout(context);
       case TaskStatus.extraTime:
         return _buildExtraTimeLayout(context);
+      case TaskStatus.completedUnderReview:
+        return _buildCompletedUnderReviewLayout(context);
       case TaskStatus.completed:
         return _buildCompletedLayout(context);
       default:
@@ -78,18 +88,19 @@ class TaskLayoutBuilder extends StatelessWidget {
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                   const Divider(),
                   _buildSectionItem(
-                  icon: Iconsax.clock_copy,
-                  title: 'История задачи',
-                  onTap: () {
-                    // Действие при нажатии
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TaskHistoryScreen(revisions: revisions),
-                      ),
-                    );
-                  },
-                ),
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
                   const Divider(),
                 ],
               );
@@ -100,7 +111,11 @@ class TaskLayoutBuilder extends StatelessWidget {
                 const Divider(),
                 if (revisions.isNotEmpty &&
                     revisions.any((revision) => !revision.isDone))
-                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы')
+                  RevisionsCard(
+                      revisions: revisions,
+                      task: task,
+                      role: role,
+                      title: 'Доработки и запросы')
                 else ...[
                   _buildSectionItem(
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
@@ -183,18 +198,19 @@ class TaskLayoutBuilder extends StatelessWidget {
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                   const Divider(),
                   _buildSectionItem(
-                  icon: Iconsax.clock_copy,
-                  title: 'История задачи',
-                  onTap: () {
-                    // Действие при нажатии
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TaskHistoryScreen(revisions: revisions),
-                      ),
-                    );
-                  },
-                ),
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
                   const Divider(),
                 ],
               );
@@ -230,7 +246,11 @@ class TaskLayoutBuilder extends StatelessWidget {
                   title: 'Контрольные точки',
                 ),
                 const Divider(),
-                RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы'),
+                RevisionsCard(
+                    revisions: revisions,
+                    task: task,
+                    role: role,
+                    title: 'Доработки и запросы'),
               ],
             );
 
@@ -243,7 +263,11 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ),
                 const Divider(),
                 if (notDoneRevision.status != TaskStatus.newTask) ...[
-                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы'),
+                  RevisionsCard(
+                      revisions: revisions,
+                      task: task,
+                      role: role,
+                      title: 'Доработки и запросы'),
                 ] else
                   _buildSectionItem(
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
@@ -256,7 +280,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        builder: (context) =>
+                            TaskHistoryScreen(revisions: revisions),
                       ),
                     );
                   },
@@ -272,7 +297,11 @@ class TaskLayoutBuilder extends StatelessWidget {
                   title: 'Контрольные точки',
                 ),
                 const Divider(),
-                RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы'),
+                RevisionsCard(
+                    revisions: revisions,
+                    task: task,
+                    role: role,
+                    title: 'Доработки и запросы'),
                 const Divider(),
                 _buildSectionItem(
                   icon: Iconsax.clock_copy,
@@ -282,7 +311,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        builder: (context) =>
+                            TaskHistoryScreen(revisions: revisions),
                       ),
                     );
                   },
@@ -302,13 +332,18 @@ class TaskLayoutBuilder extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        builder: (context) =>
+                            TaskHistoryScreen(revisions: revisions),
                       ),
                     );
                   },
                 ),
                 const Divider(),
-                RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы'),
+                RevisionsCard(
+                    revisions: revisions,
+                    task: task,
+                    role: role,
+                    title: 'Доработки и запросы'),
               ],
             );
         }
@@ -337,18 +372,19 @@ class TaskLayoutBuilder extends StatelessWidget {
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                   const Divider(),
                   _buildSectionItem(
-                  icon: Iconsax.clock_copy,
-                  title: 'История задачи',
-                  onTap: () {
-                    // Действие при нажатии
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TaskHistoryScreen(revisions: revisions),
-                      ),
-                    );
-                  },
-                ),
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
                   const Divider(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -469,18 +505,19 @@ class TaskLayoutBuilder extends StatelessWidget {
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                   const Divider(),
                   _buildSectionItem(
-                  icon: Iconsax.clock_copy,
-                  title: 'История задачи',
-                  onTap: () {
-                    // Действие при нажатии
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TaskHistoryScreen(revisions: revisions),
-                      ),
-                    );
-                  },
-                ),
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
                   const Divider(),
                 ],
               );
@@ -517,7 +554,11 @@ class TaskLayoutBuilder extends StatelessWidget {
                 const Divider(),
                 if (revisions.isNotEmpty &&
                     revisions.any((revision) => !revision.isDone))
-                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы')
+                  RevisionsCard(
+                      revisions: revisions,
+                      task: task,
+                      role: role,
+                      title: 'Доработки и запросы')
                 else
                   _buildSectionItem(
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
@@ -600,18 +641,19 @@ class TaskLayoutBuilder extends StatelessWidget {
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                   const Divider(),
                   _buildSectionItem(
-                  icon: Iconsax.clock_copy,
-                  title: 'История задачи',
-                  onTap: () {
-                    // Действие при нажатии
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TaskHistoryScreen(revisions: revisions),
-                      ),
-                    );
-                  },
-                ),
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
                   const Divider(),
                 ],
               );
@@ -641,7 +683,11 @@ class TaskLayoutBuilder extends StatelessWidget {
           switch (role) {
             case TaskRole.executor:
               return Column(children: [
-                RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы'),
+                RevisionsCard(
+                    revisions: revisions,
+                    task: task,
+                    role: role,
+                    title: 'Доработки и запросы'),
                 const Divider(),
                 _buildSectionItem(
                     icon: Iconsax.clock_copy, title: 'История задачи'),
@@ -678,7 +724,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                         ),
                       );
                     },
-                ),
+                  ),
                   const Divider(),
                 ],
               );
@@ -769,18 +815,19 @@ class TaskLayoutBuilder extends StatelessWidget {
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                   const Divider(),
                   _buildSectionItem(
-                  icon: Iconsax.clock_copy,
-                  title: 'История задачи',
-                  onTap: () {
-                    // Действие при нажатии
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TaskHistoryScreen(revisions: revisions),
-                      ),
-                    );
-                  },
-                ),
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
                   const Divider(),
                 ],
               );
@@ -820,7 +867,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
                         ),
                       );
                     },
@@ -835,7 +883,11 @@ class TaskLayoutBuilder extends StatelessWidget {
                 const Divider(),
                 if (revisions.isNotEmpty &&
                     revisions.any((revision) => !revision.isDone))
-                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы')
+                  RevisionsCard(
+                      revisions: revisions,
+                      task: task,
+                      role: role,
+                      title: 'Доработки и запросы')
                 else ...[
                   _buildSectionItem(
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
@@ -870,7 +922,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
                         ),
                       );
                     },
@@ -879,12 +932,11 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-            // TODO: Handle this case.
+              // TODO: Handle this case.
               throw UnimplementedError();
           }
         });
   }
-
 
   Widget _buildAtWorkLayout(BuildContext context) {
     return FutureBuilder<List<Correction>>(
@@ -900,12 +952,22 @@ class TaskLayoutBuilder extends StatelessWidget {
 
           final revisions = snapshot.data ?? [];
 
+          final notDoneRevisions = revisions.where((r) => !r.isDone).first;
+
           switch (role) {
             case TaskRole.executor:
               return Column(
                 children: [
-                  _buildSectionItem(
-                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  if (notDoneRevisions.status ==
+                      TaskStatus.completedUnderReview)
+                    RevisionsCard(
+                        revisions: revisions,
+                        task: task,
+                        role: role,
+                        title: 'Доработки и запросы')
+                  else
+                    _buildSectionItem(
+                        icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                   const Divider(),
                   _buildSectionItem(
                     icon: Iconsax.clock_copy,
@@ -915,7 +977,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
                         ),
                       );
                     },
@@ -990,7 +1053,11 @@ class TaskLayoutBuilder extends StatelessWidget {
                 const Divider(),
                 if (revisions.isNotEmpty &&
                     revisions.any((revision) => !revision.isDone))
-                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы')
+                  RevisionsCard(
+                      revisions: revisions,
+                      task: task,
+                      role: role,
+                      title: 'Доработки и запросы')
                 else ...[
                   _buildSectionItem(
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
@@ -1025,7 +1092,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
                         ),
                       );
                     },
@@ -1034,7 +1102,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-            // TODO: Handle this case.
+              // TODO: Handle this case.
               throw UnimplementedError();
           }
         });
@@ -1069,7 +1137,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
                         ),
                       );
                     },
@@ -1084,7 +1153,11 @@ class TaskLayoutBuilder extends StatelessWidget {
                 const Divider(),
                 if (revisions.isNotEmpty &&
                     revisions.any((revision) => !revision.isDone))
-                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы')
+                  RevisionsCard(
+                      revisions: revisions,
+                      task: task,
+                      role: role,
+                      title: 'Доработки и запросы')
                 else ...[
                   _buildSectionItem(
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
@@ -1119,7 +1192,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
                         ),
                       );
                     },
@@ -1128,9 +1202,141 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-            // TODO: Handle this case.
+              // TODO: Handle this case.
               throw UnimplementedError();
           }
+        });
+  }
+
+  Widget _buildCompletedUnderReviewLayout(BuildContext context) {
+    return FutureBuilder<List<Correction>>(
+        future: _loadCorrections(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          }
+
+          final revisions = snapshot.data ?? [];
+
+          return FutureBuilder<TaskValidate?>(
+            future: RequestService().getValidate(task.id, task.status),
+            builder: (context, validateSnapshot) {
+              if (validateSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final validate = validateSnapshot.data;
+
+              switch (role) {
+                case TaskRole.executor:
+                  return Column(
+                    children: [
+                      _buildSectionItem(
+                          icon: Iconsax.edit_copy,
+                          title: 'Доработки и запросы'),
+                      const Divider(),
+                      _buildSectionItem(
+                        icon: Iconsax.clock_copy,
+                        title: 'История задачи',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  TaskHistoryScreen(revisions: revisions),
+                            ),
+                          );
+                        },
+                      ),
+                      const Divider(),
+                    ],
+                  );
+                case TaskRole.communicator:
+                  return Column(children: [
+                    _buildSectionItem(
+                        icon: Iconsax.clock_copy, title: 'Контрольные точки'),
+                    const Divider(),
+                    _buildSectionItem(
+                        icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                    const Divider(),
+                    _buildSectionItem(
+                      icon: Iconsax.clock_copy,
+                      title: 'История задачи',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                TaskHistoryScreen(revisions: revisions),
+                          ),
+                        );
+                      },
+                    ),
+                  ]);
+                case TaskRole.creator:
+                  return Column(
+                    children: [
+                      _buildSectionItem(
+                          icon: Iconsax.edit_copy,
+                          title: 'Доработки и запросы'),
+                      const Divider(),
+                      _buildSectionItem(
+                        icon: Iconsax.clock_copy,
+                        title: 'История задачи',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  TaskHistoryScreen(revisions: revisions),
+                            ),
+                          );
+                        },
+                      ),
+                      const Divider(),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      TaskValidateDetailsScreen(
+                                          task: task, validate: validate!)));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(width: 8),
+                            Text(
+                              'Принять',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                case TaskRole.none:
+                  // TODO: Handle this case.
+                  throw UnimplementedError();
+              }
+            },
+          );
         });
   }
 
@@ -1178,7 +1384,8 @@ class TaskLayoutBuilder extends StatelessWidget {
   }) {
     return InkWell(
       borderRadius: BorderRadius.circular(8),
-      onTap: title == 'История задачи' ? onTap : null, // Делаем кликабельным только "Историю"
+      onTap: title == 'История задачи' ? onTap : null,
+      // Делаем кликабельным только "Историю"
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         child: Row(
