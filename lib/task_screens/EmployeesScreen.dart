@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/services/task_operations.dart';
+import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/task_screens/DeadlineScreen.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/employee.dart';
 import '../models/task.dart';
@@ -20,6 +22,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
   late Future<List<Employee>> employeesFuture;
   Employee? selectedPerformer;
   Employee? selectedCommunicator;
+  Employee? selectedObserver;
   final TaskService _database = TaskService();
 
   @override
@@ -91,39 +94,55 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   employees: employees,
                 ),
                 const SizedBox(height: 16),
-                if (widget.taskData.team.teamMembers.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Текущая команда',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: widget.taskData.team.teamMembers.length,
-                        itemBuilder: (context, index) {
-                          final member =
-                              widget.taskData.team.teamMembers[index];
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                  _database.getAvatarUrl(member.avatarUrl)),
-                            ),
-                            title: Text(
-                              member.name,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(member.position),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                _buildEmployeeSelectionTile(
+                  title: 'Наблюдатель',
+                  selectedEmployee: selectedObserver,
+                  onSelected: (Employee? employee) {
+                    if (_isEmployeeAlreadySelected(employee)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Этот сотрудник уже выбран')),
+                      );
+                    } else {
+                      setState(() {
+                        selectedObserver = employee;
+                      });
+                    }
+                  },
+                  employees: employees,
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Наблюдатели',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: widget.taskData.project!.observers.length,
+                      itemBuilder: (context, index) {
+                        final member =
+                            widget.taskData.project!.observers[index];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(
+                                _database.getAvatarUrl(member.avatarUrl)),
+                          ),
+                          title: Text(
+                            member.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(member.position),
+                        );
+                      },
+                    ),
+                  ],
+                ),
                 const Spacer(),
                 SizedBox(
                   width: double.infinity,
@@ -133,24 +152,24 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                           selectedCommunicator != null) {
                         // Создаем новую команду или обновляем существующую
                         final newTeam = TaskTeam(
-                          teamId: widget.taskData.team.teamId,
+                          teamId: const Uuid().v4(),
                           taskId: widget.taskData.id,
                           communicatorId: selectedCommunicator!,
-                          creatorId: widget.taskData.team.creatorId,
-                          teamMembers: [
-                            ...widget.taskData.team.teamMembers,
-                            selectedPerformer!,
-                            selectedCommunicator!,
-                          ],
+                          creatorId: UserService.to.currentUser!,
+                          teamMembers: [selectedPerformer!],
                         );
 
                         widget.taskData.team = newTeam;
+                        if (selectedObserver != null) {
+                          widget.taskData.project!.observers
+                              .add(selectedObserver!);
+                        }
 
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                DeadlineScreen(widget.taskData),
+                            builder: (context) => DeadlineScreen(
+                                widget.taskData),
                           ),
                         );
                       }
@@ -172,7 +191,13 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
 
   bool _isEmployeeAlreadySelected(Employee? employee) {
     if (employee == null) return false;
-    return employee == selectedPerformer || employee == selectedCommunicator;
+    return employee == selectedPerformer ||
+        employee == selectedCommunicator ||
+        employee == selectedObserver ||
+        widget.taskData.project!.observers
+            .where((emp) => employee.userId == emp.userId)
+            .isNotEmpty ||
+        employee == UserService.to.currentUser!;
   }
 
   Widget _buildEmployeeSelectionTile({
@@ -190,36 +215,63 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
         ),
         const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(8.0),
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.15),
+                spreadRadius: 1,
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-          child: DropdownButton<Employee>(
-            value: selectedEmployee,
-            hint: const Text('Выберите сотрудника'),
-            icon: const Icon(Icons.arrow_drop_down),
-            isExpanded: true,
-            underline: Container(),
-            onChanged: onSelected,
-            items: employees.map((employee) {
-              return DropdownMenuItem<Employee>(
-                value: employee,
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(
-                          _database.getAvatarUrl(employee.avatarUrl)),
-                      radius: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(employee.name),
-                    ),
-                  ],
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<Employee?>(
+              value: selectedEmployee,
+              hint: const Text('Выберите сотрудника'),
+              icon: const Icon(Icons.arrow_drop_down),
+              isExpanded: true,
+              dropdownColor: Colors.white,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              onChanged: onSelected,
+              items: [
+                const DropdownMenuItem<Employee?>(
+                  value: null,
+                  child: Text('Выберите сотрудника'),
                 ),
-              );
-            }).toList(),
+                ...employees.map((employee) {
+                  const SizedBox(height: 4);
+                  return DropdownMenuItem<Employee?>(
+                    value: employee,
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: NetworkImage(
+                              _database.getAvatarUrl(employee.avatarUrl)),
+                          radius: 16,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            employee.name,
+                            style: const TextStyle(fontSize: 15),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
           ),
         ),
       ],

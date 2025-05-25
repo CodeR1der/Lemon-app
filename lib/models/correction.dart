@@ -27,7 +27,7 @@ class Correction {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'date': date.toIso8601String(),
+      'date': date.toLocal().toIso8601String(),
       'task_id': taskId,
       'description': description,
       'is_done': isDone,
@@ -41,7 +41,7 @@ class Correction {
   factory Correction.fromJson(Map<String, dynamic> json) {
     return Correction(
       id: json['id'] as String,
-      date: DateTime.parse(json['date'] as String),
+      date: DateTime.parse(json['date'] as String).toLocal(),
       taskId: json['task_id'] as String,
       description: json['description'] as String,
       attachments: List<String>.from(json['attachments'] ?? []),

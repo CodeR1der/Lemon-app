@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:task_tracker/models/priority.dart';
 import 'package:task_tracker/screens/task_details_screen.dart';
 import 'package:task_tracker/services/task_operations.dart';
+import 'package:task_tracker/task_screens/taskTitleScreen.dart';
 
 import '../models/task.dart';
 import 'SelectPeriodScreen.dart';
@@ -44,30 +45,52 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
 
   // Виджет для выбора приоритета
   Widget _buildPriorityDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: DropdownButton<Priority>(
-        value: selectedPriority,
-        hint: const Text('Выберите приоритет'),
-        icon: const Icon(Icons.arrow_drop_down),
-        isExpanded: true,
-        underline: Container(),
-        onChanged: (Priority? newValue) {
-          setState(() {
-            selectedPriority = newValue!;
-          });
-        },
-        items: Priority.values.map((Priority priority) {
-          return DropdownMenuItem<Priority>(
-            value: priority,
-            child: Text(priority.displayName), // Используем displayName
-          );
-        }).toList(),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.15),
+                spreadRadius: 1,
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<Priority>(
+              value: selectedPriority,
+              hint: const Text('Выберите приоритет'),
+              icon: const Icon(Icons.arrow_drop_down),
+              isExpanded: true,
+              underline: Container(),
+              onChanged: (Priority? newValue) {
+                setState(() {
+                  selectedPriority = newValue!;
+                });
+              },
+              dropdownColor: Colors.white,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              items: Priority.values.map((Priority priority) {
+                return DropdownMenuItem<Priority>(
+                  value: priority,
+                  child: Text(priority.displayName), // Используем displayName
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -168,14 +191,15 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
                                   Navigator.of(context)
                                       .pop(); // Закрываем диалог
 
-                                  // Переход на экран с задачей
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => TaskDetailsScreen(
-                                          task: widget.taskData),
-                                    ),
-                                  );
+                                  Navigator.popUntil(context, ModalRoute.withName(TaskTitleScreen.routeName));
+                                  Navigator.pop(context);
+
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => TaskDetailsScreen(
+                                            task: widget.taskData),
+                                      ));
                                 },
                                 child: const Text('Принять'),
                               ),

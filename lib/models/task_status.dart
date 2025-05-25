@@ -9,7 +9,7 @@ enum TaskStatus {
   queue, // в очереди на выполнение
   needExplanation, // Нужно разъяснение
   atWork, // В работе
-  needTicket,
+  needTicket, // Нужно письмо-решение
   controlPoint, // Контрольная точка
   extraTime, // Запросы на дополнительное время
   overdue, // Просроченная задача

@@ -6,7 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/widgets/navigation_panel.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   InitialBindings().dependencies();
@@ -46,7 +45,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-
+      routes: {
+        HomeScreen.routeName: (context) => const HomeScreen(),
+        TaskTitleScreen.routeName: (context) => const TaskTitleScreen(),
+        // Добавляй другие экраны здесь
+      },
       theme: ThemeData(
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.white,
