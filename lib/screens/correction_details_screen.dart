@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/models/task_role.dart';
+import 'package:task_tracker/screens/tasks_screen.dart';
+import 'package:task_tracker/services/user_service.dart';
 
 import '../models/correction.dart';
 import '../models/task.dart';
 import '../models/task_status.dart';
-import '../services/correction_operation.dart';
+import '../services/request_operation.dart';
 import '../task_screens/TaskDescriptionTab.dart';
+import 'choose_task_deadline_screen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {
   // Добавлено наследование
@@ -63,6 +66,13 @@ class CorrectionDetailsScreen extends StatelessWidget {
             if (correction.status == TaskStatus.needTicket) ...[
               Text(
                 'Решение',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ] else if (correction.status == TaskStatus.overdue) ...[
+              Text(
+                'Объяснительная',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -215,8 +225,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
               onPressed: () {
                 if (correction.status == TaskStatus.needTicket) {
                   task.changeStatus(TaskStatus.notRead);
-                  RequestService()
-                      .updateCorrection(correction..isDone = true);
+                  RequestService().updateCorrection(correction..isDone = true);
                 } else {
                   task.changeStatus(TaskStatus.newTask);
                 }
@@ -250,8 +259,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
               onPressed: () {
                 if (correction.status == TaskStatus.needTicket) {
                   task.changeStatus(TaskStatus.needExplanation);
-                  RequestService()
-                      .updateCorrection(correction..isDone = true);
+                  RequestService().updateCorrection(correction..isDone = true);
                   RequestService()
                       .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                 }
@@ -294,75 +302,170 @@ class CorrectionDetailsScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Первая кнопка
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                task.changeStatus(TaskStatus.notRead);
-                RequestService().updateCorrection(correction..isDone = true);
-                Navigator.pop(
-                  context,
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.orange,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          if (task.status == TaskStatus.overdue) ...[
+            // Первая кнопка
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  task.changeStatus(TaskStatus.extraTime);
+                  RequestService().updateCorrection(correction..isDone = true);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TaskCompletionPage(task: task),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.orange,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text(
-                'Принять',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Вторая кнопка
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                if (correction.status == TaskStatus.needTicket) {
-                  task.changeStatus(TaskStatus.needExplanation);
-                  RequestService()
-                      .updateCorrection(correction..isDone = true);
-                  RequestService()
-                      .updateCorrectionByStatus(task.id, TaskStatus.notRead);
-                } else {
-                  task.changeStatus(TaskStatus.revision);
-                }
-                Navigator.pop(
-                  context,
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.grey,
-                side: const BorderSide(color: Colors.grey, width: 1),
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: Text(
-                correction.status == TaskStatus.needTicket
-                    ? "Не принять"
-                    : 'Правки выполнены некорректно',
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                child: const Text(
+                  'Дать дополнительное время',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 8), // Дополнительный отступ снизу
+            const SizedBox(height: 16),
+            // Вторая кнопка
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  task.changeStatus(TaskStatus.inOrder);
+                  RequestService().updateCorrection(correction..isDone = true);
+                  Navigator.pop(
+                    context,
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.grey,
+                  side: const BorderSide(color: Colors.grey, width: 1),
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text("Заменить исполнителя",
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  task.changeStatus(TaskStatus.completed);
+                  RequestService().updateCorrection(correction..isDone = true);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TasksScreen(user: UserService.to.currentUser!,),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.grey,
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text("Завершить задачу и сдать в архив",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            // Первая кнопка
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  task.changeStatus(TaskStatus.notRead);
+                  RequestService().updateCorrection(correction..isDone = true);
+                  Navigator.pop(
+                    context,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.orange,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text(
+                  'Принять',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Вторая кнопка
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (correction.status == TaskStatus.needTicket) {
+                    task.changeStatus(TaskStatus.needExplanation);
+                    RequestService()
+                        .updateCorrection(correction..isDone = true);
+                    RequestService()
+                        .updateCorrectionByStatus(task.id, TaskStatus.notRead);
+                  } else {
+                    task.changeStatus(TaskStatus.revision);
+                  }
+                  Navigator.pop(
+                    context,
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.grey,
+                  side: const BorderSide(color: Colors.grey, width: 1),
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text(
+                  correction.status == TaskStatus.needTicket
+                      ? "Не принять"
+                      : 'Правки выполнены некорректно',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8), // Дополнительный отступ снизу
+          ]
         ],
       ),
     );

@@ -3,7 +3,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/screens/correction_screen.dart';
 import 'package:task_tracker/screens/queue_screen.dart';
 import 'package:task_tracker/screens/task_validate_screen.dart';
-import 'package:task_tracker/services/correction_operation.dart';
+import 'package:task_tracker/services/request_operation.dart';
 import 'package:task_tracker/widgets/revision_section.dart';
 
 import '../models/correction.dart';
@@ -51,6 +51,8 @@ class TaskLayoutBuilder extends StatelessWidget {
         return _buildExtraTimeLayout(context);
       case TaskStatus.completed:
         return _buildCompletedLayout(context);
+      case TaskStatus.overdue:
+        return _buildOverdueLayout(context);
       default:
         return _buildNewTaskLayout(context);
     }
@@ -956,7 +958,12 @@ class TaskLayoutBuilder extends StatelessWidget {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      task.changeStatus(TaskStatus.extraTime);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CorrectionScreen(task: task),
+                        ),
+                      );
                     },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -1134,6 +1141,101 @@ class TaskLayoutBuilder extends StatelessWidget {
         });
   }
 
+  Widget _buildOverdueLayout(BuildContext context) {
+    return FutureBuilder<List<Correction>>(
+        future: _loadCorrections(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          }
+
+          final revisions = snapshot.data ?? [];
+
+          switch (role) {
+            case TaskRole.executor:
+              return Column(
+                children: [
+                  if (revisions.isNotEmpty &&
+                      revisions.any((revision) => !revision.isDone))
+                    RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.communicator:
+              return Column(children: [
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'Контрольные точки'),
+                const Divider(),
+                if (revisions.isNotEmpty &&
+                    revisions.any((revision) => !revision.isDone))
+                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы')
+                else ...[
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                ],
+                const Divider(),
+                _buildSectionItem(
+                  icon: Iconsax.clock_copy,
+                  title: 'История задачи',
+                  onTap: () {
+                    // Действие при нажатии
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TaskHistoryScreen(revisions: revisions),
+                      ),
+                    );
+                  },
+                ),
+              ]);
+            case TaskRole.creator:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.none:
+            // TODO: Handle this case.
+              throw UnimplementedError();
+          }
+        });
+  }
+
   Widget _buildCompletedLayout(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -1205,4 +1307,5 @@ class TaskLayoutBuilder extends StatelessWidget {
       ),
     );
   }
+
 }
