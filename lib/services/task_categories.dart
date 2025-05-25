@@ -135,8 +135,14 @@ class TaskCategories {
 
       // Обновляем count для каждой категории
       return categories.map((category) {
-        final count =
-            tasksCount[StatusHelper.displayName(category.status)] ?? 0;
+        late int count = 0;
+        if (position == "Исполнитель" && category.status == TaskStatus.queue) {
+          count =
+              (tasksCount[StatusHelper.displayName(category.status)]! + tasksCount[StatusHelper.displayName(TaskStatus.inOrder)]!);
+        } else {
+          count =
+              tasksCount[StatusHelper.displayName(category.status)] ?? 0;
+        }
         category.count = count;
         return category;
       }).toList();
@@ -155,5 +161,4 @@ class TaskCategories {
       }
     }
   }
-
 }

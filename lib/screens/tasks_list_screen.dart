@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:task_tracker/screens/task_details_screen.dart';
 
 import '../models/task.dart';
+import '../models/task_role.dart';
 import '../models/task_status.dart';
 import '../services/task_operations.dart';
 
@@ -114,6 +115,29 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
                 ],
               ),
               const SizedBox(height: 16),
+              if (widget.position == RoleHelper.convertToString(TaskRole.communicator) && widget.status == TaskStatus.queue) ...[
+                Text(
+                  'Очередность задачи',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEBEDF0),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    task.queuePosition.toString(),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
               Text(
                 'Название задачи',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(

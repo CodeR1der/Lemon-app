@@ -29,6 +29,7 @@ class Task {
     required this.startDate,
     required this.endDate,
     required this.attachments,
+    this.queuePosition,
     this.deadline,
     this.audioMessage,
     this.videoMessage,
@@ -91,7 +92,8 @@ class Task {
           .single,
       attachments: List<String>.from(json['attachments'] ?? []),
       audioMessage: json['audio_message'],
-      deadline: DateTime.parse(json['deadline']),
+      queuePosition: json['queue_position']?.toString() ,
+      deadline: json['deadline'] != null ? DateTime.parse(json['deadline']) : null,
       videoMessage: List<String>.from(json['video_message'] ?? []),
       status: StatusHelper.toTaskStatus(json['status']),
     );

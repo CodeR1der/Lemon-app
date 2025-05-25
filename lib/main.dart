@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:task_tracker/screens/home_page.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/task_screens/taskTitleScreen.dart';
 import 'package:task_tracker/widgets/navigation_panel.dart';
 
 void main() async {

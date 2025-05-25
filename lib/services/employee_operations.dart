@@ -197,7 +197,6 @@ class EmployeeService {
       final communicatorProjects = await _client.from('task_team').select('''
         task_id,
         task:task_id(
-          project_id
           project:project_id(*,
             project_description_id:project_description_id(*),
             project_observers:project_observers(
@@ -212,7 +211,6 @@ class EmployeeService {
       final creatorProjects = await _client.from('task_team').select('''
           task_id,
           task:task_id(
-            project_id
             project:project_id(*,
               project_description_id:project_description_id(*),
               project_observers:project_observers(
