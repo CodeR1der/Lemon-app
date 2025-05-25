@@ -14,7 +14,7 @@ void main() async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1c3l4dGdkbXRwdXBtcm9lbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0NDU2NTgsImV4cCI6MjA0ODAyMTY1OH0.Z7gU-A_s6ymY7-vTW4ObeHurvtbSIt4kWe-9EXF5j9M',
   );
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class InitialBindings extends Bindings {
@@ -32,8 +32,8 @@ class MyApp extends StatelessWidget {
       const userId =
       //'e50629e9-fef5-472f-b798-58fedc9739be'; //наблюдатель
       //'d1e6c36b-0fb1-4686-9ccd-a062bd95011d'; //сотрудник исполнитель
-      'd6c99c8b-fd07-4702-b849-71cd603eab0b'; //владислав постановщик
-      //'71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; //никита коммуникатор
+      //'d6c99c8b-fd07-4702-b849-71cd603eab0b'; //владислав постановщик
+      '71a5a83c-7bf8-4227-ba71-3fc5eb6407c2'; //никита коммуникатор
       await UserService.to.initializeUser(userId);
     } catch (e) {
       print('Ошибка инициализации приложения: $e');
@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       theme: ThemeData(
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
           elevation: 0,
           iconTheme: IconThemeData(color: Colors.black),

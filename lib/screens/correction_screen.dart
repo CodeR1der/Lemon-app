@@ -41,7 +41,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
 
   Correction _createCorrection() {
     return Correction(
-        date: DateTime.now(),
+        date: DateTime.now().toLocal(),
         taskId: widget.task.id,
         description: _descriptionController.text,
         attachments: _attachments,
@@ -66,7 +66,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
         }
         await widget.task.changeStatus(TaskStatus.revision);
 
-        CorrectionService().updateCorrection(correction);
+        //CorrectionService().updateCorrection(correction);
       }
       // 4. Показываем уведомление
       ScaffoldMessenger.of(context).showSnackBar(

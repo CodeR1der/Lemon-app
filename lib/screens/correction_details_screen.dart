@@ -48,7 +48,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
       // Добавлен Scaffold для правильной структуры экрана
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(correction.status == TaskStatus.needTicket ? "Письмо-решение" : 'Правки по задаче'),
+        title: Text(correction.status == TaskStatus.needTicket
+            ? "Письмо-решение"
+            : 'Правки по задаче'),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -218,6 +220,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
                 } else {
                   task.changeStatus(TaskStatus.newTask);
                 }
+
                 Navigator.pop(
                   context,
                 );
@@ -247,11 +250,10 @@ class CorrectionDetailsScreen extends StatelessWidget {
               onPressed: () {
                 if (correction.status == TaskStatus.needTicket) {
                   task.changeStatus(TaskStatus.needExplanation);
-
-                  CorrectionService().updateCorrection(
-                      correction..isDone = true);
-                  CorrectionService().updateCorrectionByStatus(
-                      task.id, TaskStatus.notRead);
+                  CorrectionService()
+                      .updateCorrection(correction..isDone = true);
+                  CorrectionService()
+                      .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                 }
                 Navigator.pop(
                   context,
@@ -266,7 +268,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: Text(
-                correction.status == TaskStatus.needTicket ? 'Не принять' : 'Отредактировать задачу',
+                correction.status == TaskStatus.needTicket
+                    ? 'Не принять'
+                    : 'Отредактировать задачу',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -295,12 +299,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                if (correction.status == TaskStatus.needTicket) {
-                  task.changeStatus(TaskStatus.needExplanation);
-                  CorrectionService().updateCorrectionByStatus(task.id, TaskStatus.notRead);
-                }
-                else
-                  task.changeStatus(TaskStatus.notRead);
+                task.changeStatus(TaskStatus.notRead);
                 CorrectionService().updateCorrection(correction..isDone = true);
                 Navigator.pop(
                   context,
@@ -329,7 +328,15 @@ class CorrectionDetailsScreen extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                task.changeStatus(TaskStatus.revision);
+                if (correction.status == TaskStatus.needTicket) {
+                  task.changeStatus(TaskStatus.needExplanation);
+                  CorrectionService()
+                      .updateCorrection(correction..isDone = true);
+                  CorrectionService()
+                      .updateCorrectionByStatus(task.id, TaskStatus.notRead);
+                } else {
+                  task.changeStatus(TaskStatus.revision);
+                }
                 Navigator.pop(
                   context,
                 );
@@ -344,7 +351,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: Text(
-                correction.status == TaskStatus.needTicket ? "Не принять" : 'Правки выполнены некорректно',
+                correction.status == TaskStatus.needTicket
+                    ? "Не принять"
+                    : 'Правки выполнены некорректно',
                 style: const TextStyle(
                   color: Colors.black,
                   fontSize: 16,

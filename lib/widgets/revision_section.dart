@@ -13,37 +13,41 @@ class RevisionsCard extends StatelessWidget {
   final List<Correction> revisions;
   final Task task;
   final TaskRole role;
+  final String title;
 
   const RevisionsCard(
       {super.key,
       required this.revisions,
       required this.task,
-      required this.role});
+      required this.role,
+      required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      InkWell(
-        borderRadius: BorderRadius.circular(8),
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-          child: Row(
-            children: [
-              Icon(Iconsax.edit_copy, size: 24, color: Color(0xFF6D7885)),
-              SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  "Доработки и запросы",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
+      if (title == "Доработки и запросы")
+        InkWell(
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+            child: Row(
+              children: [
+                const Icon(Iconsax.edit_copy,
+                    size: 24, color: Color(0xFF6D7885)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
       if (revisions.isNotEmpty)
         Card(
           color: Colors.white,
@@ -89,7 +93,7 @@ class RevisionsCard extends StatelessWidget {
 
         if (role != TaskRole.executor) ...[
           Text(
-            'Описание ошибок в постановке задачи',
+            _getActionTitle(correction.status),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.grey.shade600,
                 ),
@@ -126,7 +130,8 @@ class RevisionsCard extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CorrectionScreen(task: task, prevCorrection: correction),
+                            builder: (context) => CorrectionScreen(
+                                task: task, prevCorrection: correction),
                           ),
                         );
                       },
@@ -160,9 +165,7 @@ class RevisionsCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 0, vertical: 8.0),
                     child: ElevatedButton(
-                      onPressed: () {
-
-                      },
+                      onPressed: () {},
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.black,
                         backgroundColor: Colors.white,
@@ -333,5 +336,21 @@ class RevisionsCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _getActionTitle(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.atWork:
+        return 'Запрос на дополнительное время';
+      case TaskStatus.newTask:
+        return 'Описание ошибок в поставке задачи';
+      case TaskStatus.notRead:
+        return 'Причина разъяснения';
+      case TaskStatus.needTicket:
+        return 'Письмо-решение';
+      // Добавьте другие статусы по необходимости
+      default:
+        return 'Изменение статуса';
+    }
   }
 }

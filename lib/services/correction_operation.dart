@@ -50,11 +50,23 @@ class CorrectionService {
   Future<void> updateCorrectionByStatus(
       String task_id, TaskStatus status) async {
     try {
-      await _client
+      final latestCorrection = await _client
+          .from('correction')
+          .select('date')
+          .eq('task_id', task_id)
+          .eq('status', status.toString().substring(11))
+          .order('date', ascending: false)
+          .limit(1)
+          .single();
+
+      final latestDate = DateTime.parse(latestCorrection['date'] as String);
+
+      final response = await _client
           .from('correction')
           .update({'is_done': false})
           .eq('task_id', task_id)
-          .eq('status', status.toString().substring(11));
+          .eq('status', status.toString().substring(11))
+          .eq('date', latestDate.toIso8601String());
     } on PostgrestException catch (error) {
       print('Ошибка при добавлении корректировки: ${error.message}');
     }
