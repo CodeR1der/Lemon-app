@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/screens/correction_screen.dart';
 import 'package:task_tracker/screens/queue_screen.dart';
+import 'package:task_tracker/screens/task_validate_screen.dart';
 import 'package:task_tracker/services/correction_operation.dart';
 import 'package:task_tracker/widgets/revision_section.dart';
 
@@ -22,7 +23,7 @@ class TaskLayoutBuilder extends StatelessWidget {
   });
 
   Future<List<Correction>> _loadCorrections() {
-    final corrections = CorrectionService().getCorrection(task.id, task.status);
+    final corrections = RequestService().getCorrection(task.id, task.status);
 
     return corrections;
   }
@@ -42,10 +43,12 @@ class TaskLayoutBuilder extends StatelessWidget {
         return _buildNeedTicketLayout(context);
       case TaskStatus.inOrder:
         return _buildInOrderLayout(context);
+      case TaskStatus.queue:
+        return _buildQueueLayout(context);
       case TaskStatus.atWork:
         return _buildAtWorkLayout(context);
-      case TaskStatus.overdue:
-        return _buildOverdueLayout(context);
+      case TaskStatus.extraTime:
+        return _buildExtraTimeLayout(context);
       case TaskStatus.completed:
         return _buildCompletedLayout(context);
       default:
@@ -521,10 +524,10 @@ class TaskLayoutBuilder extends StatelessWidget {
                 Column(children: [
                   ElevatedButton(
                     onPressed: () {
-                      CorrectionService()
+                      RequestService()
                           .updateCorrection(notDoneRevision..isDone = true);
 
-                      CorrectionService().addCorrection(Correction(
+                      RequestService().addCorrection(Correction(
                           date: DateTime.now(),
                           taskId: task.id,
                           status: TaskStatus.needExplanation,
@@ -663,17 +666,18 @@ class TaskLayoutBuilder extends StatelessWidget {
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                   const Divider(),
                   _buildSectionItem(
-                  icon: Iconsax.clock_copy,
-                  title: 'История задачи',
-                  onTap: () {
-                    // Действие при нажатии
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TaskHistoryScreen(revisions: revisions),
-                      ),
-                    );
-                  },
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
                 ),
                   const Divider(),
                 ],
@@ -711,7 +715,19 @@ class TaskLayoutBuilder extends StatelessWidget {
                     icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
                 const Divider(),
                 _buildSectionItem(
-                    icon: Iconsax.clock_copy, title: 'История задачи'),
+                  icon: Iconsax.clock_copy,
+                  title: 'История задачи',
+                  onTap: () {
+                    // Действие при нажатии
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TaskHistoryScreen(revisions: revisions),
+                      ),
+                    );
+                  },
+                ),
                 const Divider(),
                 ElevatedButton(
                   onPressed: () {
@@ -775,26 +791,347 @@ class TaskLayoutBuilder extends StatelessWidget {
         });
   }
 
-  Widget _buildAtWorkLayout(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.indigo.shade50, Colors.white],
-        ),
-      ),
-      child: _buildCommonLayout(context),
-    );
+  Widget _buildQueueLayout(BuildContext context) {
+    return FutureBuilder<List<Correction>>(
+        future: _loadCorrections(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          }
+
+          final revisions = snapshot.data ?? [];
+
+          switch (role) {
+            case TaskRole.executor:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.communicator:
+              return Column(children: [
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'Контрольные точки'),
+                const Divider(),
+                if (revisions.isNotEmpty &&
+                    revisions.any((revision) => !revision.isDone))
+                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы')
+                else ...[
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                ],
+                const Divider(),
+                _buildSectionItem(
+                  icon: Iconsax.clock_copy,
+                  title: 'История задачи',
+                  onTap: () {
+                    // Действие при нажатии
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TaskHistoryScreen(revisions: revisions),
+                      ),
+                    );
+                  },
+                ),
+              ]);
+            case TaskRole.creator:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.none:
+            // TODO: Handle this case.
+              throw UnimplementedError();
+          }
+        });
   }
 
-  Widget _buildOverdueLayout(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.red.shade50, Colors.white],
-        ),
-      ),
-      child: _buildCommonLayout(context, warning: true),
-    );
+
+  Widget _buildAtWorkLayout(BuildContext context) {
+    return FutureBuilder<List<Correction>>(
+        future: _loadCorrections(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          }
+
+          final revisions = snapshot.data ?? [];
+
+          switch (role) {
+            case TaskRole.executor:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskValidateScreen(task: task),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Сдать задачу на проверку',
+                          style: TextStyle(
+                            color: Colors.white, // Белый текст
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      //task.changeStatus(TaskStatus.extraTime);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: Colors.orange, width: 1),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Запросить дополнительное время',
+                          style: TextStyle(
+                            color: Colors.black, // Белый текст
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            case TaskRole.communicator:
+              return Column(children: [
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'Контрольные точки'),
+                const Divider(),
+                if (revisions.isNotEmpty &&
+                    revisions.any((revision) => !revision.isDone))
+                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы')
+                else ...[
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                ],
+                const Divider(),
+                _buildSectionItem(
+                  icon: Iconsax.clock_copy,
+                  title: 'История задачи',
+                  onTap: () {
+                    // Действие при нажатии
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TaskHistoryScreen(revisions: revisions),
+                      ),
+                    );
+                  },
+                ),
+              ]);
+            case TaskRole.creator:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.none:
+            // TODO: Handle this case.
+              throw UnimplementedError();
+          }
+        });
+  }
+
+  Widget _buildExtraTimeLayout(BuildContext context) {
+    return FutureBuilder<List<Correction>>(
+        future: _loadCorrections(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          }
+
+          final revisions = snapshot.data ?? [];
+
+          switch (role) {
+            case TaskRole.executor:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.communicator:
+              return Column(children: [
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'Контрольные точки'),
+                const Divider(),
+                if (revisions.isNotEmpty &&
+                    revisions.any((revision) => !revision.isDone))
+                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы')
+                else ...[
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                ],
+                const Divider(),
+                _buildSectionItem(
+                  icon: Iconsax.clock_copy,
+                  title: 'История задачи',
+                  onTap: () {
+                    // Действие при нажатии
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TaskHistoryScreen(revisions: revisions),
+                      ),
+                    );
+                  },
+                ),
+              ]);
+            case TaskRole.creator:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.none:
+            // TODO: Handle this case.
+              throw UnimplementedError();
+          }
+        });
   }
 
   Widget _buildCompletedLayout(BuildContext context) {

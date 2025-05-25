@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:task_tracker/screens/task_details_screen.dart';
 
 import '../models/task.dart';
-import '../models/task_role.dart';
 import '../models/task_status.dart';
 import '../services/task_operations.dart';
 
@@ -45,14 +44,16 @@ class _QueueScreenState extends State<QueueScreen> {
   }
 
   Widget _buildTaskCard(Task task) {
+    // Безопасное получение queuePosition
+    final queuePosition = task.queuePosition;
+    final queuePositionInt = queuePosition != null ? int.tryParse(queuePosition) : null;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TaskDetailsScreen(
-              task: task,
-            ),
+            builder: (context) => TaskDetailsScreen(task: task),
           ),
         );
       },
@@ -73,23 +74,20 @@ class _QueueScreenState extends State<QueueScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Статус задачи
               Text(
                 'Статус',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
+                  color: Colors.grey.shade600,
+                ),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const CircleAvatar(
-                    radius: 16,
-                    backgroundColor: Colors.blue,
-                  ),
+                  const CircleAvatar(radius: 16, backgroundColor: Colors.blue),
                   const SizedBox(width: 8),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEBEDF0),
                       borderRadius: BorderRadius.circular(12),
@@ -97,10 +95,7 @@ class _QueueScreenState extends State<QueueScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          StatusHelper.getStatusIcon(task.status),
-                          size: 16,
-                        ),
+                        Icon(StatusHelper.getStatusIcon(task.status), size: 16),
                         const SizedBox(width: 6),
                         Text(StatusHelper.displayName(task.status),
                             style: Theme.of(context).textTheme.bodySmall),
@@ -110,7 +105,9 @@ class _QueueScreenState extends State<QueueScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              if (task.status == TaskStatus.queue) ...[
+
+              // Очередность задачи (только для задач в очереди)
+              if (task.status == TaskStatus.queue && queuePosition != null) ...[
                 Text(
                   'Очередность задачи',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -119,14 +116,13 @@ class _QueueScreenState extends State<QueueScreen> {
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEBEDF0),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    task.queuePosition.toString(),
+                    queuePosition,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Colors.black,
                     ),
@@ -134,33 +130,68 @@ class _QueueScreenState extends State<QueueScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
+
+              // Название задачи
               Text(
                 'Название задачи',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
+                  color: Colors.grey.shade600,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 task.taskName,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.black,
-                    ),
+                  color: Colors.black,
+                ),
               ),
               const SizedBox(height: 16),
+
+              // Проект
               Text(
                 'Проект',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
+                  color: Colors.grey.shade600,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 task.project?.name ?? 'Не указан',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.black,
-                    ),
+                  color: Colors.black,
+                ),
               ),
+
+              if (queuePositionInt == 1) ...[
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    TaskService().updateTask(task..queuePosition=null);
+                    task.changeStatus(TaskStatus.atWork);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(width: 8),
+                      Text(
+                        'Взять задачу в работу',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ]
             ],
           ),
         ),
@@ -187,7 +218,7 @@ class _QueueScreenState extends State<QueueScreen> {
           }
 
           if (snapshot.hasError) {
-            return const Center(child: Text('Ошибка загрузки задач'));
+            return Center(child: Text('Ошибка загрузки задач: ${snapshot.error}'));
           }
 
           final tasksInOrder = snapshot.data![0];
@@ -209,9 +240,10 @@ class _QueueScreenState extends State<QueueScreen> {
                   ...tasksInOrder.map(_buildTaskCard),
                 ],
                 if (tasksQueue.isNotEmpty) ...[
+                  const SizedBox(height: 16),
                   const Row(
                     children: [
-                      Text('В очереди на выполнение',
+                      Text('В очереди на подтверждение',
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold)),
                     ],

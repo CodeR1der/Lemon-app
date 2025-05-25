@@ -138,6 +138,8 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
                   ),
                 ),
               ],
+              const SizedBox(height: 16),
+
               Text(
                 'Название задачи',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
