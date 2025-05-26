@@ -234,12 +234,18 @@ class EmployeeService {
         ''').eq('employee_id', employeeId);
 
       // Объединяем все проекты и убираем дубликаты
-      final allProjects = <dynamic>{
+      final allProjects = [
         ..._extractProjectsFromResponse(teamProjects),
         ..._extractProjectsFromResponse(communicatorProjects),
         ..._extractProjectsFromResponse(creatorProjects),
         ..._extractProjectsFromResponse(observerProjects),
-      }.toList();
+      ].fold(<Map<String, dynamic>>[], (unique, project) {
+        if (project is Map<String, dynamic> &&
+            !unique.any((p) => p['project_id'] == project['project_id'])) {
+          unique.add(project);
+        }
+        return unique;
+      });
 
       //observerProjects.map((obs) => allProjects.add(obs['project']));
 
@@ -256,12 +262,25 @@ class EmployeeService {
       if (item['task_team'] != null) {
         final task_team = item['task_team'];
         if (task_team['task'] != null && task_team['task']['project'] != null) {
-          projects.add(task_team['task']['project']);
+          if (projects.isEmpty) {
+            projects.add(task_team['task']['project']);
+          } else if (projects.where((p) => p['project_id'] == task_team['task']['project']['project_id']).isEmpty) {
+            projects.add(task_team['task']['project']);
+          }
         }
       } else if (item['task'] != null && item['task']['project'] != null) {
-        projects.add(item['task']['project']);
+        if (projects.isEmpty) {
+          projects.add(item['task']['project']);
+        } else if (projects.where((p) => p['project_id'] == item['task']['project']['project_id']).isEmpty) {
+          projects.add(item['task']['project']);
+        }
       } else if (item['project'] != null) {
-        projects.add(item['project']);
+        if (projects.isEmpty) {
+          projects.add(item['project']);
+        } else if (projects.where((p) => p['project_id'] == item['project']['project_id']).isEmpty) {
+          projects.add(item['project']);
+        }
+
       }
     }
 

@@ -953,14 +953,16 @@ class TaskLayoutBuilder extends StatelessWidget {
           }
 
           final revisions = snapshot.data ?? [];
-
-          final notDoneRevisions = revisions.where((r) => !r.isDone).first;
+          late Correction? notDoneRevisions = null;
+          if (revisions.isNotEmpty) {
+            notDoneRevisions = revisions.where((r) => !r.isDone).first;
+          }
 
           switch (role) {
             case TaskRole.executor:
               return Column(
                 children: [
-                  if (notDoneRevisions.status ==
+                  if (notDoneRevisions != null && notDoneRevisions.status ==
                       TaskStatus.completedUnderReview)
                     RevisionsCard(
                         revisions: revisions,
@@ -1409,9 +1411,10 @@ class TaskLayoutBuilder extends StatelessWidget {
                                       TaskValidateDetailsScreen(
                                           task: task, validate: validate!)));
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
                           foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.orange, width: 1),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -1422,9 +1425,9 @@ class TaskLayoutBuilder extends StatelessWidget {
                           children: [
                             SizedBox(width: 8),
                             Text(
-                              'Принять',
+                              'Подробнее',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: Colors.black,
                                 fontSize: 16,
                               ),
                             ),
