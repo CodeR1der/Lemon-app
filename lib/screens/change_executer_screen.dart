@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/models/correction.dart';
 import 'package:task_tracker/models/task_status.dart';
+import 'package:task_tracker/screens/correction_screen.dart';
 import 'package:task_tracker/services/employee_operations.dart';
+import 'package:task_tracker/services/task_operations.dart';
 
 import '../models/employee.dart';
 import '../models/task.dart';
@@ -79,9 +81,10 @@ class _ChangeExecuterScreen extends State<ChangeExecuterScreen> {
                     onPressed: () {
                       if (selectedPerformer != null) {
                         // Создаем новую команду или обновляем существующую
+                        RequestService().updateCorrection(widget.correction..isDone = true);
+                        TaskService().updateExecuter(widget.task, selectedPerformer!);
                         widget.task.team.teamMembers.first = selectedPerformer!;
                         widget.task.changeStatus(TaskStatus.inOrder);
-                        RequestService().updateCorrection(widget.correction..isDone = true);
                         Navigator.pop(context);
                       }
                     },

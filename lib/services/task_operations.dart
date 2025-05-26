@@ -39,7 +39,8 @@ class TaskService {
     }
   }
 
-  Future<Map<String, int>> getCountOfTasksByStatus(String position, String employeeId) async {
+  Future<Map<String, int>> getCountOfTasksByStatus(
+      String position, String employeeId) async {
     try {
       late List<dynamic> tasksResponse;
 
@@ -121,7 +122,10 @@ class TaskService {
     };
   }
 
-  Future<List<Task>> getProjectTasksByStatus({required TaskStatus status, required String projectId,}) async {
+  Future<List<Task>> getProjectTasksByStatus({
+    required TaskStatus status,
+    required String projectId,
+  }) async {
     try {
       final statusString = status.toString().substring(11);
 
@@ -152,7 +156,11 @@ class TaskService {
     }
   }
 
-  Future<List<Task>> getTasksByStatus({required String position, required TaskStatus status, required String employeeId,}) async {
+  Future<List<Task>> getTasksByStatus({
+    required String position,
+    required TaskStatus status,
+    required String employeeId,
+  }) async {
     try {
       final statusString = status.toString().substring(11);
 
@@ -342,8 +350,6 @@ class TaskService {
             {'team_id': task.team.teamId, 'employee_id': member.userId});
       }
 
-
-
       print('Задача и команда успешно добавлены!');
     } catch (e) {
       print('Ошибка при добавлении задачи: $e');
@@ -389,7 +395,7 @@ class TaskService {
           employee:employee_id(*)
         )
       ),
-      task_team: id(*,
+      task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
         team_members:team_id(*,
@@ -441,7 +447,8 @@ class TaskService {
     }
   }
 
-  Future<Map<TaskStatus, int>> fetchCommunicatorTasksCount(communicatorId) async {
+  Future<Map<TaskStatus, int>> fetchCommunicatorTasksCount(
+      communicatorId) async {
     try {
       // Запрос для получения количества задач по статусам
       final response = await _client.from('task_team').select('''
@@ -493,7 +500,7 @@ class TaskService {
 
   Future<void> batchUpdateTasks(List<Map<String, dynamic>> updates) async {
     try {
-       await Supabase.instance.client.from('task').upsert(updates);
+      await Supabase.instance.client.from('task').upsert(updates);
     } catch (e) {
       throw Exception('Failed to batch update tasks: $e');
     }
@@ -501,17 +508,33 @@ class TaskService {
 
   Future<void> updateDeadline(DateTime deadline, String taskId) async {
     try {
-      await Supabase.instance.client
-          .from('task')
-          .update({
-        'deadline': deadline.toUtc().toIso8601String() // Конвертируем в UTC строку
-      })
-          .eq('id', taskId);
+      await Supabase.instance.client.from('task').update({
+        'deadline': deadline.toUtc().toIso8601String()
+        // Конвертируем в UTC строку
+      }).eq('id', taskId);
     } catch (e) {
       throw Exception('Failed to update deadline: $e');
     }
   }
 
+  Future<void> updateExecuter(Task task, Employee employee) async {
+    await _client
+        .from('team_members')
+        .update({'employee_id': employee.userId})
+        .eq('team_id', task.team.teamId)
+        .eq('employee_id', task.team.teamMembers.first.userId);
+
+    await _client
+        .from('task')
+        .update({'deadline': null})
+        .eq('id', task.id);
+
+    for (var member in task.team.teamMembers) {
+      await _client
+          .from('team_members')
+          .insert({'team_id': task.team.teamId, 'employee_id': member.userId});
+    }
+  }
 
   Future<TaskStatus> changeStatus(TaskStatus newStatus, String taskId) async {
     // Обновляем в Supabase

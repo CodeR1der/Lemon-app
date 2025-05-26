@@ -8,6 +8,8 @@ import 'package:record/record.dart'; // Для записи аудио
 import 'package:task_tracker/task_screens/EmployeesScreen.dart';
 
 import '../models/task.dart'; // Импортируйте ваш класс Task
+import 'package:path_provider/path_provider.dart';
+
 
 class AddedFilesScreen extends StatefulWidget {
   final Task taskData;
@@ -45,7 +47,14 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
 
   Future<void> recordAudio() async {
     if (await _checkPermission()) {
-      await _audioRecorder.start(const RecordConfig(), path: '');
+      final dir = await getTemporaryDirectory(); // путь к временной папке
+      final filePath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.m4a'; // имя файла
+
+      await _audioRecorder.start(
+        RecordConfig(),
+        path: filePath,
+      );
+
       setState(() {
         isRecording = true;
         audioMessage = 'Запись...';
