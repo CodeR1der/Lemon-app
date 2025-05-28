@@ -129,4 +129,38 @@ class Task {
   void removeVideoMessage(String filePath) {
     videoMessage!.remove(filePath);
   }
+
+  Task copyWith({
+    String? id,
+    String? taskName,
+    String? description,
+    Project? project,
+    TaskTeam? team,
+    DateTime? startDate,
+    DateTime? endDate,
+    DateTime? deadline,
+    List<String>? attachments,
+    String? audioMessage,
+    List<String>? videoMessage,
+    String? queuePosition,
+    Priority? priority,
+    TaskStatus? status,
+  }) {
+    return Task(
+      id: id ?? this.id,
+      taskName: taskName ?? this.taskName,
+      description: description ?? this.description,
+      project: project ?? this.project,
+      team: team ?? this.team,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      deadline: deadline ?? this.deadline,
+      attachments: attachments ?? List.from(this.attachments),
+      audioMessage: audioMessage ?? this.audioMessage,
+      videoMessage: videoMessage ?? (this.videoMessage != null ? List.from(this.videoMessage!) : null),
+      queuePosition: queuePosition ?? this.queuePosition,
+      priority: priority ?? this.priority,
+      status: status ?? this.status,
+    );
+  }
 }

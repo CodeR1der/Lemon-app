@@ -152,7 +152,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
 
         return PositionTasksTab(
           projectId: projectId,
-          categories: snapshot.data!,
         );
       },
     );

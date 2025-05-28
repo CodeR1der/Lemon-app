@@ -1,9 +1,10 @@
+// tasks_screen.dart
 import 'package:flutter/material.dart';
-import 'package:task_tracker/screens/position_tasks_tab.dart';
-import 'package:task_tracker/services/task_categories.dart';
-
+import 'package:provider/provider.dart';
 import '../models/employee.dart';
-import '../models/task_category.dart';
+import '../services/task_categories.dart';
+import '../services/task_provider.dart';
+import 'position_tasks_tab.dart';
 
 class TasksScreen extends StatefulWidget {
   final Employee user;
@@ -14,72 +15,49 @@ class TasksScreen extends StatefulWidget {
   State<TasksScreen> createState() => _TasksScreenState();
 }
 
-class _TasksScreenState extends State<TasksScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    // Количество вкладок зависит от роли пользователя
-    int tabCount = widget.user.role == "Коммуникатор" ? 4 : 3;
-    _tabController = TabController(length: tabCount, vsync: this);
-  }
-
+class _TasksScreenState extends State<TasksScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          tabs: [
-            if (widget.user.role == "Коммуникатор") Tab(text: 'Я коммуникатор'),
-            Tab(text: 'Я исполнитель'),
-            Tab(text: 'Я постановщик'),
-            Tab(text: 'Я наблюдатель'),
+    final user = widget.user;
+
+    return DefaultTabController(
+      length: user.role == "Коммуникатор" ? 4 : 3,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          bottom: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [
+              if (user.role == "Коммуникатор") Tab(text: 'Я коммуникатор'),
+              Tab(text: 'Я исполнитель'),
+              Tab(text: 'Я постановщик'),
+              Tab(text: 'Я наблюдатель'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            if (user.role == "Коммуникатор")
+              _buildTab("Коммуникатор", user.userId),
+            _buildTab("Исполнитель", user.userId),
+            _buildTab("Постановщик", user.userId),
+            _buildTab("Наблюдатель", user.userId),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          if (widget.user.role == "Коммуникатор")
-            _buildFutureTab("Коммуникатор", widget.user.userId),
-          _buildFutureTab("Исполнитель", widget.user.userId),
-          _buildFutureTab("Постановщик", widget.user.userId),
-          _buildFutureTab("Наблюдатель", widget.user.userId),
-        ],
       ),
     );
   }
 
-  Widget _buildFutureTab(String position, String employeeId) {
-    return FutureBuilder<List<TaskCategory>>(
-      future: TaskCategories().getCategories(position, employeeId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Ошибка: ${snapshot.error}'));
-        } else if (!snapshot.hasData) {
-          return const Center(child: Text('Нет данных'));
-        }
+  Widget _buildTab(String position, String employeeId) {
+    return Consumer<TaskProvider>(
+      builder: (context, taskProvider, child) {
 
         return PositionTasksTab(
           position: position,
           employeeId: employeeId,
-          categories: snapshot.data!,
         );
       },
     );
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 }

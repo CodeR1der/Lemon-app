@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_validate.dart';
 import 'package:task_tracker/services/request_operation.dart';
 import 'package:task_tracker/services/request_operation.dart';
@@ -9,6 +10,7 @@ import '../models/correction.dart';
 import '../models/task.dart';
 import '../models/task_status.dart';
 import '../models/task_validate.dart';
+import '../services/task_provider.dart';
 
 class CorrectionScreen extends StatefulWidget {
   final Task task;
@@ -59,38 +61,33 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
 
     try {
       final correction = _createCorrection();
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      final task = widget.task;
 
       await RequestService().addCorrection(correction);
 
-      if (widget.task.status == TaskStatus.notRead) {
-        await widget.task.changeStatus(TaskStatus.needExplanation);
-      } else if (widget.task.status == TaskStatus.completedUnderReview) {
+      if (task.status == TaskStatus.notRead) {
+        await taskProvider.updateTaskStatus(task, TaskStatus.needExplanation);
+      } else if (task.status == TaskStatus.completedUnderReview) {
         Navigator.pop(context);
-        RequestService().updateValidate(widget.validate!..isDone = true);
-        await widget.task.changeStatus(TaskStatus.atWork);
-      } else if (widget.task.status == TaskStatus.atWork) {
-        await widget.task.changeStatus(TaskStatus.extraTime);
-      } else if (widget.task.status == TaskStatus.overdue) {
-        RequestService()
-            .updateCorrection(widget.prevCorrection!..isDone = true);
+        await RequestService().updateValidate(widget.validate!..isDone = true);
+        await taskProvider.updateTaskStatus(task, TaskStatus.atWork);
+      } else if (task.status == TaskStatus.atWork) {
+        await taskProvider.updateTaskStatus(task, TaskStatus.extraTime);
+      } else if (task.status == TaskStatus.overdue) {
+        await RequestService().updateCorrection(widget.prevCorrection!..isDone = true);
       } else {
-        if (widget.task.status == TaskStatus.needTicket) {
-          RequestService()
-              .updateCorrection(widget.prevCorrection!..isDone = true);
+        if (task.status == TaskStatus.needTicket) {
+          await RequestService().updateCorrection(widget.prevCorrection!..isDone = true);
         }
-        await widget.task.changeStatus(TaskStatus.revision);
-
-        //CorrectionService().updateCorrection(correction);
+        await taskProvider.updateTaskStatus(task, TaskStatus.revision);
       }
-      // 4. Показываем уведомление
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Задача отправлена на доработку')),
       );
 
-      // 5. Закрываем экран и возвращаем результат
-      Navigator.pop(
-        context,
-      );
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Ошибка: ${e.toString()}')),

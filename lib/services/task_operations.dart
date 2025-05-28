@@ -122,10 +122,7 @@ class TaskService {
     };
   }
 
-  Future<List<Task>> getProjectTasksByStatus({
-    required TaskStatus status,
-    required String projectId,
-  }) async {
+  Future<List<Task>> getProjectTasksByStatus({required TaskStatus status, required String projectId}) async {
     try {
       final statusString = status.toString().substring(11);
 
@@ -156,11 +153,7 @@ class TaskService {
     }
   }
 
-  Future<List<Task>> getTasksByStatus({
-    required String position,
-    required TaskStatus status,
-    required String employeeId,
-  }) async {
+  Future<List<Task>> getTasksByStatus({required String position, required TaskStatus status, required String employeeId,}) async {
     try {
       final statusString = status.toString().substring(11);
 
@@ -293,6 +286,148 @@ class TaskService {
         )
       )
     ''').inFilter('project_id', projectIds).eq('status', statusString);
+
+        return tasksResponse
+            .map((taskData) => Task.fromJson(taskData))
+            .toList();
+      }
+    } catch (e) {
+      print('Error getting tasks: $e');
+      return [];
+    }
+  }
+
+  Future<List<Task>> getTasksByPosition({required String position, required String employeeId,}) async {
+    try {
+      if (position == 'Коммуникатор') {
+        final taskIdsResponse = await _client
+            .from('task_team')
+            .select('task_id')
+            .eq('communicator_id', employeeId);
+
+        if (taskIdsResponse.isEmpty) return [];
+
+        final taskIds =
+        taskIdsResponse.map((item) => item['task_id'] as String).toList();
+
+        // 2. Получаем полные данные задач с фильтрацией по статусу
+        final tasksResponse = await _client.from('task').select('''
+      *,
+      project:project_id(*,
+        project_description_id:project_description_id(*),
+        project_observers:project_observers(
+          *,
+          employee:employee_id(*)
+        )
+      ),
+      task_team: task_team!task_team_task_id_fkey(*,
+        creator_id:creator_id(*),
+        communicator_id:communicator_id(*),
+        team_members:team_id(*,
+          employee_id:employee_id(*)
+        )
+      )
+    ''').inFilter('id', taskIds);
+
+        return tasksResponse
+            .map((taskData) => Task.fromJson(taskData))
+            .toList();
+      } else if (position == 'Постановщик') {
+        // 1. Получаем список ID задач с нужным статусом и creator_id
+        final taskIdsResponse = await _client
+            .from('task_team')
+            .select('task_id')
+            .eq('creator_id', employeeId);
+
+        if (taskIdsResponse.isEmpty) return [];
+
+        final taskIds =
+        taskIdsResponse.map((item) => item['task_id'] as String).toList();
+
+        final tasksResponse = await _client.from('task').select('''
+      *,
+      project:project_id(*,
+        project_description_id:project_description_id(*),
+        project_observers:project_observers(
+          *,
+          employee:employee_id(*)
+        )
+      ),
+      task_team: task_team!task_team_task_id_fkey(*,
+        creator_id:creator_id(*),
+        communicator_id:communicator_id(*),
+        team_members:team_id(*,
+          employee_id:employee_id(*)
+        )
+      )
+    ''').inFilter('id', taskIds);
+
+        return tasksResponse
+            .map((taskData) => Task.fromJson(taskData))
+            .toList();
+      } else if (position == 'Исполнитель') {
+        // Для исполнителя получаем задачи через team_members
+        final teamsResponse = await _client
+            .from('team_members')
+            .select('task_team:team_id(task_id)')
+            .eq('employee_id', employeeId);
+
+        if (teamsResponse.isEmpty) return [];
+
+        final taskIds = (teamsResponse as List)
+            .map((team) => team['task_team']['task_id'] as String)
+            .toList();
+
+        final tasksResponse = await _client.from('task').select('''
+      *,
+      project:project_id(*,
+        project_description_id:project_description_id(*),
+        project_observers:project_observers(
+          *,
+          employee:employee_id(*)
+        )
+      ),
+      task_team: task_team!task_team_task_id_fkey(*,
+        creator_id:creator_id(*),
+        communicator_id:communicator_id(*),
+        team_members:team_id(*,
+          employee_id:employee_id(*)
+        )
+      )
+    ''').inFilter('id', taskIds);
+
+        return tasksResponse
+            .map((taskData) => Task.fromJson(taskData))
+            .toList();
+      } else {
+        final projectsResponse = await _client
+            .from('project_observers')
+            .select('project_id')
+            .eq('employee_id', employeeId);
+
+        if (projectsResponse.isEmpty) return [];
+
+        final projectIds = (projectsResponse as List)
+            .map((team) => team['project_id'] as String)
+            .toList();
+
+        final tasksResponse = await _client.from('task').select('''
+      *,
+      project:project_id(*,
+        project_description_id:project_description_id(*),
+        project_observers:project_observers(
+          *,
+          employee:employee_id(*)
+        )
+      ),
+      task_team: task_team!task_team_task_id_fkey(*,
+        creator_id:creator_id(*),
+        communicator_id:communicator_id(*),
+        team_members:team_id(*,
+          employee_id:employee_id(*)
+        )
+      )
+    ''').inFilter('project_id', projectIds);
 
         return tasksResponse
             .map((taskData) => Task.fromJson(taskData))

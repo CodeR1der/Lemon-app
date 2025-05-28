@@ -146,7 +146,6 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
         return PositionTasksTab(
           position: position,
           employeeId: employeeId,
-          categories: snapshot.data!,
         );
       },
     );

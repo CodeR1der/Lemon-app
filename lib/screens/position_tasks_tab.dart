@@ -1,41 +1,73 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/screens/tasks_list_screen.dart';
-
 import '../models/task_category.dart';
 import '../models/task_role.dart';
 import '../models/task_status.dart';
+import '../services/task_categories.dart';
 import 'employee_queue_screen.dart';
+import '../services/task_provider.dart';
 
-class PositionTasksTab extends StatelessWidget {
+class PositionTasksTab extends StatefulWidget {
   final String? position;
   final String? employeeId;
   final String? projectId;
-  final List<TaskCategory> categories;
 
   const PositionTasksTab({
     Key? key,
     this.position,
     this.employeeId,
     this.projectId,
-    required this.categories,
   }) : super(key: key);
 
   @override
+  State<PositionTasksTab> createState() => _PositionTasksTabState();
+}
+
+class _PositionTasksTabState extends State<PositionTasksTab> {
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      taskProvider.loadTasksAndCategories(
+        taskCategories: TaskCategories(),
+        position: widget.position!,
+        employeeId: widget.employeeId!,
+      );
+      _initialized = true; // Предотвращаем повторную загрузку
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: ListView.separated(
-        padding: const EdgeInsets.all(1.0),
-        itemCount: categories.length,
-        separatorBuilder: (context, index) => const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0), // Добавляем отступы по бокам
-          child: Divider(),
-        ),
-        itemBuilder: (context, index) {
-          final category = categories[index];
-          return _buildCategoryItem(context, category);
-        },
-      ),
+    return Consumer<TaskProvider>(
+      builder: (context, taskProvider, child) {
+        final categories = taskProvider.getCategories(
+          widget.position ?? '',
+          widget.employeeId ?? '',
+        );
+
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: categories.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.separated(
+            padding: const EdgeInsets.all(1.0),
+            itemCount: categories.length,
+            separatorBuilder: (context, index) => const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Divider(),
+            ),
+            itemBuilder: (context, index) {
+              final category = categories[index];
+              return _buildCategoryItem(context, category);
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -68,55 +100,45 @@ class PositionTasksTab extends StatelessWidget {
     );
   }
 
-  void _handleCategoryTap(BuildContext context, TaskCategory category) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
+  void _handleCategoryTap(BuildContext context, TaskCategory category) {
     try {
-      Navigator.of(context).pop();
-
-      if (projectId != null) {
-        // Навигация для проекта
+      if (widget.projectId != null) {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => TaskListByStatusScreen(
-              projectId: projectId!,
+              projectId: widget.projectId!,
               status: category.status,
             ),
           ),
         );
-      } else if (position != null && employeeId != null) {
-        if((position == RoleHelper.convertToString(TaskRole.executor) || position == RoleHelper.convertToString(TaskRole.creator)) && category.status == TaskStatus.queue){
+      } else if (widget.position != null && widget.employeeId != null) {
+        if ((widget.position == RoleHelper.convertToString(TaskRole.executor) ||
+            widget.position == RoleHelper.convertToString(TaskRole.creator)) &&
+            category.status == TaskStatus.queue) {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => QueueScreen(
-                position: position!,
-                userId: employeeId!,
+                position: widget.position!,
+                userId: widget.employeeId!,
               ),
             ),
           );
-        }
-        else{// Навигация для сотрудника
+        } else {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => TaskListByStatusScreen(
-                position: position!,
-                userId: employeeId!,
+                position: widget.position!,
+                userId: widget.employeeId!,
                 status: category.status,
               ),
             ),
           );
         }
       }
-
     } catch (e) {
-      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Ошибка загрузки задач: ${e.toString()}')),
       );

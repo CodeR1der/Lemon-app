@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_role.dart';
 import 'package:task_tracker/screens/change_executer_screen.dart';
 import 'package:task_tracker/screens/tasks_screen.dart';
@@ -8,6 +9,7 @@ import '../models/correction.dart';
 import '../models/task.dart';
 import '../models/task_status.dart';
 import '../services/request_operation.dart';
+import '../services/task_provider.dart';
 import '../task_screens/TaskDescriptionTab.dart';
 import 'choose_task_deadline_screen.dart';
 
@@ -223,12 +225,14 @@ class CorrectionDetailsScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+
                 if (correction.status == TaskStatus.needTicket) {
-                  task.changeStatus(TaskStatus.notRead);
+                  await taskProvider.updateTaskStatus(task, TaskStatus.notRead);
                   RequestService().updateCorrection(correction..isDone = true);
                 } else {
-                  task.changeStatus(TaskStatus.newTask);
+                  await taskProvider.updateTaskStatus(task, TaskStatus.newTask);
                 }
 
                 Navigator.pop(
@@ -280,7 +284,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
                 correction.status == TaskStatus.needTicket
                     ? 'Не принять'
                     : 'Отредактировать задачу',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -357,8 +361,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Text("Заменить исполнителя",
-                  style: const TextStyle(
+                child: const Text("Заменить исполнителя",
+                  style: TextStyle(
                     color: Colors.black,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -388,8 +392,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Text("Завершить задачу и сдать в архив",
-                  style: const TextStyle(
+                child: const Text("Завершить задачу и сдать в архив",
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
