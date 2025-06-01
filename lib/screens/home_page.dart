@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:task_tracker/screens/project_details_screen.dart';
 import 'package:task_tracker/screens/tasks_list_screen.dart';
 import 'package:task_tracker/services/employee_operations.dart';
@@ -22,89 +23,112 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<ProjectInformation> _projects = [];
-  List<Employee> _employees = [];
+  final RxList<ProjectInformation> _projects = <ProjectInformation>[].obs;
+  final RxList<Employee> _employees = <Employee>[].obs;
   late final Future<List<TaskCategory>> _categoriesFuture;
+  final RxBool _isLoading = true.obs;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadProjects();
-    _loadEmployees();
-    _categoriesFuture = TaskCategories().getCategories(
-      'Исполнитель',
-      UserService.to.currentUser!.userId,
-    );
+    _loadData();
   }
 
-  Future<void> _loadProjects() async {
+  Future<void> _loadData() async {
     try {
-      final List<ProjectInformation> projectsWithCounts = [];
-      final currentUser = UserService.to.currentUser!;
-      final projects =
-          await EmployeeService().getAllProjects(currentUser.userId);
-
-      for (final project in projects) {
-        final workersCount =
-            await ProjectService().getAllWorkersCount(project.projectId);
-        projectsWithCounts.add(ProjectInformation(project, workersCount));
+      // Ждем завершения инициализации пользователя
+      if (!UserService.to.isInitialized) {
+        await Future.doWhile(() async {
+          await Future.delayed(const Duration(milliseconds: 100));
+          return !UserService.to.isInitialized;
+        });
       }
 
-      setState(() {
-        _projects = projectsWithCounts;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка загрузки данных: ${e.toString()}')),
-      );
-    }
-  }
+      // Проверяем авторизацию
+      if (!UserService.to.isLoggedIn) {
+        Get.offNamed('/auth'); // Предполагается, что AuthScreen имеет routeName '/auth'
+        return;
+      }
 
-  Future<void> _loadEmployees() async {
-    try {
+      // Загружаем категории задач
+      _categoriesFuture = TaskCategories().getCategories(
+        'Исполнитель',
+        UserService.to.currentUser!.userId,
+      );
+
+      // Загружаем проекты
+      final List<ProjectInformation> projectsWithCounts = [];
+      final currentUser = UserService.to.currentUser!;
+      final projects = await EmployeeService().getAllProjects(currentUser.userId);
+
+      for (final project in projects) {
+        final workersCount = await ProjectService().getAllWorkersCount(project.projectId);
+        projectsWithCounts.add(ProjectInformation(project, workersCount));
+      }
+      _projects.assignAll(projectsWithCounts);
+
+      // Загружаем сотрудников
       final employees = await EmployeeService().getAllEmployees();
-
-      setState(() {
-        _employees = employees;
-      });
+      _employees.assignAll(employees);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка загрузки данных: ${e.toString()}')),
-      );
+      _errorMessage = 'Ошибка загрузки данных: $e';
+      Get.snackbar('Ошибка', _errorMessage!);
+    } finally {
+      _isLoading.value = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            _buildUserInfo(),
-            const SizedBox(height: 20),
-            _buildSearchBox(),
-            const SizedBox(height: 20),
-            _buildAddTaskButton(),
-            const SizedBox(height: 20),
-            _buildAnnouncementCard(),
-            const SizedBox(height: 20),
-            _buildTasksSection(),
-            const SizedBox(height: 20),
-            _buildEmployeesSection(),
-            const SizedBox(height: 20),
-            _buildProjectsSection(),
-          ],
+    return Obx(() {
+      if (!UserService.to.isInitialized || _isLoading.value) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      if (!UserService.to.isLoggedIn) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Get.offNamed('/auth');
+        });
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: _errorMessage != null
+            ? Center(child: Text(_errorMessage!))
+            : SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              _buildUserInfo(),
+              const SizedBox(height: 20),
+              _buildSearchBox(),
+              const SizedBox(height: 20),
+              _buildAddTaskButton(),
+              const SizedBox(height: 20),
+              _buildAnnouncementCard(),
+              const SizedBox(height: 20),
+              _buildTasksSection(),
+              const SizedBox(height: 20),
+              _buildEmployeesSection(),
+              const SizedBox(height: 20),
+              _buildProjectsSection(),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildUserInfo() {
-    var user = UserService.to.currentUser!;
+    final user = UserService.to.currentUser!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -113,11 +137,10 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               user.name.split(' ').take(2).join(' '),
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
             ),
             Text(
-              'Программист',
+              user.position, // Используем position из Employee вместо хардкода
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -127,7 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const Icon(Icons.notifications),
               Positioned(
-                // Красный кружок с количеством уведомлений
                 right: 0,
                 top: 0,
                 child: Container(
@@ -141,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     minHeight: 16,
                   ),
                   child: const Text(
-                    '3', // Замените на реальное количество уведомлений
+                    '3', // TODO: Замените на реальное количество уведомлений
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 10,
@@ -153,8 +175,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           onPressed: () {
-            // Переход на экран уведомлений
-            // Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsScreen()));
+            // TODO: Реализуйте переход на экран уведомлений
+            // Get.toNamed('/notifications');
           },
         ),
       ],
@@ -172,31 +194,31 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       ),
+      onChanged: (value) {
+        // TODO: Реализуйте логику поиска
+      },
     );
   }
 
   Widget _buildAddTaskButton() {
     return SizedBox(
-      width: double.infinity, // занимает всю доступную ширину
+      width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
-          Navigator.pushNamed(context, TaskTitleScreen.routeName);
+          Get.toNamed(TaskTitleScreen.routeName);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.orange,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(vertical: 16),
           elevation: 4,
           shadowColor: Colors.blue.withOpacity(0.3),
         ),
         child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center, // центрируем содержимое
-          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.add, size: 20),
             SizedBox(width: 8),
@@ -228,7 +250,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Заголовок с иконкой
             const Row(
               children: [
                 Icon(Icons.announcement, size: 20, color: Colors.blue),
@@ -243,8 +264,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 12),
-
-            // Текст объявления
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -252,43 +271,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
-                'Текст название объявления',
+                'Текст название объявления', // TODO: Замените на реальные данные
                 style: TextStyle(fontSize: 14),
               ),
             ),
             const SizedBox(height: 12),
-
-            // Кнопка "Прочитать"
             SizedBox(
-              width: double.infinity, // занимает всю доступную ширину
+              width: double.infinity,
               child: OutlinedButton(
                 onPressed: () {
-                  // действие
+                  // TODO: Реализуйте действие для кнопки
+                  Get.snackbar('Объявление', 'Действие для объявления');
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.black,
-                  // цвет текста и иконки
                   side: const BorderSide(color: Colors.orange, width: 1),
-                  // цвет и толщина границы
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(12), // закругление углов
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Прочитать',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-                  ],
+                child: const Text(
+                  'Прочитать',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
                 ),
               ),
             ),
@@ -308,10 +311,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 8),
         FutureBuilder<List<TaskCategory>>(
-          future: TaskCategories().getCategories(
-            'Исполнитель',
-            UserService.to.currentUser!.userId,
-          ),
+          future: _categoriesFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -324,11 +324,8 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             final categories = snapshot.data!;
-
             return Column(
-              children: categories
-                  .map((category) => _buildTaskCategoryItem(category))
-                  .toList(),
+              children: categories.map((category) => _buildTaskCategoryItem(category)).toList(),
             );
           },
         ),
@@ -337,14 +334,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTaskCategoryItem(TaskCategory category) {
-    final icon = StatusHelper.getStatusIcon(
-        category.status); // Используем существующий метод
+    final icon = StatusHelper.getStatusIcon(category.status);
 
     return Column(
       children: [
         ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
           leading: Icon(icon, color: Colors.blue),
           title: Text(
             category.title,
@@ -364,31 +359,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          onTap: () => () async {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) =>
-                  const Center(child: CircularProgressIndicator()),
-            );
-
+          onTap: () async {
+            Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
             try {
-              Navigator.of(context).pop();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TaskListByStatusScreen(
-                    position: 'Исполнитель',
-                    userId: UserService.to.currentUser!.userId,
-                    status: category.status,
-                  ),
-                ),
-              );
+              Get.back();
+              Get.to(() => TaskListByStatusScreen(
+                position: 'Исполнитель',
+                userId: UserService.to.currentUser!.userId,
+                status: category.status,
+              ));
             } catch (e) {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Ошибка: ${e.toString()}')),
-              );
+              Get.back();
+              Get.snackbar('Ошибка', 'Ошибка: $e');
             }
           },
         ),
@@ -409,29 +391,28 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 _employees.length.toString(),
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          height: 180, // Фиксированная высота для скроллируемой области
+        _employees.isEmpty
+            ? const Center(child: Text('Нет сотрудников'))
+            : SizedBox(
+          height: 180,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _employees.length,
             separatorBuilder: (context, index) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              return _buildEmployeeCell(_employees[index]);
-            },
+            itemBuilder: (context, index) => _buildEmployeeCell(_employees[index]),
           ),
         ),
       ],
@@ -441,12 +422,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildEmployeeCell(Employee employee) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EmployeeDetailScreen(employee: employee),
-          ),
-        );
+        Get.to(() => EmployeeDetailScreen(employee: employee));
       },
       child: SizedBox(
         width: 120,
@@ -457,28 +433,21 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 12),
-              // Фиксированный контейнер для аватарки
               SizedBox(
-                height: 68, // Радиус 34 * 2
+                height: 68,
                 child: CircleAvatar(
                   radius: 34,
-                  backgroundImage: (employee.avatarUrl != null &&
-                          employee.avatarUrl!.isNotEmpty)
-                      ? NetworkImage(
-                          ProjectService().getAvatarUrl(employee.avatarUrl!) ??
-                              '',
-                        )
+                  backgroundImage: (employee.avatarUrl != null && employee.avatarUrl!.isNotEmpty)
+                      ? NetworkImage(ProjectService().getAvatarUrl(employee.avatarUrl!) ?? '')
                       : null,
-                  child: (employee.avatarUrl == null ||
-                          employee.avatarUrl!.isEmpty)
+                  child: (employee.avatarUrl == null || employee.avatarUrl!.isEmpty)
                       ? const Icon(Icons.account_box, size: 34)
                       : null,
                 ),
               ),
               const SizedBox(height: 12),
-              // Фиксированная высота для имени (2 строки)
               SizedBox(
-                height: 32, // Примерная высота для 2 строк текста
+                height: 32,
                 child: Text(
                   employee.name.split(' ').take(2).join(' '),
                   style: const TextStyle(
@@ -491,9 +460,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              // Фиксированная высота для должности
               SizedBox(
-                height: 20, // Примерная высота для 1 строки текста
+                height: 20,
                 child: Text(
                   employee.position,
                   style: const TextStyle(fontSize: 10),
@@ -520,29 +488,28 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 _projects.length.toString(),
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          height: 140, // Фиксированная высота для скроллируемой области
+        _projects.isEmpty
+            ? const Center(child: Text('Нет проектов'))
+            : SizedBox(
+          height: 140,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _projects.length,
             separatorBuilder: (context, index) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              return _buildProjectCell(_projects[index]);
-            },
+            itemBuilder: (context, index) => _buildProjectCell(_projects[index]),
           ),
         ),
       ],
@@ -551,74 +518,63 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildProjectCell(ProjectInformation project) {
     return GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ProjectDetailsScreen(project: project.project),
-            ),
-          );
-        },
-        child: SizedBox(
-          width: 150, // Фиксированная ширина каждой ячейки
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 12),
-                CircleAvatar(
-                  radius: 17,
-                  backgroundImage: (project.project.avatarUrl != null &&
-                          project.project.avatarUrl!.isNotEmpty)
-                      ? NetworkImage(
-                          ProjectService()
-                                  .getAvatarUrl(project.project.avatarUrl!) ??
-                              '',
-                        )
-                      : null,
-                  child: (project.project.avatarUrl == null ||
-                          project.project.avatarUrl!.isEmpty)
-                      ? const Icon(Icons.account_box, size: 17)
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  project.project.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.account_circle_sharp, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      project.employees.toString(),
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+      onTap: () {
+        Get.to(() => ProjectDetailsScreen(project: project.project));
+      },
+      child: SizedBox(
+        width: 150,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
           ),
-        ));
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              CircleAvatar(
+                radius: 17,
+                backgroundImage: (project.project.avatarUrl != null && project.project.avatarUrl!.isNotEmpty)
+                    ? NetworkImage(ProjectService().getAvatarUrl(project.project.avatarUrl!) ?? '')
+                    : null,
+                child: (project.project.avatarUrl == null || project.project.avatarUrl!.isEmpty)
+                    ? const Icon(Icons.account_box, size: 17)
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                project.project.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.account_circle_sharp, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    project.employees.toString(),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

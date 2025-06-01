@@ -15,9 +15,26 @@ class BottomNavigationMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(NavigationController());
-    return Scaffold(
-      bottomNavigationBar: Obx(
-        () => NavigationBar(
+    return Obx(() {
+      if (!UserService.to.isInitialized || !controller.isScreensReady.value) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      // Redirect to AuthScreen if not logged in
+      if (!UserService.to.isLoggedIn) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Get.offNamed('/auth');
+        });
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      // Display navigation bar and selected screen
+      return Scaffold(
+        bottomNavigationBar: NavigationBar(
           elevation: 0,
           backgroundColor: Colors.white,
           selectedIndex: controller.selectedIndex.value,
@@ -36,23 +53,56 @@ class BottomNavigationMenu extends StatelessWidget {
                 icon: Icon(Iconsax.profile_circle_copy), label: 'Профиль'),
           ],
         ),
-      ),
-      body: Obx(() => controller.screens[controller.selectedIndex.value]),
-    );
+        body: controller.screens[controller.selectedIndex.value],
+      );
+    });
   }
 }
 
 class NavigationController extends GetxController {
-  final Rx<int> selectedIndex = 0.obs;
+  final RxInt selectedIndex = 0.obs;
+  final RxBool isScreensReady = false.obs;
+  final List<Widget> _screens = [];
 
-  List<Widget> get screens {
-    final user = UserService.to.currentUser!;
-    return [
-      HomeScreen(),
-      ProjectScreen(),
-      TasksScreen(user: user),
-      EmployeesScreen(),
-      ProfileScreen(user: user)
-    ];
+  @override
+  void onInit() {
+    super.onInit();
+    _initializeScreens();
   }
+
+  Future<void> _initializeScreens() async {
+    debugPrint('Initializing NavigationController screens');
+    try {
+      // Wait for UserService to initialize
+      if (!UserService.to.isInitialized) {
+        await Future.doWhile(() async {
+          await Future.delayed(const Duration(milliseconds: 100));
+          return !UserService.to.isInitialized;
+        });
+      }
+
+      // Check if user is logged in
+      if (!UserService.to.isLoggedIn) {
+        isScreensReady.value = true; // Allow redirection to AuthScreen
+        return;
+      }
+
+      // Initialize screens with currentUser
+      _screens.addAll([
+        const HomeScreen(),
+        ProjectScreen(),
+        TasksScreen(user: UserService.to.currentUser!),
+        EmployeesScreen(),
+        ProfileScreen(user: UserService.to.currentUser!),
+      ]);
+      isScreensReady.value = true;
+      debugPrint('Screens initialized');
+    } catch (e) {
+      debugPrint('Error initializing screens: $e');
+      Get.snackbar('Ошибка', 'Не удалось инициализировать экраны: $e');
+      isScreensReady.value = true; // Allow UI to proceed even on error
+    }
+  }
+
+  List<Widget> get screens => _screens;
 }

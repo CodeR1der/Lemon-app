@@ -256,7 +256,7 @@ class RevisionsCard extends StatelessWidget {
             ),
           ),
         ] else if (task.status == TaskStatus.overdue &&
-            role == TaskRole.communicator)
+            role == TaskRole.communicator && correction.description != 'Просроченная задача')
           ...[
             Align(
               alignment: Alignment.centerRight,
@@ -313,7 +313,6 @@ class RevisionsCard extends StatelessWidget {
             ),
           ]
         else ...[
-          // Кнопка "Подробнее"
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(

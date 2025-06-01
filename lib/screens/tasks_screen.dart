@@ -21,7 +21,7 @@ class _TasksScreenState extends State<TasksScreen>
   @override
   void initState() {
     super.initState();
-    // Количество вкладок зависит от роли пользователя
+
     int tabCount = widget.user.role == "Коммуникатор" ? 4 : 3;
     _tabController = TabController(length: tabCount, vsync: this);
   }
