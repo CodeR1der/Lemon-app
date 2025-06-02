@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart'; // Для иконок
+import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:task_tracker/services/employee_operations.dart'; // Use package: scheme
 
 import '../models/employee.dart';
-import '../services//employee_operations.dart';
+import '../services/user_service.dart';
 import 'employee_details_screen.dart';
 
 class EmployeesScreen extends StatefulWidget {
@@ -11,10 +13,12 @@ class EmployeesScreen extends StatefulWidget {
 }
 
 class _EmployeesScreenState extends State<EmployeesScreen> {
-  EmployeeService _employeeService = EmployeeService();
+  final EmployeeService _employeeService = EmployeeService();
+  final UserService _userService = Get.find<UserService>();
   List<Employee> _employees = [];
   List<Employee> _filteredEmployees = [];
   TextEditingController _searchController = TextEditingController();
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -24,11 +28,26 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
   }
 
   Future<void> _loadEmployees() async {
-    List<Employee> employees = await _employeeService.getAllEmployees();
-    setState(() {
-      _employees = employees;
-      _filteredEmployees = employees;
-    });
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      List<Employee> employees = await _employeeService.getAllEmployees();
+      Employee? currentUser = _userService.currentUser;
+      if (currentUser != null) {
+        employees = employees.where((employee) => employee.userId != currentUser.userId).toList();
+      }
+      setState(() {
+        _employees = employees;
+        _filteredEmployees = employees;
+      });
+    } catch (e) {
+      Get.snackbar('Ошибка', 'Не удалось загрузить сотрудников: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _filterEmployees() {
@@ -76,12 +95,13 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
         children: [
           const SizedBox(height: 40),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            // Уменьшен до горизонтального отступа
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -103,7 +123,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                     radius: 24,
                     backgroundImage: employee.avatarUrl != ''
                         ? NetworkImage(
-                            _employeeService.getAvatarUrl(employee.avatarUrl))
+                        _employeeService.getAvatarUrl(employee.avatarUrl))
                         : null,
                     child: employee.avatarUrl == '' ? const Icon(Icons.person) : null,
                   ),
@@ -120,7 +140,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                           fontFamily: 'Roboto',
                         ),
                       ),
-                      const SizedBox(height: 4), // Отступ между текстом и иконками
+                      const SizedBox(height: 4),
                       _buildEmployeeIcons(employee),
                     ],
                   ),

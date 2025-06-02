@@ -12,6 +12,7 @@ class TaskPeriodTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formattedDate = DateFormat('dd.MM.yyyy').format(task.endDate);
+
     final priorityText = task.priorityToString();
 
     return Container(

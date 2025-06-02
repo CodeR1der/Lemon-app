@@ -1,15 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/employee.dart';
 import '../services/employee_operations.dart';
+import '../services/user_service.dart';
 
 // Абстрактное состояние профиля
 abstract class ProfileState {
   Widget buildBody(_ProfileScreenState screen);
-
   Widget buildFloatingActionButton(_ProfileScreenState screen);
 }
 
@@ -21,7 +22,7 @@ class ViewProfileState implements ProfileState {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 40),
-        Center(child: screen._buildAvatar()),
+        screen._buildAvatar(),
         screen._buildProfileSection('ФИО', screen.name),
         screen._buildBorders(),
         screen._buildProfileSection('Должность', screen.position),
@@ -59,7 +60,7 @@ class EditProfileState implements ProfileState {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 40),
-        Center(child: screen._buildAvatar()),
+        screen._buildAvatar(),
         screen._buildProfileSection('ФИО', screen.name),
         screen._buildBorders(),
         screen._buildProfileSection('Должность', screen.position),
@@ -117,6 +118,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final EmployeeService _employeeService = EmployeeService();
+  final UserService _userService = Get.find<UserService>();
   final ImagePicker _imagePicker = ImagePicker();
 
   String name = '';
@@ -157,9 +159,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _telegramController.text = widget.user.telegramId ?? '';
         _vkController.text = widget.user.vkId ?? '';
         avatarUrl = widget.user.avatarUrl;
+        role = widget.user.role;
         isLoading = false;
       });
-        } catch (e) {
+    } catch (e) {
       print('Ошибка при загрузке данных профиля: $e');
       setState(() {
         isLoading = false;
@@ -179,18 +182,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         avatarUrl: avatarUrl,
         role: role,
       ));
+      Get.snackbar('Успех', 'Профиль обновлен');
     } catch (e) {
       print('Ошибка при сохранении данных профиля: $e');
+      Get.snackbar('Ошибка', 'Не удалось обновить профиль: $e');
     }
   }
 
   Future<void> _selectAndUploadAvatar() async {
-    final pickedFile =
-        await _imagePicker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       final uploadedFileName =
-          await _employeeService.uploadAvatar(file, widget.user.userId);
+      await _employeeService.uploadAvatar(file, widget.user.userId);
       if (uploadedFileName != null) {
         setState(() {
           avatarUrl = uploadedFileName;
@@ -200,21 +204,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _logout() async {
+    try {
+      await _userService.signOut();
+      Get.offNamed('/auth');
+    } catch (e) {
+      Get.snackbar('Ошибка', 'Ошибка при выходе: $e');
+    }
+  }
+
   Widget _buildAvatar() {
-    return GestureDetector(
-      onTap: _selectAndUploadAvatar,
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: CircleAvatar(
-          radius: 50,
-          backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
-              ? NetworkImage(_employeeService.getAvatarUrl(avatarUrl!))
-              : null,
-          child: avatarUrl == null || avatarUrl!.isEmpty
-              ? const Icon(Icons.person, size: 50)
-              : null,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        GestureDetector(
+          onTap: _selectAndUploadAvatar,
+          child: CircleAvatar(
+            radius: 50,
+            backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
+                ? NetworkImage(_employeeService.getAvatarUrl(avatarUrl!))
+                : null,
+            child: avatarUrl == null || avatarUrl!.isEmpty
+                ? const Icon(Icons.person, size: 50)
+                : null,
+          ),
         ),
-      ),
+        IconButton(
+          icon: const Icon(Icons.logout, color: Colors.red, size: 30),
+          onPressed: _logout,
+          tooltip: 'Выйти',
+        ),
+      ],
     );
   }
 
@@ -285,7 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                controller.text.isNotEmpty ? controller.text : 'Загрузка...',
+                controller.text.isNotEmpty ? controller.text : '',
                 style: TextStyle(
                   fontSize: 16,
                   fontFamily: 'Roboto',
@@ -310,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             : _currentState.buildBody(this),
       ),
       floatingActionButton:
-          isLoading ? null : _currentState.buildFloatingActionButton(this),
+      isLoading ? null : _currentState.buildFloatingActionButton(this),
     );
   }
 }
