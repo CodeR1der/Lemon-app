@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:task_tracker/screens/project_details_screen.dart';
 import 'package:task_tracker/screens/tasks_list_screen.dart';
 import 'package:task_tracker/services/employee_operations.dart';
@@ -8,10 +10,13 @@ import 'package:task_tracker/services/user_service.dart';
 import '../models/employee.dart';
 import '../models/project.dart';
 import '../models/task_category.dart';
+import '../models/task_role.dart';
 import '../models/task_status.dart';
 import '../services/task_categories.dart';
+import '../services/task_provider.dart';
 import '../task_screens/taskTitleScreen.dart';
 import 'employee_details_screen.dart';
+import 'employee_queue_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   static const routeName = '/homePage';
@@ -26,14 +31,39 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Employee> _employees = [];
   late final Future<List<TaskCategory>> _categoriesFuture;
 
+  bool _isLoading = true;
+  bool _hasError = false;
+  String _errorMessage = '';
+
   @override
   void initState() {
     super.initState();
-    _loadProjects();
-    _loadEmployees();
-    _categoriesFuture = TaskCategories().getCategories(
-      'Исполнитель',
-      UserService.to.currentUser!.userId,
+    _loadAllData();
+  }
+
+  Future<void> _loadAllData() async {
+    try {
+      await Future.wait([
+        _loadProjects(),
+        _loadEmployees(),
+        _initializeTaskProvider(),
+      ]);
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+        _errorMessage = e.toString();
+      });
+    }
+  }
+
+  Future<void> _initializeTaskProvider() async {
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    await taskProvider.loadTasksAndCategories(
+      taskCategories: TaskCategories(),
+      position: 'Исполнитель',
+      employeeId: UserService.to.currentUser!.userId,
     );
   }
 
@@ -76,29 +106,245 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_hasError) {
+      return _buildErrorScreen();
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+      body: _isLoading ? _buildShimmerSkeleton() : _buildLoadedContent(),
+    );
+  }
+
+  Widget _buildShimmerSkeleton() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20),
+          _buildShimmerUserInfo(),
+          const SizedBox(height: 20),
+          _buildShimmerSection(title: 'Мои задачи', itemCount: 4),
+          const SizedBox(height: 20),
+          _buildShimmerSection(title: 'Сотрудники', itemCount: 3, isHorizontal: true),
+          const SizedBox(height: 20),
+          _buildShimmerSection(title: 'Проекты', itemCount: 2, isHorizontal: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerUserInfo() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(width: 150, height: 20, color: Colors.white),
+              const SizedBox(height: 4),
+              Container(width: 100, height: 16, color: Colors.white),
+            ],
+          ),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerSection({required String title, int itemCount = 3, bool isHorizontal = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Shimmer.fromColors(
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
+          child: Container(
+            width: 120,
+            height: 24,
+            color: Colors.white,
+            margin: const EdgeInsets.symmetric(horizontal: 16.0),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: isHorizontal ? (title == 'Сотрудники' ? 180 : 140) : null,
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            scrollDirection: isHorizontal ? Axis.horizontal : Axis.vertical,
+            itemCount: itemCount,
+            separatorBuilder: (context, index) =>
+            isHorizontal ? const SizedBox(width: 10) : const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Divider(),
+            ),
+            itemBuilder: (context, index) {
+              return isHorizontal
+                  ? _buildShimmerHorizontalItem()
+                  : _buildShimmerListItem();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildShimmerHorizontalItem() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        width: 120,
+        margin: const EdgeInsets.only(left: 16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            _buildUserInfo(),
-            const SizedBox(height: 20),
-            _buildSearchBox(),
-            const SizedBox(height: 20),
-            _buildAddTaskButton(),
-            const SizedBox(height: 20),
-            _buildAnnouncementCard(),
-            const SizedBox(height: 20),
-            _buildTasksSection(),
-            const SizedBox(height: 20),
-            _buildEmployeesSection(),
-            const SizedBox(height: 20),
-            _buildProjectsSection(),
+            Container(
+              width: 68,
+              height: 68,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(width: 80, height: 12, color: Colors.white),
+            const SizedBox(height: 6),
+            Container(width: 60, height: 10, color: Colors.white),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerListItem() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(width: 120, height: 16, color: Colors.white),
+                  const SizedBox(height: 4),
+                  Container(width: 80, height: 14, color: Colors.white),
+                ],
+              ),
+            ),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadedContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20),
+          AnimatedOpacity(
+            opacity: 1,
+            duration: const Duration(milliseconds: 300),
+            child: _buildUserInfo(),
+          ),
+          const SizedBox(height: 20),
+          AnimatedOpacity(
+            opacity: 1,
+            duration: const Duration(milliseconds: 400),
+            child: _buildSearchBox(),
+          ),
+          const SizedBox(height: 20),
+          AnimatedOpacity(
+            opacity: 1,
+            duration: const Duration(milliseconds: 500),
+            child: _buildAddTaskButton(),
+          ),
+          const SizedBox(height: 20),
+          AnimatedOpacity(
+            opacity: 1,
+            duration: const Duration(milliseconds: 600),
+            child: _buildAnnouncementCard(),
+          ),
+          const SizedBox(height: 20),
+          AnimatedOpacity(
+            opacity: 1,
+            duration: const Duration(milliseconds: 700),
+            child: _buildTasksSection(),
+          ),
+          const SizedBox(height: 20),
+          AnimatedOpacity(
+            opacity: 1,
+            duration: const Duration(milliseconds: 800),
+            child: _buildEmployeesSection(),
+          ),
+          const SizedBox(height: 20),
+          AnimatedOpacity(
+            opacity: 1,
+            duration: const Duration(milliseconds: 900),
+            child: _buildProjectsSection(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorScreen() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+          const SizedBox(height: 16),
+          Text(
+            'Ошибка загрузки данных',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _errorMessage,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: _loadAllData,
+            child: const Text('Повторить попытку'),
+          ),
+        ],
       ),
     );
   }
@@ -302,33 +548,41 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Мои задачи',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        FutureBuilder<List<TaskCategory>>(
-          future: TaskCategories().getCategories(
-            'Исполнитель',
-            UserService.to.currentUser!.userId,
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            'Мои задачи',
+            style: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+        ),
+        const SizedBox(height: 8.0),
+        Consumer<TaskProvider>(
+          builder: (context, taskProvider, child) {
+            final categories = taskProvider.getCategories(
+              RoleHelper.convertToString(TaskRole.executor),
+              UserService.to.currentUser!.userId,
+            );
+
+            if (categories.isEmpty) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (snapshot.hasError) {
-              return Center(child: Text('Ошибка: ${snapshot.error}'));
-            }
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('Нет задач'));
-            }
 
-            final categories = snapshot.data!;
-
-            return Column(
-              children: categories
-                  .map((category) => _buildTaskCategoryItem(category))
-                  .toList(),
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(1.0),
+              itemCount: categories.length,
+              separatorBuilder: (context, index) => const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Divider(),
+              ),
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                return _buildTaskCategoryItem(category);
+              },
             );
           },
         ),
@@ -337,64 +591,63 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTaskCategoryItem(TaskCategory category) {
-    final icon = StatusHelper.getStatusIcon(
-        category.status); // Используем существующий метод
+    final icon = StatusHelper.getStatusIcon(category.status);
 
-    return Column(
-      children: [
-        ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          leading: Icon(icon, color: Colors.blue),
-          title: Text(
-            category.title,
-            style: const TextStyle(fontSize: 16),
-          ),
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              category.count.toString(),
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          onTap: () => () async {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) =>
-                  const Center(child: CircularProgressIndicator()),
-            );
-
-            try {
-              Navigator.of(context).pop();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TaskListByStatusScreen(
-                    position: 'Исполнитель',
-                    userId: UserService.to.currentUser!.userId,
-                    status: category.status,
-                  ),
-                ),
-              );
-            } catch (e) {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Ошибка: ${e.toString()}')),
-              );
-            }
-          },
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      leading: Icon(icon, color: Colors.blue),
+      title: Text(
+        category.title,
+        style: const TextStyle(fontSize: 16.0),
+      ),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(12.0),
         ),
-        const Divider(height: 1),
-      ],
+        child: Text(
+          category.count.toString(),
+          style: const TextStyle(
+            fontSize: 14.0,
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      onTap: () => _handleCategoryTap(category),
     );
+  }
+
+  void _handleCategoryTap(TaskCategory category) async {
+    try {
+      if (category.status == TaskStatus.queue) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => QueueScreen(
+              position: RoleHelper.convertToString(TaskRole.executor),
+              userId: UserService.to.currentUser!.userId,
+            ),
+          ),
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskListByStatusScreen(
+              position: RoleHelper.convertToString(TaskRole.executor),
+              userId: UserService.to.currentUser!.userId,
+              status: category.status,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки задач: ${e.toString()}')),
+      );
+    }
   }
 
   Widget _buildEmployeesSection() {
