@@ -14,16 +14,20 @@ class BottomNavigationMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(NavigationController());
+    NavigationController controller = Get.put(NavigationController());
+    ever(UserService.to.isLoggedIn, (bool isLoggedIn) {
+      Get.delete<NavigationController>(); // Dispose current instance
+      controller = Get.put(NavigationController()); // Create new instance, triggering onInit
+    });
     return Obx(() {
-      if (!UserService.to.isInitialized || !controller.isScreensReady.value) {
+      if (!UserService.to.isInitialized.value || !controller.isScreensReady.value) {
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );
       }
 
       // Redirect to AuthScreen if not logged in
-      if (!UserService.to.isLoggedIn) {
+      if (!UserService.to.isLoggedIn.value) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Get.offNamed('/auth');
         });
@@ -74,15 +78,15 @@ class NavigationController extends GetxController {
     debugPrint('Initializing NavigationController screens');
     try {
       // Wait for UserService to initialize
-      if (!UserService.to.isInitialized) {
+      if (!UserService.to.isInitialized.value) {
         await Future.doWhile(() async {
           await Future.delayed(const Duration(milliseconds: 100));
-          return !UserService.to.isInitialized;
+          return !UserService.to.isInitialized.value;
         });
       }
 
       // Check if user is logged in
-      if (!UserService.to.isLoggedIn) {
+      if (!UserService.to.isLoggedIn.value) {
         isScreensReady.value = true; // Allow redirection to AuthScreen
         return;
       }

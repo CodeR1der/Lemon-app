@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/models/task_validate.dart';
 import 'package:task_tracker/services/request_operation.dart';
-import 'package:task_tracker/services/request_operation.dart';
 
 import '../models/correction.dart';
 import '../models/task.dart';
 import '../models/task_status.dart';
-import '../models/task_validate.dart';
 
 class CorrectionScreen extends StatefulWidget {
   final Task task;
@@ -310,8 +308,6 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
         return "Письмо-решение";
       case TaskStatus.notRead:
         return "Причина разъяснения";
-      case TaskStatus.needTicket:
-        return "Письмо-решение";
       case TaskStatus.completedUnderReview:
         return "Задача выполнена некорректно";
       case TaskStatus.atWork:
