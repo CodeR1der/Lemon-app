@@ -206,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _logout() async {
     try {
-      await _userService.logout();
+      await _userService.signOut();
       Get.offNamed('/auth');
     } catch (e) {
       Get.snackbar('Ошибка', 'Ошибка при выходе: $e');

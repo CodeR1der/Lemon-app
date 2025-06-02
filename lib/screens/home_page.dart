@@ -38,15 +38,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadData() async {
     try {
       // Ждем завершения инициализации пользователя
-      if (!UserService.to.isInitialized) {
+      if (!UserService.to.isInitialized.value) {
         await Future.doWhile(() async {
           await Future.delayed(const Duration(milliseconds: 100));
-          return !UserService.to.isInitialized;
+          return !UserService.to.isInitialized.value;
         });
       }
 
       // Проверяем авторизацию
-      if (!UserService.to.isLoggedIn) {
+      if (!UserService.to.isLoggedIn.value) {
         Get.offNamed('/auth'); // Предполагается, что AuthScreen имеет routeName '/auth'
         return;
       }
@@ -82,13 +82,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (!UserService.to.isInitialized || _isLoading.value) {
+      if (!UserService.to.isInitialized.value || _isLoading.value) {
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );
       }
 
-      if (!UserService.to.isLoggedIn) {
+      if (!UserService.to.isLoggedIn.value) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Get.offNamed('/auth');
         });

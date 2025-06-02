@@ -29,7 +29,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     try {
       final userService = UserService.to;
       if (widget.supabase.auth.currentSession != null &&
-          !userService.isInitialized) {
+          !userService.isInitialized.value) {
         await userService
             .initializeUser(widget.supabase.auth.currentSession!.user.id);
       }
@@ -42,12 +42,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget build(BuildContext context) {
     return Obx(() {
       final userService = UserService.to;
-      if (!userService.isInitialized) {
+      if (!userService.isInitialized.value) {
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );
       }
-      return userService.isLoggedIn
+      return userService.isLoggedIn.value
           ? widget.homeScreen
           : AuthScreen(supabase: widget.supabase);
     });
@@ -136,7 +136,7 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     }
 
-    if (success && userService.isLoggedIn) {
+    if (success && userService.isLoggedIn.value) {
       Get.off(() => const BottomNavigationMenu());
     } else {
       Get.snackbar('Ошибка', 'Авторизация не удалась');
