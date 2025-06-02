@@ -345,21 +345,33 @@ class _AuthScreenState extends State<AuthScreen> {
             },
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              TextInputFormatter.withFunction((oldValue, newValue) {
-                final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-                if (digits.isEmpty) return newValue;
+              LengthLimitingTextInputFormatter(10), // 10 цифр без +7
+              // Маска для номера телефонажю
+              TextInputFormatter.withFunction(
+                    (oldValue, newValue) {
+                  if (newValue.text.isEmpty) return newValue;
 
-                String formatted = '+7 ';
-                if (digits.length > 0) formatted += digits.substring(0, 3);
-                if (digits.length > 3) formatted += ' ${digits.substring(3, 6)}';
-                if (digits.length > 6) formatted += '-${digits.substring(6, 8)}';
-                if (digits.length > 8) formatted += '-${digits.substring(8)}';
+                  final text = newValue.text;
+                  String newText = text;
 
-                return TextEditingValue(
-                  text: formatted,
-                  selection: TextSelection.collapsed(offset: formatted.length),
-                );
-              }),
+                  if (text.length > 3) {
+                    newText = '${text.substring(0, 3)} ${text.substring(3)}';
+                  }
+                  if (text.length > 6) {
+                    newText =
+                    '${newText.substring(0, 7)}-${newText.substring(7)}';
+                  }
+                  if (text.length > 8) {
+                    newText =
+                    '${newText.substring(0, 10)}-${newText.substring(10)}';
+                  }
+
+                  return TextEditingValue(
+                    text: '$newText',
+                    selection: TextSelection.collapsed(offset: newText.length),
+                  );
+                },
+              )
             ],
           ),
         ),

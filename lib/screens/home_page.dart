@@ -30,13 +30,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final RxList<ProjectInformation> _projects = <ProjectInformation>[].obs;
   final RxList<Employee> _employees = <Employee>[].obs;
-  late final Future<List<TaskCategory>> _categoriesFuture;
   final RxBool _isLoading = true.obs;
   String? _errorMessage;
-
-  bool _isLoading = true;
-  bool _hasError = false;
-  String _errorMessage = '';
 
   @override
   void initState() {
@@ -61,9 +56,11 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       // Загружаем категории задач
-      _categoriesFuture = TaskCategories().getCategories(
-        'Исполнитель',
-        UserService.to.currentUser!.userId,
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      await taskProvider.loadTasksAndCategories(
+        taskCategories: TaskCategories(),
+        position: 'Исполнитель',
+        employeeId: UserService.to.currentUser!.userId,
       );
 
       // Загружаем проекты
