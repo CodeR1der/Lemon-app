@@ -181,6 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         vkId: _vkController.text,
         avatarUrl: avatarUrl,
         role: role,
+        companyId: widget.user.companyId,
       ));
       Get.snackbar('Успех', 'Профиль обновлен');
     } catch (e) {

@@ -112,37 +112,37 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   employees: employees,
                 ),
                 const SizedBox(height: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Наблюдатели',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: widget.taskData.project!.observers.length,
-                      itemBuilder: (context, index) {
-                        final member =
-                            widget.taskData.project!.observers[index];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: NetworkImage(
-                                _database.getAvatarUrl(member.avatarUrl)),
-                          ),
-                          title: Text(
-                            member.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(member.position),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                // Column(
+                //   crossAxisAlignment: CrossAxisAlignment.start,
+                //   children: [
+                //     const Text(
+                //       'Наблюдатели',
+                //       style:
+                //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                //     ),
+                //     const SizedBox(height: 8),
+                //     ListView.builder(
+                //       shrinkWrap: true,
+                //       physics: const NeverScrollableScrollPhysics(),
+                //       itemCount: widget.taskData.project!.observers.length,
+                //       itemBuilder: (context, index) {
+                //         final member =
+                //             widget.taskData.project!.observers[index];
+                //         return ListTile(
+                //           leading: CircleAvatar(
+                //             backgroundImage: NetworkImage(
+                //                 _database.getAvatarUrl(member.avatarUrl)),
+                //           ),
+                //           title: Text(
+                //             member.name,
+                //             style: const TextStyle(fontWeight: FontWeight.bold),
+                //           ),
+                //           subtitle: Text(member.position),
+                //         );
+                //       },
+                //     ),
+                //   ],
+                // ),
                 const Spacer(),
                 SizedBox(
                   width: double.infinity,
@@ -160,10 +160,6 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                         );
 
                         widget.taskData.team = newTeam;
-                        if (selectedObserver != null) {
-                          widget.taskData.project!.observers
-                              .add(selectedObserver!);
-                        }
 
                         Navigator.push(
                           context,
@@ -194,9 +190,6 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
     return employee == selectedPerformer ||
         employee == selectedCommunicator ||
         employee == selectedObserver ||
-        widget.taskData.project!.observers
-            .where((emp) => employee.userId == emp.userId)
-            .isNotEmpty ||
         employee == UserService.to.currentUser!;
   }
 

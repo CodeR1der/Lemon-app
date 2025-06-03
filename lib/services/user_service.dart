@@ -188,6 +188,7 @@ class UserService extends GetxService {
     } finally {
       isInitialized.value = true;
       isLoggedIn.value = _currentUser.value != null;
+      _supabase.auth.refreshSession();
     }
   }
 

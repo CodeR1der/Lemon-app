@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../models/employee.dart';
 import '/models/project.dart';
 import '../models/project_description.dart';
 import '../models/task_status.dart';
@@ -12,17 +13,53 @@ class ProjectService {
   final SupabaseClient _client = Supabase.instance.client;
   final _uuid = Uuid();
 
-  // Добавление проекта в Supabase
+  // Добавление проекта в Supabasew
   Future<void> addProject(Project project) async {
     if (project.projectId.isEmpty) {
       project.projectId = _uuid.v4();
     }
+    if (project.projectDescription!.projectDescriptionId.isEmpty) {
+      project.projectDescription!.projectDescriptionId = _uuid.v4();
+    }
 
     try {
-      await _client.from('project').insert(project.toJson());
+      final response = await _client
+          .from('project_description')
+          .insert(project.projectDescription!.toJson())
+          .select('project_description_id');
+      project.projectDescription!.projectDescriptionId =
+          response.first['project_description_id'];
+
+      final projectResponse = await _client
+          .from('project')
+          .insert(project.toJson())
+          .select('project_id');
+      project.projectId = projectResponse.first['project_id'];
+
+      for (var emp in project.team) {
+        await _client.from('project_team').insert({
+          'project_id': project.projectId,
+          'employee_id': emp.userId,
+          'company_id': project.companyId
+        });
+      }
+
       print('Проект успешно добавлен');
     } on PostgrestException catch (error) {
       print('Ошибка при добавлении проекта: ${error.message}');
+    }
+  }
+
+  Future<List<Employee>> getProjectTeam(String projectId) async {
+    try {
+      final response = await _client.from('project_team')
+          .select('*, employee_id:employee_id(*)')
+          .eq('project_id', projectId);
+
+      return response.map((emp) => Employee.fromJson(emp['employee_id'])).toList();
+    } catch (e) {
+      print('Ошибка при получении команды проекта: $e');
+      return [];
     }
   }
 
@@ -31,7 +68,7 @@ class ProjectService {
     try {
       final response = await _client.from('project').select('''*,
         project_description_id:project_description_id(*),
-        project_observers:project_observers(
+        project_team:project_team(
           *,
           employee:employee_id(*)
         )
@@ -59,7 +96,8 @@ class ProjectService {
   }
 
   // Получение данных описания проекта по projectDescriptionId
-  Future<ProjectDescription?> getProjectDescription(String projectDescriptionId) async {
+  Future<ProjectDescription?> getProjectDescription(
+      String projectDescriptionId) async {
     try {
       final response = await _client
           .from('project_description')
@@ -122,9 +160,7 @@ class ProjectService {
 
   Future<Map<String, int>> getTasksByProject(String projectId) async {
     try {
-      final tasksResponse = await _client
-          .from('task')
-          .select('''
+      final tasksResponse = await _client.from('task').select('''
       *,
       project:project_id(*,
         project_description_id:project_description_id(*),
@@ -140,8 +176,7 @@ class ProjectService {
           employee_id:employee_id(*)
         )
       )
-    ''')
-          .eq('project_id', projectId);
+    ''').eq('project_id', projectId);
 
       final statusCounts = <String, int>{};
 
@@ -166,6 +201,7 @@ class ProjectService {
       return {};
     }
   }
+
   // Получение публичного URL для аватара проекта
   String getAvatarUrl(String? fileName) {
     return _client.storage.from('Avatars').getPublicUrl(fileName!);
@@ -173,53 +209,8 @@ class ProjectService {
 
   Future<int> getAllWorkersCount(String projectId) async {
     try {
-      final teamResponce = await _client.from('task').select('''
-          id,
-          task_team: task_team!task_team_task_id_fkey(
-            *,
-            team_members:team_id(employee_id)
-          )
-          ''').eq('project_id', projectId);
-
-      final observersResponse = await _client
-          .from('project_observers')
-          .select('employee_id')
-          .eq('project_id', projectId);
-
-      if ((teamResponce == null || teamResponce.isEmpty) && (observersResponse == null || observersResponse.isEmpty)) {
-        return 0;
-      }
-
-      // Собираем все уникальные employee_id из всех команд всех задач проекта
-      final Set<String> uniqueWorkerIds = {};
-
-      for (final task in teamResponce) {
-        final teamData = task['task_team'];
-        if (teamData != null) {
-          for (final team in teamData) {
-            final teamMembers = team['team_members'];
-            uniqueWorkerIds.add(team['creator_id']);
-            uniqueWorkerIds.add(team['communicator_id']);
-            if (teamMembers != null) {
-              for (final member in teamMembers) {
-                final employeeId = member['employee_id'];
-                if (employeeId != null) {
-                  uniqueWorkerIds.add(employeeId);
-                }
-              }
-            }
-          }
-        }
-      }
-
-      for (final obs in observersResponse) {
-        final employeeId = obs['employee_id'];
-        if (employeeId != null) {
-          uniqueWorkerIds.add(employeeId);
-        }
-      }
-
-      return uniqueWorkerIds.length;
+      //await
+      return 0;
     } catch (e) {
       print('Error getting count of project workers: $e');
       throw Exception('Error getting count of project workers: $e');

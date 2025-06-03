@@ -13,7 +13,6 @@ class TaskTeamTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final team = task.team;
     final hasTeamMembers = team.teamMembers.isNotEmpty;
-    final hasObservers = task.project?.observers.isNotEmpty ?? false;
 
     return Container(
       color: Colors.white,
@@ -48,14 +47,6 @@ class TaskTeamTab extends StatelessWidget {
                         member.userId != team.creatorId.userId &&
                         member.userId != team.communicatorId.userId)
                     .toList(),
-              ),
-
-            // Наблюдатели из проекта
-            if (hasObservers)
-              _buildTeamMemberSection(
-                context: context,
-                title: 'Наблюдатели',
-                employees: task.project!.observers,
               ),
           ],
         ),

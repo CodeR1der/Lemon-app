@@ -63,7 +63,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
 
   Future<void> _loadTeam() async {
     try {
-      final employees = await _taskService.getUniqueEmployees(_taskList);
+      final employees = await ProjectService().getProjectTeam(widget.project.projectId);
 
       if (mounted) {
         setState(() {

@@ -6,7 +6,8 @@ class Project {
   late String name;
   late String? avatarUrl;
   late ProjectDescription? projectDescription;
-  final List<Employee> observers;
+  final List<Employee> team;
+  final String companyId;
 
   // Конструктор
   Project(
@@ -14,7 +15,8 @@ class Project {
       required this.name,
       this.avatarUrl,
       this.projectDescription,
-      required this.observers});
+      required this.team,
+      required this.companyId});
 
   // Преобразование объекта в JSON для хранения в Supabase
   Map<String, dynamic> toJson() {
@@ -22,6 +24,8 @@ class Project {
       'project_id': projectId,
       'name': name,
       'avatar_url': avatarUrl,
+      'project_description_id': projectDescription!.projectDescriptionId,
+      'company_id': companyId
     };
   }
 
@@ -33,13 +37,14 @@ class Project {
       projectDescription: json['project_description_id'] != null
           ? ProjectDescription.fromJson(json['project_description_id'])
           : null,
-      observers: json['project_observers'] != null
+      team: json['team'] != null
           ? List<Employee>.from(
-              json['project_observers'].map((observer) {
+              json['team'].map((observer) {
                 return Employee.fromJson(observer['employee']);
               }),
             )
           : <Employee>[],
+      companyId: json['company_id']
     );
   }
 }

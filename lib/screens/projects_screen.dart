@@ -1,32 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:task_tracker/screens/project_details_screen.dart';
-
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:provider/provider.dart';
+import '../services/project_provider.dart';
 import '/models/project.dart';
-import '/services/project_operations.dart';
+import '/services/user_service.dart';
+import 'project_details_screen.dart';
+import 'add_project_screen.dart';
 
-class ProjectScreen extends StatefulWidget {
-  @override
-  _ProjectScreenState createState() => _ProjectScreenState();
-}
+class ProjectScreen extends StatelessWidget {
+  const ProjectScreen({Key? key}) : super(key: key);
 
-class _ProjectScreenState extends State<ProjectScreen> {
-  final ProjectService _projectService = ProjectService();
-  List<Project> _projects = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProjects();
-  }
-
-  Future<void> _loadProjects() async {
-    final projects = await _projectService.getAllProjects();
-    setState(() {
-      _projects = projects;
-    });
-  }
-
-  void _openProjectDetails(Project project) {
+  void _openProjectDetails(BuildContext context, Project project) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -35,26 +19,47 @@ class _ProjectScreenState extends State<ProjectScreen> {
     );
   }
 
+  void _openAddProjectScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddProjectScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _projects.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : GridView.builder(
+    final userService = UserService.to;
+
+    return ChangeNotifierProvider(
+      create: (context) => ProjectProvider()..loadProjects(),
+      child: Consumer<ProjectProvider>(
+        builder: (context, provider, child) {
+          final isDirector = userService.currentUser?.role == 'Директор';
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: provider.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : provider.projects.isEmpty
+                  ? const Center(
+                child: Text(
+                  'Нет проектов',
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+              )
+                  : GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
-                  childAspectRatio: 1.5, // Пропорции плитки
+                  childAspectRatio: 1.5,
                 ),
-                itemCount: _projects.length,
+                itemCount: provider.projects.length,
                 itemBuilder: (context, index) {
-                  final project = _projects[index];
+                  final project = provider.projects[index];
                   return GestureDetector(
-                    onTap: () => _openProjectDetails(project),
+                    onTap: () => _openProjectDetails(context, project),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -69,29 +74,22 @@ class _ProjectScreenState extends State<ProjectScreen> {
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        // Прижимаем элементы к левой стороне
                         children: [
-                          // Картинка (аватар)
                           Padding(
                             padding: const EdgeInsets.all(16.0),
-                            // Отступы вокруг аватара
                             child: CircleAvatar(
-                              radius: 20, // Размер аватара
+                              radius: 20,
                               backgroundImage: project.avatarUrl != null
-                                  ? NetworkImage(_projectService
-                                      .getAvatarUrl(project.avatarUrl))
+                                  ? NetworkImage(project.avatarUrl!)
                                   : null,
                               child: project.avatarUrl == null
                                   ? const Icon(Icons.business,
-                                      size: 20, color: Colors.grey)
+                                  size: 20, color: Colors.grey)
                                   : null,
                             ),
                           ),
-                          // Название проекта
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            // Отступы вокруг текста
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
                             child: Text(
                               project.name,
                               style: const TextStyle(
@@ -99,9 +97,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                               textAlign: TextAlign.left,
-                              // Выравнивание текста по левой стороне
-                              overflow: TextOverflow
-                                  .ellipsis, // Обрезание текста, если он слишком длинный
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -110,6 +106,45 @@ class _ProjectScreenState extends State<ProjectScreen> {
                   );
                 },
               ),
+            ),
+            bottomSheet: isDirector
+                ? Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              width: double.infinity,
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => {
+                    _openAddProjectScreen(context)
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 4,
+                    shadowColor: Colors.blue.withOpacity(0.3),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Iconsax.box_add, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Добавить проект',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+                : null,
+          );
+        },
       ),
     );
   }

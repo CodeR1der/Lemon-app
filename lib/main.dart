@@ -8,6 +8,7 @@ import 'package:task_tracker/screens/home_page.dart';
 import 'package:task_tracker/screens/profile_screen.dart';
 import 'package:task_tracker/screens/projects_screen.dart';
 import 'package:task_tracker/screens/tasks_screen.dart';
+import 'package:task_tracker/services/project_provider.dart';
 import 'package:task_tracker/services/task_provider.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/task_screens/taskTitleScreen.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => TaskProvider()),
+        ChangeNotifierProvider(create: (_) => ProjectProvider()),
       ],
       child: GetMaterialApp(
         getPages: [

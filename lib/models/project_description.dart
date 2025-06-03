@@ -3,7 +3,8 @@ class ProjectDescription {
   late String description;
   late String goals;
   final String projectLink;
-  final Map<String, dynamic> socialNetworks;
+  late Map<String, dynamic>? socialNetworks;
+  final String companyId;
 
   // Конструктор
   ProjectDescription({
@@ -11,7 +12,8 @@ class ProjectDescription {
     required this.description,
     required this.goals,
     required this.projectLink,
-    required this.socialNetworks,
+    this.socialNetworks,
+    required this.companyId,
   });
 
   // Преобразование объекта в JSON для хранения в Supabase
@@ -22,6 +24,7 @@ class ProjectDescription {
       'goals': goals,
       'project_link': projectLink,
       'social_networks': socialNetworks,
+      'company_id': companyId,
     };
   }
 
@@ -33,6 +36,7 @@ class ProjectDescription {
       goals: json['goals'],
       projectLink: json['project_link'],
       socialNetworks: json['social_networks'] ?? {},
+      companyId: json['company_id']
     );
   }
 }

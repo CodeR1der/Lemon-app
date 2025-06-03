@@ -6,6 +6,7 @@ class Employee {
   late String? telegramId;
   late String? vkId;
   late String role;
+  late String companyId;
   String? avatarUrl; // Поле для хранения имени файла аватара
 
   // Конструктор
@@ -18,6 +19,7 @@ class Employee {
     required this.vkId,
     this.avatarUrl,
     required this.role,
+    required this.companyId
   });
 
   // Преобразование объекта в JSON для хранения в Supabase
@@ -44,6 +46,7 @@ class Employee {
         telegramId: json['telegram_id'],
         vkId: json['vk_id'],
         avatarUrl: json['avatar_url'],
-        role: json['role']);
+        role: json['role'],
+        companyId: json['company_id']);
   }
 }

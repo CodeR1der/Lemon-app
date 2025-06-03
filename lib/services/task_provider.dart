@@ -74,8 +74,6 @@ class TaskProvider with ChangeNotifier {
             matches &= task.team.teamMembers.any((member) => member.userId == userId);
           case 'Постановщик':
             matches &= task.team.creatorId.userId == userId;
-          case 'Наблюдатель':
-            matches &= task.project?.observers.any((observer) => observer.userId == userId) ?? false;
         }
       }
       return matches;

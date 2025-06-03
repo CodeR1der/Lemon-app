@@ -143,7 +143,9 @@ class EmployeeService {
   Future<List<Task>> getEmployeeTasksByProject(
       String employeeId, String projectId) async {
     try {
-      final tasksResponse = await _client.from('task').select('''
+      final tasksResponse = await _client
+          .from('task')
+          .select('''
   *,
   project:project_id(*,
     project_description_id:project_description_id(*),
@@ -175,81 +177,14 @@ class EmployeeService {
 
   Future<List<Project>> getAllProjects(String employeeId) async {
     try {
-      // Получаем проекты, где сотрудник является членом команды
-      final teamProjects = await _client.from('team_members').select('''
-        team_id,
-        task_team:team_id(
-          task_id,
-          task:task_id(
-            project_id,
-            project:project_id(*,
-              project_description_id:project_description_id(*),
-              project_observers:project_observers(
-                *,
-                employee:employee_id(*)
-              )
-            )
-          )
-        )
-        ''').eq('employee_id', employeeId);
+      final response = await _client.from('project_team').select('''
+      project:project_id (
+        *,
+        project_description_id:project_description_id (*)
+      )
+    ''').eq('employee_id', employeeId);
 
-      // Получаем проекты, где сотрудник является коммуникатором
-      final communicatorProjects = await _client.from('task_team').select('''
-        task_id,
-        task:task_id(
-          project:project_id(*,
-            project_description_id:project_description_id(*),
-            project_observers:project_observers(
-              *,
-              employee:employee_id(*)
-            )
-          )
-        )
-        ''').eq('communicator_id', employeeId);
-
-      // Получаем проекты, где сотрудник является создателем
-      final creatorProjects = await _client.from('task_team').select('''
-          task_id,
-          task:task_id(
-            project:project_id(*,
-              project_description_id:project_description_id(*),
-              project_observers:project_observers(
-                *,
-                employee:employee_id(*)
-              )
-            )
-          )
-        ''').eq('creator_id', employeeId);
-
-      final observerProjects =
-          await _client.from('project_observers').select('''
-          project_id,
-          project:project_id(*,
-            project_description_id:project_description_id(*),
-            project_observers:project_observers(
-              *,
-              employee:employee_id(*)
-            )
-          )
-        ''').eq('employee_id', employeeId);
-
-      // Объединяем все проекты и убираем дубликаты
-      final allProjects = [
-        ..._extractProjectsFromResponse(teamProjects),
-        ..._extractProjectsFromResponse(communicatorProjects),
-        ..._extractProjectsFromResponse(creatorProjects),
-        ..._extractProjectsFromResponse(observerProjects),
-      ].fold(<Map<String, dynamic>>[], (unique, project) {
-        if (project is Map<String, dynamic> &&
-            !unique.any((p) => p['project_id'] == project['project_id'])) {
-          unique.add(project);
-        }
-        return unique;
-      });
-
-      //observerProjects.map((obs) => allProjects.add(obs['project']));
-
-      return allProjects.map((json) => Project.fromJson(json)).toList();
+      return response.map((json) => Project.fromJson(json['project'])).toList();
     } catch (e) {
       throw Exception('Error getting projects: $e');
     }
@@ -264,23 +199,30 @@ class EmployeeService {
         if (task_team['task'] != null && task_team['task']['project'] != null) {
           if (projects.isEmpty) {
             projects.add(task_team['task']['project']);
-          } else if (projects.where((p) => p['project_id'] == task_team['task']['project']['project_id']).isEmpty) {
+          } else if (projects
+              .where((p) =>
+                  p['project_id'] == task_team['task']['project']['project_id'])
+              .isEmpty) {
             projects.add(task_team['task']['project']);
           }
         }
       } else if (item['task'] != null && item['task']['project'] != null) {
         if (projects.isEmpty) {
           projects.add(item['task']['project']);
-        } else if (projects.where((p) => p['project_id'] == item['task']['project']['project_id']).isEmpty) {
+        } else if (projects
+            .where(
+                (p) => p['project_id'] == item['task']['project']['project_id'])
+            .isEmpty) {
           projects.add(item['task']['project']);
         }
       } else if (item['project'] != null) {
         if (projects.isEmpty) {
           projects.add(item['project']);
-        } else if (projects.where((p) => p['project_id'] == item['project']['project_id']).isEmpty) {
+        } else if (projects
+            .where((p) => p['project_id'] == item['project']['project_id'])
+            .isEmpty) {
           projects.add(item['project']);
         }
-
       }
     }
 
