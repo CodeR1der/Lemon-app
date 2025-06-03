@@ -11,7 +11,6 @@ import 'package:task_tracker/screens/tasks_screen.dart';
 import 'package:task_tracker/services/task_provider.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/task_screens/taskTitleScreen.dart';
-import 'package:task_tracker/widgets/app_initializer.dart';
 import 'package:task_tracker/widgets/navigation_panel.dart';
 import 'auth/auth.dart';
 

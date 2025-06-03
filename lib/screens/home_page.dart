@@ -21,6 +21,7 @@ import 'employee_queue_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   static const routeName = '/homePage';
+
   const HomeScreen({super.key});
 
   @override
@@ -51,7 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // Проверяем авторизацию
       if (!UserService.to.isLoggedIn.value) {
-        Get.offNamed('/auth'); // Предполагается, что AuthScreen имеет routeName '/auth'
+        Get.offNamed(
+            '/auth'); // Предполагается, что AuthScreen имеет routeName '/auth'
         return;
       }
 
@@ -66,17 +68,19 @@ class _HomeScreenState extends State<HomeScreen> {
       // Загружаем проекты
       final List<ProjectInformation> projectsWithCounts = [];
       final currentUser = UserService.to.currentUser!;
-      final projects = await EmployeeService().getAllProjects(currentUser.userId);
+      final projects =
+          await EmployeeService().getAllProjects(currentUser.userId);
 
       for (final project in projects) {
-        final workersCount = await ProjectService().getAllWorkersCount(project.projectId);
+        final workersCount =
+            await ProjectService().getAllWorkersCount(project.projectId);
         projectsWithCounts.add(ProjectInformation(project, workersCount));
       }
       _projects.assignAll(projectsWithCounts);
 
       // Загружаем сотрудников
       final employees = await EmployeeService().getAllEmployees();
-      _employees.assignAll(employees);
+      _employees.assignAll(employees.where((e) => e.userId != UserService.to.currentUser!.userId));
     } catch (e) {
       _errorMessage = 'Ошибка загрузки данных: $e';
       Get.snackbar('Ошибка', _errorMessage!);
@@ -85,12 +89,235 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _buildShimmerSkeleton() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20),
+          _buildShimmerUserInfo(),
+          const SizedBox(height: 20),
+          _buildShimmerSearchBox(),
+          const SizedBox(height: 20),
+          _buildShimmerButton(),
+          const SizedBox(height: 20),
+          _buildShimmerAnnouncement(),
+          const SizedBox(height: 20),
+          _buildShimmerSection(title: 'Мои задачи', itemCount: 4),
+          const SizedBox(height: 20),
+          _buildShimmerSection(
+              title: 'Сотрудники', itemCount: 3, isHorizontal: true),
+          const SizedBox(height: 20),
+          _buildShimmerSection(
+              title: 'Проекты', itemCount: 2, isHorizontal: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerUserInfo() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(width: 150, height: 20, color: Colors.white),
+              const SizedBox(height: 4),
+              Container(width: 100, height: 16, color: Colors.white),
+            ],
+          ),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerSearchBox() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerButton() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        width: double.infinity,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerAnnouncement() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(width: 100, height: 20, color: Colors.white),
+            const SizedBox(height: 12),
+            Container(height: 60, color: Colors.white),
+            const SizedBox(height: 12),
+            Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerSection(
+      {required String title, int itemCount = 3, bool isHorizontal = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Shimmer.fromColors(
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
+          child: Container(
+            width: 120,
+            height: 24,
+            color: Colors.white,
+            margin: const EdgeInsets.symmetric(horizontal: 16.0),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: isHorizontal ? (title == 'Сотрудники' ? 180 : 140) : null,
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            scrollDirection: isHorizontal ? Axis.horizontal : Axis.vertical,
+            itemCount: itemCount,
+            separatorBuilder: (context, index) => isHorizontal
+                ? const SizedBox(width: 10)
+                : const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Divider(),
+                  ),
+            itemBuilder: (context, index) {
+              return isHorizontal
+                  ? _buildShimmerHorizontalItem()
+                  : _buildShimmerListItem();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildShimmerHorizontalItem() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        width: 120,
+        margin: const EdgeInsets.only(left: 16),
+        child: Column(
+          children: [
+            Container(
+              width: 68,
+              height: 68,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(width: 80, height: 12, color: Colors.white),
+            const SizedBox(height: 6),
+            Container(width: 60, height: 10, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerListItem() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(width: 120, height: 16, color: Colors.white),
+                  const SizedBox(height: 4),
+                  Container(width: 80, height: 14, color: Colors.white),
+                ],
+              ),
+            ),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       if (!UserService.to.isInitialized.value || _isLoading.value) {
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: _buildShimmerSkeleton(),
         );
       }
 
@@ -108,27 +335,27 @@ class _HomeScreenState extends State<HomeScreen> {
         body: _errorMessage != null
             ? Center(child: Text(_errorMessage!))
             : SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              _buildUserInfo(),
-              const SizedBox(height: 20),
-              _buildSearchBox(),
-              const SizedBox(height: 20),
-              _buildAddTaskButton(),
-              const SizedBox(height: 20),
-              _buildAnnouncementCard(),
-              const SizedBox(height: 20),
-              _buildTasksSection(),
-              const SizedBox(height: 20),
-              _buildEmployeesSection(),
-              const SizedBox(height: 20),
-              _buildProjectsSection(),
-            ],
-          ),
-        ),
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    _buildUserInfo(),
+                    const SizedBox(height: 20),
+                    _buildSearchBox(),
+                    const SizedBox(height: 20),
+                    _buildAddTaskButton(),
+                    const SizedBox(height: 20),
+                    _buildAnnouncementCard(),
+                    const SizedBox(height: 20),
+                    _buildTasksSection(),
+                    const SizedBox(height: 20),
+                    _buildEmployeesSection(),
+                    const SizedBox(height: 20),
+                    _buildProjectsSection(),
+                  ],
+                ),
+              ),
       );
     });
   }
@@ -143,10 +370,11 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               user.name.split(' ').take(2).join(' '),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
             ),
             Text(
-              user.position, // Используем position из Employee вместо хардкода
+              user.position,
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -200,7 +428,8 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       ),
       onChanged: (value) {
         // TODO: Реализуйте логику поиска
@@ -218,7 +447,8 @@ class _HomeScreenState extends State<HomeScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.orange,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(vertical: 16),
           elevation: 4,
           shadowColor: Colors.blue.withOpacity(0.3),
@@ -277,7 +507,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
-                'Текст название объявления', // TODO: Замените на реальные данные
+                'Текст название объявления',
                 style: TextStyle(fontSize: 14),
               ),
             ),
@@ -286,14 +516,15 @@ class _HomeScreenState extends State<HomeScreen> {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () {
-                  // TODO: Реализуйте действие для кнопки
                   Get.snackbar('Объявление', 'Действие для объявления');
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.black,
                   side: const BorderSide(color: Colors.orange, width: 1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 ),
                 child: const Text(
                   'Прочитать',
@@ -358,7 +589,8 @@ class _HomeScreenState extends State<HomeScreen> {
         category.status); // Используем существующий метод
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      contentPadding:
+          const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       leading: Icon(icon, color: Colors.blue),
       title: Text(
         category.title,
@@ -433,7 +665,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Text(
                 _employees.length.toString(),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -442,14 +675,16 @@ class _HomeScreenState extends State<HomeScreen> {
         _employees.isEmpty
             ? const Center(child: Text('Нет сотрудников'))
             : SizedBox(
-          height: 180,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _employees.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 10),
-            itemBuilder: (context, index) => _buildEmployeeCell(_employees[index]),
-          ),
-        ),
+                height: 180,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _employees.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 10),
+                  itemBuilder: (context, index) =>
+                      _buildEmployeeCell(_employees[index]),
+                ),
+              ),
       ],
     );
   }
@@ -472,10 +707,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 68,
                 child: CircleAvatar(
                   radius: 34,
-                  backgroundImage: (employee.avatarUrl != null && employee.avatarUrl!.isNotEmpty)
-                      ? NetworkImage(ProjectService().getAvatarUrl(employee.avatarUrl!) ?? '')
+                  backgroundImage: (employee.avatarUrl != null &&
+                          employee.avatarUrl!.isNotEmpty)
+                      ? NetworkImage(
+                          ProjectService().getAvatarUrl(employee.avatarUrl!) ??
+                              '')
                       : null,
-                  child: (employee.avatarUrl == null || employee.avatarUrl!.isEmpty)
+                  child: (employee.avatarUrl == null ||
+                          employee.avatarUrl!.isEmpty)
                       ? const Icon(Icons.account_box, size: 34)
                       : null,
                 ),
@@ -530,7 +769,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Text(
                 _projects.length.toString(),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -539,14 +779,16 @@ class _HomeScreenState extends State<HomeScreen> {
         _projects.isEmpty
             ? const Center(child: Text('Нет проектов'))
             : SizedBox(
-          height: 140,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _projects.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 10),
-            itemBuilder: (context, index) => _buildProjectCell(_projects[index]),
-          ),
-        ),
+                height: 140,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _projects.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 10),
+                  itemBuilder: (context, index) =>
+                      _buildProjectCell(_projects[index]),
+                ),
+              ),
       ],
     );
   }
@@ -577,10 +819,14 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 12),
               CircleAvatar(
                 radius: 17,
-                backgroundImage: (project.project.avatarUrl != null && project.project.avatarUrl!.isNotEmpty)
-                    ? NetworkImage(ProjectService().getAvatarUrl(project.project.avatarUrl!) ?? '')
+                backgroundImage: (project.project.avatarUrl != null &&
+                        project.project.avatarUrl!.isNotEmpty)
+                    ? NetworkImage(ProjectService()
+                            .getAvatarUrl(project.project.avatarUrl!) ??
+                        '')
                     : null,
-                child: (project.project.avatarUrl == null || project.project.avatarUrl!.isEmpty)
+                child: (project.project.avatarUrl == null ||
+                        project.project.avatarUrl!.isEmpty)
                     ? const Icon(Icons.account_box, size: 17)
                     : null,
               ),

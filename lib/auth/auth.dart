@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/user_service.dart';
@@ -69,10 +70,97 @@ class _AuthScreenState extends State<AuthScreen> {
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
   final _positionController = TextEditingController();
+  final _companyCodeController = TextEditingController();
   final _phoneController = TextEditingController();
   bool _isSignUp = false;
   bool _isLoading = false;
   bool _isButtonEnabled = false;
+  String? _selectedRole; // 'director' или 'employee'
+  bool _showRoleSelection = true; // Показывать ли выбор роли
+
+  Widget _buildRoleSelection() {
+    return Column(
+      children: [
+        const Text(
+          'Выберите вашу роль',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 74),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.orange,
+              width: 2,
+            ),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            leading: const Icon(
+              Iconsax.user,
+              color: Colors.orange,
+              size: 32,
+            ),
+            title: const Text(
+              'Я директор',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            onTap: () {
+              setState(() {
+                _selectedRole = 'Директор';
+                _showRoleSelection = false;
+              });
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.orange,
+              width: 2,
+            ),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            leading: const Icon(
+              Iconsax.people,
+              color: Colors.orange,
+              size: 32,
+            ),
+            title: const Text(
+              'Я сотрудник',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            onTap: () {
+              setState(() {
+                _selectedRole = 'Исполнитель / Постановщик';
+                _showRoleSelection = false;
+              });
+            },
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
 
   @override
   void initState() {
@@ -97,11 +185,19 @@ class _AuthScreenState extends State<AuthScreen> {
   void _updateButtonState() {
     setState(() {
       if (_isSignUp) {
-        _isButtonEnabled = _emailController.text.isNotEmpty &&
-            _passwordController.text.isNotEmpty &&
-            _nameController.text.isNotEmpty &&
-            _positionController.text.isNotEmpty &&
-            _phoneController.text.isNotEmpty;
+        if (_selectedRole == 'Исполнитель / Постановщик') {
+          _isButtonEnabled = _emailController.text.isNotEmpty &&
+              _passwordController.text.isNotEmpty &&
+              _nameController.text.isNotEmpty &&
+              _positionController.text.isNotEmpty &&
+              _phoneController.text.isNotEmpty &&
+              _companyCodeController.text.isNotEmpty;
+        } else {
+          _isButtonEnabled = _emailController.text.isNotEmpty &&
+              _passwordController.text.isNotEmpty &&
+              _nameController.text.isNotEmpty &&
+              _phoneController.text.isNotEmpty;
+        }
       } else {
         _isButtonEnabled = _emailController.text.isNotEmpty &&
             _passwordController.text.isNotEmpty;
@@ -127,8 +223,26 @@ class _AuthScreenState extends State<AuthScreen> {
         password: _passwordController.text,
         name: _nameController.text,
         position: _positionController.text,
+        role: _selectedRole,
+        code: _selectedRole == 'Исполнитель / Постановщик' ? _companyCodeController.text : null,
         phone: _phoneController.text.isEmpty ? null : _phoneController.text,
       );
+      if (success) {
+        // Переключение на форму входа
+        setState(() {
+          _isSignUp = false;
+          _selectedRole = null;
+          _showRoleSelection = false;
+          _nameController.clear();
+          _positionController.clear();
+          _companyCodeController.clear();
+          _phoneController.clear();
+        });
+      }
+      setState(() {
+        _isLoading = false;
+      });
+      return;
     } else {
       success = await userService.signIn(
         email: _emailController.text,
@@ -138,8 +252,8 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (success && userService.isLoggedIn.value) {
       Get.off(() => const BottomNavigationMenu());
-    } else {
-      Get.snackbar('Ошибка', 'Авторизация не удалась');
+    } else if (!_isSignUp) {
+      Get.snackbar('Ошибка', 'Вход не удался');
     }
 
     setState(() {
@@ -157,61 +271,102 @@ class _AuthScreenState extends State<AuthScreen> {
           key: _formKey,
           child: Column(
             children: [
-              _buildRegistrationSection('Email', _emailController),
-              _buildRegistrationSection(
-                'Пароль',
-                _passwordController,
-                obscureText: true,
-              ),
-              if (_isSignUp) ...[
-                _buildRegistrationSection('Имя', _nameController),
-                _buildRegistrationSection('Должность', _positionController),
-                _buildPhoneField(),
-              ],
-              const SizedBox(height: 20),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _isButtonEnabled ? _handleAuth : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+              if (_isSignUp && _showRoleSelection) _buildRoleSelection(),
+              if (!(_isSignUp && _showRoleSelection)) ...[
+                _buildRegistrationSection('Email', _emailController),
+                _buildRegistrationSection(
+                  'Пароль',
+                  _passwordController,
+                  obscureText: true,
+                ),
+                if (_isSignUp) ...[
+                  _buildRegistrationSection('Имя', _nameController),
+                  if (_selectedRole == 'Исполнитель / Постановщик') ...[
+                    _buildRegistrationSection('Должность', _positionController),
+                    _buildRegistrationSection(
+                        'Код для привязки к компании', _companyCodeController),
+                  ],
+                  _buildPhoneField(),
+                ],
+                const SizedBox(height: 20),
+                _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                  onPressed: _isButtonEnabled ? _handleAuth : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(width: 8),
+                      Text(
+                        _isSignUp ? 'Зарегистрироваться' : 'Войти',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(width: 8),
-                          Text(
-                            _isSignUp ? 'Зарегистрироваться' : 'Войти',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _isSignUp = !_isSignUp;
-                    _updateButtonState(); // Update button state on toggle
-                  });
-                },
-                child: Text(
-                  _isSignUp
-                      ? 'Уже есть аккаунт? Войти'
-                      : 'Нет аккаунта? Зарегистрироваться',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
+                    ],
                   ),
                 ),
-              ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isSignUp = !_isSignUp;
+                      _showRoleSelection = _isSignUp;
+                      _selectedRole = null;
+                      _updateButtonState();
+                    });
+                  },
+                  child: Text(
+                    _isSignUp
+                        ? 'Уже есть аккаунт? Войти'
+                        : 'Нет аккаунта? Зарегистрироваться',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                if (_isSignUp)
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _showRoleSelection = true;
+                        _selectedRole = null;
+                        _updateButtonState();
+                      });
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.orange, width: 1),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Изменить роль',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ],
           ),
         ),
@@ -220,10 +375,10 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Widget _buildRegistrationSection(
-    String title,
-    TextEditingController controller, {
-    bool obscureText = false,
-  }) {
+      String title,
+      TextEditingController controller, {
+        bool obscureText = false,
+      }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -257,7 +412,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 borderSide: BorderSide(color: Colors.grey[400]!, width: 1),
               ),
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -315,9 +470,8 @@ class _AuthScreenState extends State<AuthScreen> {
                 borderSide: BorderSide(color: Colors.grey[400]!, width: 1),
               ),
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               hintText: 'XXX XXX-XX-XX',
-              // Формат номера
               hintStyle: const TextStyle(
                 fontSize: 18,
                 fontFamily: 'Roboto',
@@ -336,7 +490,6 @@ class _AuthScreenState extends State<AuthScreen> {
               if (value == null || value.isEmpty) {
                 return 'Пожалуйста, введите номер телефона';
               }
-              // Дополнительная валидация номера
               if (!RegExp(r'^[0-9]{10}$')
                   .hasMatch(value.replaceAll(RegExp(r'[^0-9]'), ''))) {
                 return 'Введите корректный номер телефона';
@@ -345,8 +498,7 @@ class _AuthScreenState extends State<AuthScreen> {
             },
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(10), // 10 цифр без +7
-              // Маска для номера телефонажю
+              LengthLimitingTextInputFormatter(10),
               TextInputFormatter.withFunction(
                     (oldValue, newValue) {
                   if (newValue.text.isEmpty) return newValue;
