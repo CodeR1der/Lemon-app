@@ -73,10 +73,12 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
       } else if (task.status == TaskStatus.atWork) {
         await taskProvider.updateTaskStatus(task, TaskStatus.extraTime);
       } else if (task.status == TaskStatus.overdue) {
-        await RequestService().updateCorrection(widget.prevCorrection!..isDone = true);
+        await RequestService()
+            .updateCorrection(widget.prevCorrection!..isDone = true);
       } else {
         if (task.status == TaskStatus.needTicket) {
-          await RequestService().updateCorrection(widget.prevCorrection!..isDone = true);
+          await RequestService()
+              .updateCorrection(widget.prevCorrection!..isDone = true);
         }
         await taskProvider.updateTaskStatus(task, TaskStatus.revision);
       }
@@ -114,9 +116,58 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
               ),
             ),
             const SizedBox(height: 8),
+          ] else if (widget.task.status == TaskStatus.atWork) ...[
+            const Text(
+              'Причина запроса',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Поле ввода описания
+            Container(
+              constraints: BoxConstraints(
+                minHeight: _textFieldHeight,
+              ),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                child: TextField(
+                  controller: _descriptionController,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.all(12),
+                    border: InputBorder.none,
+                    hintText: 'Описание',
+                    hintStyle: TextStyle(color: Colors.grey),
+                  ),
+                  onChanged: (text) {
+                    final textPainter = TextPainter(
+                      text: TextSpan(
+                        text: text,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      maxLines: null,
+                      textDirection: TextDirection.ltr,
+                    )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
+
+                    setState(() {
+                      _textFieldHeight = textPainter.size.height + 24;
+                      if (_textFieldHeight < 60) _textFieldHeight = 60;
+                    });
+                  },
+                ),
+              ),
+            ),
           ] else ...[
             Text(
-              widget.task.status == TaskStatus.completedUnderReview ? 'Описание ошибок в задаче' : 'Описание ошибок в постановке задачи',
+              widget.task.status == TaskStatus.completedUnderReview
+                  ? 'Описание ошибок в задаче'
+                  : 'Описание ошибок в постановке задачи',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -221,54 +272,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
               ),
             ),
             const SizedBox(height: 24),
-          ] else if (widget.task.status == TaskStatus.atWork) ...[
-            const Text(
-              'Причина запроса',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Поле ввода описания
-            Container(
-              constraints: BoxConstraints(
-                minHeight: _textFieldHeight,
-              ),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: SingleChildScrollView(
-                child: TextField(
-                  controller: _descriptionController,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.all(12),
-                    border: InputBorder.none,
-                    hintText: 'Описание',
-                    hintStyle: TextStyle(color: Colors.grey),
-                  ),
-                  onChanged: (text) {
-                    final textPainter = TextPainter(
-                      text: TextSpan(
-                        text: text,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      maxLines: null,
-                      textDirection: TextDirection.ltr,
-                    )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
-
-                    setState(() {
-                      _textFieldHeight = textPainter.size.height + 24;
-                      if (_textFieldHeight < 60) _textFieldHeight = 60;
-                    });
-                  },
-                ),
-              ),
-            ),
-          ],
+          ]
         ]),
       ),
       bottomSheet: Container(
