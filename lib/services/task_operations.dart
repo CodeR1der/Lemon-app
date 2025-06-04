@@ -240,7 +240,7 @@ class TaskService {
       *,
       project:project_id(*,
         project_description_id:project_description_id(*),
-        project_team:project_team:project_id(
+        project_team:project_team(
         *,
         employee:employee_id(*)
       )
@@ -625,7 +625,7 @@ class TaskService {
     }
   }
 
-  Future<void> updateTask(Task task) async {
+  Future<void> updateQueuePosTask(Task task) async {
     try {
       await Supabase.instance.client.from('task').update({
         'queue_position': task.queuePosition,
@@ -641,6 +641,12 @@ class TaskService {
     } catch (e) {
       throw Exception('Failed to batch update tasks: $e');
     }
+  }
+  Future<void> updateTask(Task task) async {
+    await Supabase.instance.client
+        .from('task')
+        .update(task.toMap())
+        .eq('id', task.id);
   }
 
   Future<void> updateDeadline(DateTime deadline, String taskId) async {

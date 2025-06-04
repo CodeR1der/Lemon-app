@@ -166,7 +166,7 @@ class _QueueScreenState extends State<QueueScreen> {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
-                    TaskService().updateTask(task..queuePosition=null);
+                    TaskService().updateQueuePosTask(task..queuePosition=null);
                     task.changeStatus(TaskStatus.atWork);
                   },
                   style: ElevatedButton.styleFrom(

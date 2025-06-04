@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_role.dart';
 import 'package:task_tracker/screens/change_executer_screen.dart';
 import 'package:task_tracker/screens/tasks_screen.dart';
+import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 
 import '../models/correction.dart';
@@ -14,21 +15,86 @@ import '../task_screens/TaskDescriptionTab.dart';
 import 'choose_task_deadline_screen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {
-  // Добавлено наследование
   final Correction correction;
   final Task task;
   final TaskRole role;
 
-  const CorrectionDetailsScreen(
-      {super.key,
-      required this.correction,
-      required this.task,
-      required this.role}); // Добавлен const конструктор
+  const CorrectionDetailsScreen({
+    super.key,
+    required this.correction,
+    required this.task,
+    required this.role,
+  });
 
   bool _isImage(String fileName) {
     return fileName.endsWith('.jpg') ||
         fileName.endsWith('.jpeg') ||
         fileName.endsWith('.png');
+  }
+
+  void _showEditDescriptionDialog(BuildContext context) {
+    final TextEditingController _descriptionController =
+    TextEditingController(text: task.description ?? '');
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(task.taskName ?? 'Редактирование задачи'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _descriptionController,
+                maxLines: 5,
+                decoration: const InputDecoration(
+                  labelText: 'Описание задачи',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Отмена'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newDescription = _descriptionController.text.trim();
+                if (newDescription.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Описание не может быть пустым')),
+                  );
+                  return;
+                }
+
+                try {
+                  final taskProvider =
+                  Provider.of<TaskProvider>(context, listen: false);
+                  final updatedTask = task.copyWith(description: newDescription);
+                  await taskProvider.updateTask(updatedTask);
+                  await TaskService().updateTask(updatedTask);
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Описание обновлено')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Ошибка обновления: $e')),
+                  );
+                }
+              },
+              child: const Text('Сохранить'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -51,7 +117,6 @@ class CorrectionDetailsScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      // Добавлен Scaffold для правильной структуры экрана
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(correction.status == TaskStatus.needTicket
@@ -70,23 +135,22 @@ class CorrectionDetailsScreen extends StatelessWidget {
               Text(
                 'Решение',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ] else if (correction.status == TaskStatus.overdue) ...[
               Text(
                 'Объяснительная',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ] else ...[
-              // Описание задачи
               Text(
                 'Описание ошибки',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
             const SizedBox(height: 12),
@@ -96,19 +160,18 @@ class CorrectionDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Фотографии
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Фотографии',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF5F5F5),
                     borderRadius: BorderRadius.circular(12),
@@ -125,8 +188,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             if (correction.attachments
-                    ?.where((file) => _isImage(file))
-                    .isEmpty ??
+                ?.where((file) => _isImage(file))
+                .isEmpty ??
                 true)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
@@ -170,18 +233,18 @@ class CorrectionDetailsScreen extends StatelessWidget {
                               return Center(
                                 child: CircularProgressIndicator(
                                   value: loadingProgress.expectedTotalBytes !=
-                                          null
+                                      null
                                       ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
+                                      loadingProgress.expectedTotalBytes!
                                       : null,
                                 ),
                               );
                             },
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
-                              color: Colors.grey.shade200,
-                              child: const Icon(Icons.broken_image, size: 32),
-                            ),
+                                  color: Colors.grey.shade200,
+                                  child: const Icon(Icons.broken_image, size: 32),
+                                ),
                           ),
                         ),
                       ),
@@ -221,12 +284,12 @@ class CorrectionDetailsScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Первая кнопка
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () async {
-                final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+                final taskProvider =
+                Provider.of<TaskProvider>(context, listen: false);
 
                 if (correction.status == TaskStatus.needTicket) {
                   await taskProvider.updateTaskStatus(task, TaskStatus.notRead);
@@ -235,9 +298,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   await taskProvider.updateTaskStatus(task, TaskStatus.newTask);
                 }
 
-                Navigator.pop(
-                  context,
-                );
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
@@ -257,7 +318,6 @@ class CorrectionDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // Вторая кнопка
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -267,10 +327,11 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   RequestService().updateCorrection(correction..isDone = true);
                   RequestService()
                       .updateCorrectionByStatus(task.id, TaskStatus.notRead);
+                  Navigator.pop(context);
                 }
-                Navigator.pop(
-                  context,
-                );
+                if (correction.status == TaskStatus.newTask) {
+                  _showEditDescriptionDialog(context);
+                }
               },
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
@@ -291,7 +352,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8), // Дополнительный отступ снизу
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -308,7 +369,6 @@ class CorrectionDetailsScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (task.status == TaskStatus.overdue) ...[
-            // Первая кнопка
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -340,7 +400,6 @@ class CorrectionDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            // Вторая кнопка
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -348,7 +407,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ChangeExecuterScreen(task: task,correction: correction),
+                      builder: (context) =>
+                          ChangeExecuterScreen(task: task, correction: correction),
                     ),
                   );
                 },
@@ -361,7 +421,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text("Заменить исполнителя",
+                child: const Text(
+                  "Заменить исполнителя",
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 16,
@@ -380,7 +441,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => TasksScreen(user: UserService.to.currentUser!,),
+                      builder: (context) =>
+                          TasksScreen(user: UserService.to.currentUser!),
                     ),
                   );
                 },
@@ -392,7 +454,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text("Завершить задачу и сдать в архив",
+                child: const Text(
+                  "Завершить задачу и сдать в архив",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -402,16 +465,13 @@ class CorrectionDetailsScreen extends StatelessWidget {
               ),
             ),
           ] else ...[
-            // Первая кнопка
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
                   task.changeStatus(TaskStatus.notRead);
                   RequestService().updateCorrection(correction..isDone = true);
-                  Navigator.pop(
-                    context,
-                  );
+                  Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -431,23 +491,19 @@ class CorrectionDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            // Вторая кнопка
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
                   if (correction.status == TaskStatus.needTicket) {
                     task.changeStatus(TaskStatus.needExplanation);
-                    RequestService()
-                        .updateCorrection(correction..isDone = true);
+                    RequestService().updateCorrection(correction..isDone = true);
                     RequestService()
                         .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                   } else {
                     task.changeStatus(TaskStatus.revision);
                   }
-                  Navigator.pop(
-                    context,
-                  );
+                  Navigator.pop(context);
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.grey,
@@ -470,7 +526,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8), // Дополнительный отступ снизу
+            const SizedBox(height: 8),
           ]
         ],
       ),

@@ -17,7 +17,7 @@ class TaskCompletionPage extends StatefulWidget {
 class _TaskCompletionPageState extends State<TaskCompletionPage> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
-  DateTime _selectedDay =DateTime.now();
+  DateTime _selectedDay = DateTime.now();
   TimeOfDay? _selectedTime;
   DateTime _initialDateTime = DateTime.now();
 
@@ -118,7 +118,7 @@ class _TaskCompletionPageState extends State<TaskCompletionPage> {
       context: context,
       builder: (BuildContext context) {
         return SizedBox(
-          height: 350, // Увеличили высоту для больших цифр
+          height: 350,
           child: Column(
             children: [
               Row(
@@ -132,12 +132,18 @@ class _TaskCompletionPageState extends State<TaskCompletionPage> {
                     onPressed: () {
                       if (_selectedTime != null) {
                         setState(() {
-                          _selectedDay = DateTime(_selectedDay.year, _selectedDay.month,_selectedDay.day, _selectedTime!.hour, _selectedTime!.minute) ;
+                          _selectedDay = DateTime(
+                              _selectedDay.year,
+                              _selectedDay.month,
+                              _selectedDay.day,
+                              _selectedTime!.hour,
+                              _selectedTime!.minute);
                         });
                       }
-                      TaskService().updateDeadline(_selectedDay, widget.task.id);
+                      TaskService()
+                          .updateDeadline(_selectedDay, widget.task.id);
                       Navigator.pop(context);
-                      Navigator.pop(context);
+                      Navigator.pop(context, _selectedDay);
                     },
                     child: const Text('Готово', style: TextStyle(fontSize: 18)),
                   ),
@@ -153,13 +159,12 @@ class _TaskCompletionPageState extends State<TaskCompletionPage> {
                       onDateTimeChanged: (DateTime newDateTime) {
                         setState(() {
                           _selectedTime = TimeOfDay.fromDateTime(newDateTime);
-                          _initialDateTime = DateTime.now();
+                          _initialDateTime = newDateTime;
                         });
                       },
-                      itemExtent: 30, // Увеличиваем высоту элементов
+                      itemExtent: 30,
                       backgroundColor: Colors.white,
                     ),
-                    // Добавляем двоеточие между часами и минутами
                     Center(
                       child: Container(
                         padding: const EdgeInsets.all(10),

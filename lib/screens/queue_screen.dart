@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:task_tracker/models/priority.dart';
 import 'package:task_tracker/models/task_status.dart';
 
 import '../models/task.dart';
@@ -21,55 +21,49 @@ class _QueueScreenState extends State<QueueScreen> {
   late Future<List<Task>> _queuedTasks;
   final TaskService _taskService = TaskService();
   int? _selectedPosition;
+  late Task _currentTask; // Локальная копия задачи для обновления
 
   @override
   void initState() {
     super.initState();
+    _currentTask = widget.task; // Инициализируем текущую задачу
     _loadQueuedTasks();
   }
 
   void _loadQueuedTasks() {
     setState(() {
       _queuedTasks = _taskService.getTasksByStatus(
-        position: RoleHelper.determineUserRoleInTask(
-                task: widget.task,
-                currentUserId: widget.task.team.teamMembers.first.userId)
-            .toString(),
+        position: RoleHelper.convertToString(RoleHelper.determineUserRoleInTask(
+            task: _currentTask,
+            currentUserId: _currentTask.team.teamMembers.first.userId)),
         status: TaskStatus.queue,
-        employeeId: widget.task.team.teamMembers.first.userId,
+        employeeId: _currentTask.team.teamMembers.first.userId,
       );
     });
   }
 
   String formatDeadline(DateTime? dateTime) {
+    if (dateTime == null) return 'Не указана';
     final dateFormat = DateFormat('dd.MM.yyyy');
     final timeFormat = DateFormat('HH:mm');
-
-    return '${dateFormat.format(dateTime!)}, до ${timeFormat.format(dateTime)}';
+    return '${dateFormat.format(dateTime)}, до ${timeFormat.format(dateTime)}';
   }
 
   Future<void> _addToQueue(int selectedPosition) async {
     try {
-      // Получаем список задач из Future
       final tasks = await _queuedTasks ?? [];
-
-      // Обновляем позиции существующих задач
       for (var task in tasks) {
         if (int.parse(task.queuePosition!) >= selectedPosition) {
           task.queuePosition = (int.parse(task.queuePosition!) + 1).toString();
-          await _taskService.updateTask(task); // Обновляем задачу в Supabase
+          await _taskService.updateQueuePosTask(task);
         }
       }
 
-      // Устанавливаем позицию и статус для новой задачи
-      widget.task.queuePosition = selectedPosition.toString();
-      widget.task.status = TaskStatus.queue;
-      await _taskService.updateTask(widget.task); // Сохраняем новую задачу
-
-      // Перезагружаем список задач
+      _currentTask.queuePosition = selectedPosition.toString();
+      _currentTask.status = TaskStatus.queue;
+      await _taskService.updateQueuePosTask(_currentTask);
       _loadQueuedTasks();
     } catch (e) {
-      // Обработка ошибок
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Ошибка при добавлении в очередь: $e')),
       );
@@ -120,7 +114,8 @@ class _QueueScreenState extends State<QueueScreen> {
                         if (value != null) {
                           _addToQueue(value);
                           Navigator.pop(context);
-                          widget.task.changeStatus(TaskStatus.queue);
+                          _currentTask.changeStatus(TaskStatus.queue);
+                          setState(() {}); // Обновляем UI
                         }
                       },
                     );
@@ -158,27 +153,25 @@ class _QueueScreenState extends State<QueueScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                // Карточка текущей задачи
-                _buildTaskCard(task: widget.task, count: tasks.length),
+                if(_currentTask.status == TaskStatus.inOrder)   ...[
+                _buildTaskCard(task: _currentTask, count: tasks.length),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12.0),
                   child: Divider(),
                 ),
-
-                // Список задач в очереди
+                ],
                 if (tasks.isEmpty)
                   const Center(child: Text('Нет задач в очереди'))
                 else
                   ...tasks.asMap().entries.map((entry) {
                     final queueTask = entry.value;
-
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
                       child: _buildQueueCard(
                         queueNumber: queueTask.queuePosition,
                         title: queueTask.taskName,
                         deadline: queueTask.endDate,
-                        priority: queueTask.priority,
+                        priority: queueTask.priorityToString(),
                         project: queueTask.project!.name,
                       ),
                     );
@@ -278,7 +271,7 @@ class _QueueScreenState extends State<QueueScreen> {
                   Text(
                     'Выставить в очередь',
                     style: TextStyle(
-                      color: Colors.white, // Белый текст
+                      color: Colors.white,
                       fontSize: 16,
                     ),
                   ),
@@ -287,13 +280,20 @@ class _QueueScreenState extends State<QueueScreen> {
             ),
           ] else ...[
             ElevatedButton(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final deadline = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => TaskCompletionPage(task: task),
                   ),
                 );
+                if (deadline != null) {
+                  setState(() {
+                    _currentTask = _currentTask.copyWith(
+                      deadline: deadline,
+                    );
+                  });
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
@@ -310,7 +310,7 @@ class _QueueScreenState extends State<QueueScreen> {
                   Text(
                     'Выставить дату завершения задачи',
                     style: TextStyle(
-                      color: Colors.white, // Белый текст
+                      color: Colors.white,
                       fontSize: 16,
                     ),
                   ),
@@ -326,11 +326,12 @@ class _QueueScreenState extends State<QueueScreen> {
   Widget _buildQueueCard({
     required String? queueNumber,
     required String title,
-    required DateTime deadline,
-    Priority? priority,
+    required DateTime? deadline,
+    String? priority,
     String? project,
   }) {
     return Card(
+      color: Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -345,14 +346,13 @@ class _QueueScreenState extends State<QueueScreen> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(12.0),
               ),
               child: Text(
-                queueNumber!,
+                queueNumber ?? 'Не указана',
                 style: const TextStyle(
                   fontSize: 14.0,
                   color: Colors.black,
@@ -369,35 +369,77 @@ class _QueueScreenState extends State<QueueScreen> {
               title,
               style: const TextStyle(fontSize: 16),
             ),
+            if (deadline != null) ...[
+              Text(
+                'Сделать до',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(Iconsax.calendar),
+                  const SizedBox(width: 4),
+                  Text(
+                    formatDeadline(deadline),
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ],
             if (project != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Проект: $project',
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-            ],
-            if (deadline != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                formatDeadline(widget.task.deadline),
+                'Проект:',
                 style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                project,
+                style: const TextStyle(fontSize: 16),
               ),
             ],
             if (priority != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Приоритет: $priority',
+                'Приоритет:',
                 style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(Iconsax.flash_1, color: Colors.yellow),
+                  const SizedBox(width: 4),
+                  Text(
+                    priority,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
               ),
             ],
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Логика выставления в очередь
-                },
-                child: const Text('Изменить очередность'),
+            ElevatedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.orange, width: 1),
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(width: 8),
+                  Text(
+                    'Изменить очередность',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

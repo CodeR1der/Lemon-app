@@ -85,26 +85,6 @@ class TaskLayoutBuilder extends StatelessWidget {
           switch (role) {
             case TaskRole.executor:
               return Column(
-                children: [
-                  _buildSectionItem(
-                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
-                  const Divider(),
-                  _buildSectionItem(
-                    icon: Iconsax.clock_copy,
-                    title: 'История задачи',
-                    onTap: () {
-                      // Действие при нажатии
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              TaskHistoryScreen(revisions: revisions),
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(),
-                ],
               );
             case TaskRole.communicator:
               return Column(children: [
@@ -160,38 +140,49 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
                 const Divider(),
                 _buildSectionItem(
-                    icon: Iconsax.clock_copy, title: 'История задачи'),
-                if (revisions.isNotEmpty)
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 16.0),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        task.changeStatus(TaskStatus.notRead);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.grey, width: 1),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                  icon: Iconsax.clock_copy,
+                  title: 'История задачи',
+                  onTap: () {
+                    // Действие при нажатии
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TaskHistoryScreen(revisions: revisions),
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(width: 8),
-                          Text(
-                            'Принять',
-                            style: TextStyle(
-                              color: Colors.black, // Белый текст
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+                    );
+                  },
+                ),
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      task.changeStatus(TaskStatus.notRead);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.grey, width: 1),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                  )
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Выставить в очередь на выполнение',
+                          style: TextStyle(
+                            color: Colors.black, // Белый текст
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
               ]);
             case TaskRole.creator:
               return Column(
@@ -241,21 +232,6 @@ class TaskLayoutBuilder extends StatelessWidget {
 
         switch (role) {
           case TaskRole.executor:
-            return Column(
-              children: [
-                _buildSectionItem(
-                  icon: Iconsax.clock_copy,
-                  title: 'Контрольные точки',
-                ),
-                const Divider(),
-                RevisionsCard(
-                    revisions: revisions,
-                    task: task,
-                    role: role,
-                    title: 'Доработки и запросы'),
-              ],
-            );
-
           case TaskRole.communicator:
             return Column(
               children: [
@@ -290,7 +266,6 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ),
               ],
             );
-
           case TaskRole.creator:
             return Column(
               children: [
@@ -605,6 +580,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
+                      RequestService()
+                          .updateCorrection(notDoneRevision..isDone = true);
                       task.changeStatus(TaskStatus.revision);
                       print('Жалоба на некорректную постановку задачи');
                     },
@@ -955,7 +932,10 @@ class TaskLayoutBuilder extends StatelessWidget {
           final revisions = snapshot.data ?? [];
           late Correction? notDoneRevisions = null;
           if (revisions.isNotEmpty) {
-            notDoneRevisions = revisions.where((r) => !r.isDone).first;
+            final unfinishedRevisions = revisions.where((r) => !r.isDone);
+            if (unfinishedRevisions.isNotEmpty) {
+              notDoneRevisions = unfinishedRevisions.first;
+            }
           }
 
           switch (role) {

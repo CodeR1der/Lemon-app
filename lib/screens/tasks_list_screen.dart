@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:task_tracker/screens/task_details_screen.dart';
+
 import '../models/task.dart';
 import '../models/task_role.dart';
 import '../models/task_status.dart';
@@ -126,6 +127,7 @@ class TaskListByStatusScreen extends StatelessWidget {
       ),
       body: Consumer<TaskProvider>(
         builder: (context, taskProvider, child) {
+          var tasks = [];
 
           if (taskProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -133,12 +135,27 @@ class TaskListByStatusScreen extends StatelessWidget {
           if (taskProvider.error != null) {
             return Center(child: Text('Ошибка: ${taskProvider.error}'));
           }
-          final tasks = taskProvider.getTasksByStatus(
-            status,
-            projectId: projectId,
-            userId: userId,
-            position: position,
-          );
+          if (status == TaskStatus.controlPoint && (position == TaskRole.executor || position == TaskRole.creator)) {
+            tasks = taskProvider.getTasksByStatus(
+              TaskStatus.atWork,
+              projectId: projectId,
+              userId: userId,
+              position: position,
+            );
+            tasks += taskProvider.getTasksByStatus(
+              status,
+              projectId: projectId,
+              userId: userId,
+              position: position,
+            );
+          } else {
+            tasks = taskProvider.getTasksByStatus(
+              status,
+              projectId: projectId,
+              userId: userId,
+              position: position,
+            );
+          }
           print('Найдено задач: ${tasks.length} для статуса: $status, position: $position, userId: $userId');
           if (tasks.isEmpty) {
             return const Center(child: Text('Нет задач с таким статусом'));

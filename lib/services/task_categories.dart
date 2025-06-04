@@ -139,13 +139,17 @@ class TaskCategories {
       return categories.map((category) {
         late int count = 0;
         if (position == "Исполнитель" && category.status == TaskStatus.queue) {
-          count =
-          (tasksCount[StatusHelper.displayName(category.status)]! + tasksCount[StatusHelper.displayName(TaskStatus.inOrder)]!);
+          count = (tasksCount[StatusHelper.displayName(category.status)]! +
+              tasksCount[StatusHelper.displayName(TaskStatus.inOrder)]!);
+        } else if ((position == "Исполнитель" || position == "Постановщик") &&
+            category.status == TaskStatus.atWork) {
+          count = (tasksCount[StatusHelper.displayName(category.status)]! +
+              tasksCount[StatusHelper.displayName(TaskStatus.controlPoint)]!);
         } else {
-          count =
-              tasksCount[StatusHelper.displayName(category.status)] ?? 0;
+          count = tasksCount[StatusHelper.displayName(category.status)] ?? 0;
         }
-        return category.copyWith(count: count);
+        category.count = count;
+        return category;
       }).toList();
     } catch (e) {
       print('Error getting categories: $e');

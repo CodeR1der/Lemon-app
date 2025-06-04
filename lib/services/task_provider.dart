@@ -97,7 +97,7 @@ class TaskProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      await TaskService().updateTask(task);
+      await TaskService().updateQueuePosTask(task);
       _tasks[task.id] = task;
       await _refreshCategories();
       _error = null;
