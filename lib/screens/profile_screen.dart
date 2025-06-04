@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Для Clipboard
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -27,8 +28,7 @@ class ViewProfileState implements ProfileState {
         screen._buildBorders(),
         screen._buildProfileSection('Должность', screen.position),
         screen._buildBorders(),
-        screen._buildEditableProfileSection(
-            'Контактный телефон', screen._phoneController, false),
+        screen._buildPhoneSection('Контактный телефон', screen._phoneController, false),
         screen._buildBorders(),
         screen._buildEditableProfileSection(
             'Имя пользователя в Телеграм', screen._telegramController, false),
@@ -65,8 +65,7 @@ class EditProfileState implements ProfileState {
         screen._buildBorders(),
         screen._buildProfileSection('Должность', screen.position),
         screen._buildBorders(),
-        screen._buildEditableProfileSection(
-            'Контактный телефон', screen._phoneController, true),
+        screen._buildPhoneSection('Контактный телефон', screen._phoneController, false),
         screen._buildBorders(),
         screen._buildEditableProfileSection(
             'Имя пользователя в Телеграм', screen._telegramController, true),
@@ -266,6 +265,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 13),
       ],
+    );
+  }
+
+  Widget _buildPhoneSection(String title, TextEditingController controller, bool isEditing) {
+    return GestureDetector(
+      onLongPress: () {
+        if (!isEditing && controller.text.isNotEmpty) {
+          Clipboard.setData(ClipboardData(text: controller.text));
+          Get.snackbar(
+            'Скопировано',
+            'Номер телефона скопирован в буфер обмена',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 2),
+          );
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 13),
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.grey,
+              fontFamily: 'Roboto',
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (isEditing)
+            SizedBox(
+              height: 20,
+              child: TextField(
+                style: Theme.of(context).textTheme.titleMedium,
+                controller: controller,
+                decoration: const InputDecoration(
+                  isCollapsed: true,
+                  border: InputBorder.none,
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              height: 20,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  controller.text.isNotEmpty ? controller.text : '',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'Roboto',
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: 13),
+        ],
+      ),
     );
   }
 

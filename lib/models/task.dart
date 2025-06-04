@@ -20,6 +20,7 @@ class Task {
   String? queuePosition;
   Priority priority;
   TaskStatus status;
+  String companyId;
 
   Task({required this.id,
     required this.taskName,
@@ -29,6 +30,7 @@ class Task {
     required this.startDate,
     required this.endDate,
     required this.attachments,
+    required this.companyId,
     this.queuePosition,
     this.deadline,
     this.audioMessage,
@@ -75,7 +77,8 @@ class Task {
       'deadline': deadline?.toIso8601String(),
       'audio_message': audioMessage,
       'video_message': videoMessage,
-      'status': status.toString().substring(11)
+      'status': status.toString().substring(11),
+      'company_id': companyId
     };
   }
 
@@ -92,6 +95,7 @@ class Task {
           .single,
       attachments: List<String>.from(json['attachments'] ?? []),
       audioMessage: json['audio_message'],
+      companyId: json['company_id'],
       queuePosition: json['queue_position']?.toString() ,
       deadline: json['deadline'] != null ? DateTime.parse(json['deadline']) : null,
       videoMessage: List<String>.from(json['video_message'] ?? []),
@@ -145,6 +149,7 @@ class Task {
     String? queuePosition,
     Priority? priority,
     TaskStatus? status,
+    String? companyId
   }) {
     return Task(
       id: id ?? this.id,
@@ -161,6 +166,7 @@ class Task {
       queuePosition: queuePosition ?? this.queuePosition,
       priority: priority ?? this.priority,
       status: status ?? this.status,
+      companyId: companyId ?? this.companyId
     );
   }
 }

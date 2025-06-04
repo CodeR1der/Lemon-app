@@ -117,6 +117,7 @@ class _TaskTitleScreenState extends State<TaskTitleScreen> {
                       priority: Priority.low,
                       attachments: [],
                       status: TaskStatus.newTask,
+                      companyId: UserService.to.currentUser!.companyId
                     );
 
                     Navigator.push(

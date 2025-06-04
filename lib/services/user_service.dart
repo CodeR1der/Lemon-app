@@ -12,7 +12,7 @@ class UserService extends GetxService {
   final Rx<Employee?> _currentUser = Rx<Employee?>(null);
   late RxBool isInitialized;
   late RxBool isLoggedIn;
-
+  final Map<String, String> _userNamesCache = {}; // Кэш для имен пользователей
   UserService(this._supabase) {
     isInitialized = false.obs;
     isLoggedIn = false.obs;
@@ -113,7 +113,7 @@ class UserService extends GetxService {
           'p_name': name,
           'p_position': position,
           'p_role': role,
-          'p_phone': phone,
+          'p_phone': '+7 $phone',
         });
 
         // Уведомление о необходимости подтвердить email
@@ -165,7 +165,35 @@ class UserService extends GetxService {
       isInitialized.value = true;
     }
   }
+  // Метод для получения имени пользователя по userId
+  Future<String?> getUserName(String userId) async {
+    // Проверяем, есть ли имя в кэше
+    if (_userNamesCache.containsKey(userId)) {
+      return _userNamesCache[userId];
+    }
 
+    try {
+      // Запрашиваем данные из таблицы employee
+      final response = await Supabase.instance.client
+          .from('employee')
+          .select('name')
+          .eq('id', userId)
+          .single();
+
+      if (response.isNotEmpty) {
+        final name = response['name'] as String?;
+        if (name != null) {
+          // Сохраняем в кэш
+          _userNamesCache[userId] = name;
+          return name;
+        }
+      }
+      return null; // Если имя не найдено
+    } catch (e) {
+      print('Error fetching user name for userId $userId: $e');
+      return null;
+    }
+  }
   Future<void> initializeUser(String userId) async {
     try {
       isInitialized.value = false;

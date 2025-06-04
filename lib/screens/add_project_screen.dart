@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -74,6 +72,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Container(
+              color: Colors.white,
               height: MediaQuery.of(context).size.height * 0.6,
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -230,7 +229,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Iconsax.add_circle_copy),
+                        Icon(Iconsax.gallery, size: 24,),
                         SizedBox(width: 8),
                         Text('Добавить логотип'),
                       ],
@@ -482,7 +481,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Iconsax.add_circle_copy),
+                        Icon(Iconsax.user_cirlce_add, size: 24,),
                         SizedBox(width: 8),
                         Text('Прикрепить сотрудников'),
                       ],

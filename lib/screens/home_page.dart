@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:task_tracker/models/announcement.dart';
+import 'package:task_tracker/screens/announcement_screen.dart';
 import 'package:task_tracker/screens/project_details_screen.dart';
 import 'package:task_tracker/screens/tasks_list_screen.dart';
+import 'package:task_tracker/services/announcement_operations.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
@@ -32,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final RxList<ProjectInformation> _projects = <ProjectInformation>[].obs;
   final RxList<Employee> _employees = <Employee>[].obs;
   final RxBool _isLoading = true.obs;
+  final RxList<Announcement> _announcement = <Announcement>[].obs;
   String? _errorMessage;
 
   @override
@@ -78,9 +83,13 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       _projects.assignAll(projectsWithCounts);
 
+      _announcement.assignAll(await AnnouncementService().getAnnouncements(currentUser.companyId));
+
+
       // Загружаем сотрудников
       final employees = await EmployeeService().getAllEmployees();
-      _employees.assignAll(employees.where((e) => e.userId != UserService.to.currentUser!.userId));
+      _employees.assignAll(employees
+          .where((e) => e.userId != UserService.to.currentUser!.userId));
     } catch (e) {
       _errorMessage = 'Ошибка загрузки данных: $e';
       Get.snackbar('Ошибка', _errorMessage!);
@@ -346,8 +355,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 20),
                     _buildAddTaskButton(),
                     const SizedBox(height: 20),
-                    _buildAnnouncementCard(),
-                    const SizedBox(height: 20),
+                    if(UserService.to.currentUser!.role == 'Директор')...[
+                      _buildAddAnnouncementButton(),
+                      const SizedBox(height: 20),
+                    ],
+                    if(_announcement.isNotEmpty) ...[
+                      _buildAnnouncementCard(),
+                      const SizedBox(height: 20),
+                    ],
                     _buildTasksSection(),
                     const SizedBox(height: 20),
                     _buildEmployeesSection(),
@@ -468,71 +483,135 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAnnouncementCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildAddAnnouncementButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          Get.toNamed('/create_announcement');
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          side: const BorderSide(color: Colors.orange,width: 1),
+          foregroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          elevation: 4,
+          shadowColor: Colors.blue.withOpacity(0.3),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Row(
-              children: [
-                Icon(Icons.announcement, size: 20, color: Colors.blue),
-                SizedBox(width: 8),
-                Text(
-                  'ОБЪЯВЛЕНИЕ',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Текст название объявления',
-                style: TextStyle(fontSize: 14),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {
-                  Get.snackbar('Объявление', 'Действие для объявления');
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  side: const BorderSide(color: Colors.orange, width: 1),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                ),
-                child: const Text(
-                  'Прочитать',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
-                ),
-              ),
+            Icon(Icons.add, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'Написать объявление',
+              style: TextStyle(fontSize: 16, color: Colors.black, fontFamily: 'Roboto'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnnouncementCard() {
+    final announcement = _announcement.last; // Берем последнее объявление
+    final userRole = UserService.to.currentUser!.role;
+    final showReadCount = userRole == 'Директор' || userRole == 'Коммуникатор';
+
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed('/announcement_detail', arguments: announcement);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Iconsax.flash, size: 18, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text(
+                    'ОБЪЯВЛЕНИЕ',
+                    style: TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 14, color: Colors.red
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                announcement.title,
+                style: Theme.of(context).textTheme.bodyMedium
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Cтатус объявления',
+                style: Theme.of(context).textTheme.titleSmall
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Iconsax.eye, size: 18, color: Colors.black),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Прочитали ' + announcement.readBy.length.toString(),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => AnnouncementDetailScreen(announcement: announcement,),
+                    ));
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    side: const BorderSide(color: Colors.orange, width: 1),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16, horizontal: 24),
+                  ),
+                  child: Text(
+                     UserService.to.currentUser!.role=='Директор'?'Посмотреть':'Прочитать',
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.normal),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

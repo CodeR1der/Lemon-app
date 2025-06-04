@@ -125,7 +125,6 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(projectName),
-
         ],
       ),
     );

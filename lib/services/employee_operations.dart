@@ -61,7 +61,7 @@ class EmployeeService {
       await _client
           .from('employee')
           .update(employee.toJson())
-          .eq('userId', employee.userId);
+          .eq('user_id', employee.userId);
       print('Данные сотрудника успешно обновлены');
     } on PostgrestException catch (error) {
       print('Ошибка при обновлении данных сотрудника: ${error.message}');

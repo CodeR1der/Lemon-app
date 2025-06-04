@@ -222,7 +222,7 @@ class _AuthScreenState extends State<AuthScreen> {
         email: _emailController.text,
         password: _passwordController.text,
         name: _nameController.text,
-        position: _positionController.text,
+        position: _selectedRole == 'Директор'  ? 'Директор' : _positionController.text,
         role: _selectedRole,
         code: _selectedRole == 'Исполнитель / Постановщик' ? _companyCodeController.text : null,
         phone: _phoneController.text.isEmpty ? null : _phoneController.text,

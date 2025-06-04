@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:task_tracker/services/employee_operations.dart'; // Use package: scheme
+import 'package:task_tracker/services/employee_operations.dart';
 
 import '../models/employee.dart';
 import '../services/user_service.dart';
@@ -59,6 +59,33 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     });
   }
 
+  void changeRole(Employee employee, String newRole) async {
+    try {
+      // Создаем копию сотрудника с новой ролью
+      final updatedEmployee = employee.copyWith(role: newRole);
+
+      // Обновляем сотрудника в базе данных
+      await _employeeService.updateEmployee(updatedEmployee);
+
+      // Обновляем локальные списки
+      setState(() {
+        int index = _employees.indexWhere((e) => e.userId == employee.userId);
+        if (index != -1) {
+          _employees[index] = updatedEmployee;
+        }
+        int filteredIndex = _filteredEmployees.indexWhere((e) => e.userId == employee.userId);
+        if (filteredIndex != -1) {
+          _filteredEmployees[filteredIndex] = updatedEmployee;
+        }
+      });
+
+      // Показываем уведомление об успехе
+      Get.snackbar('Успех', 'Роль сотрудника ${employee.name} изменена на $newRole');
+    } catch (e) {
+      Get.snackbar('Ошибка', 'Не удалось изменить роль: $e');
+    }
+  }
+
   Widget _buildEmployeeIcons(Employee employee) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -90,6 +117,79 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       ],
     );
   }
+
+  void _showEmployeeOptions(Employee employee) {
+    String? selectedAction;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                      'Назначить роль сотруднику',
+                  style: TextStyle(color: Colors.black, fontSize: 18, fontFamily: 'Roboto'),),
+                  RadioListTile<String?>(
+                    title: const Text('Коммуникатором'),
+                    value: 'Коммуникатор',
+                    groupValue: selectedAction,
+                    onChanged: (String? value) {
+                      setModalState(() {
+                        selectedAction = value;
+                          if (value != null) {
+                            changeRole(employee, value);
+                          }
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  RadioListTile<String?>(
+                    title: const Text('Руководителем'),
+                    value: 'Руководитель',
+                    groupValue: selectedAction,
+                    onChanged: (String? value) {
+                      setModalState(() {
+                        selectedAction = value;
+                        if (value != null) {
+                          changeRole(employee, value);
+                        }
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  RadioListTile<String?>(
+                    title: const Text('Исполнитель / Постановщик'),
+                    value: 'Исполнитель / Постановщик',
+                    groupValue: selectedAction,
+                    onChanged: (String? value) {
+                      setModalState(() {
+                        selectedAction = value;
+                        if (value != null) {
+                          changeRole(employee, value);
+                        }
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -144,6 +244,12 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                       _buildEmployeeIcons(employee),
                     ],
                   ),
+                  trailing: _userService.currentUser?.role == 'Директор'
+                      ? IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    onPressed: () => _showEmployeeOptions(employee),
+                  )
+                      : null,
                   onTap: () {
                     Navigator.push(
                       context,

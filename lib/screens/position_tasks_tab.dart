@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:task_tracker/screens/tasks_list_screen.dart';
+
 import '../models/task_category.dart';
 import '../models/task_role.dart';
 import '../models/task_status.dart';
 import '../services/task_categories.dart';
-import 'employee_queue_screen.dart';
 import '../services/task_provider.dart';
+import 'employee_queue_screen.dart';
 
 class PositionTasksTab extends StatefulWidget {
   final String? position;
@@ -34,8 +35,9 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
       final taskProvider = Provider.of<TaskProvider>(context, listen: false);
       taskProvider.loadTasksAndCategories(
         taskCategories: TaskCategories(),
-        position: widget.position!,
-        employeeId: widget.employeeId!,
+        projectId: widget.projectId, // Передаем projectId, если он есть
+        position: widget.position,
+        employeeId: widget.employeeId,
       );
       _initialized = true; // Предотвращаем повторную загрузку
     }
@@ -48,6 +50,7 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
         final categories = taskProvider.getCategories(
           widget.position ?? '',
           widget.employeeId ?? '',
+          projectId: widget.projectId, // Передаем projectId для фильтрации
         );
 
         return Scaffold(
@@ -75,7 +78,8 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
     final icon = StatusHelper.getStatusIcon(category.status);
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      contentPadding:
+      const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       leading: Icon(icon, color: Colors.blue),
       title: Text(
         category.title,
@@ -114,7 +118,8 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
         );
       } else if (widget.position != null && widget.employeeId != null) {
         if ((widget.position == RoleHelper.convertToString(TaskRole.executor) ||
-            widget.position == RoleHelper.convertToString(TaskRole.creator)) &&
+            widget.position ==
+                RoleHelper.convertToString(TaskRole.creator)) &&
             category.status == TaskStatus.queue) {
           Navigator.push(
             context,

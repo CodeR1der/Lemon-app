@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../models/task.dart';
+import '../services/task_provider.dart';
 import '../task_screens/TaskChatTab.dart';
 import '../task_screens/TaskDescriptionTab.dart';
 import '../task_screens/TaskPeriodTab.dart';
 import '../task_screens/TaskTeamTab.dart';
-import '../services/task_provider.dart';
 
 class TaskDetailsScreen extends StatelessWidget {
   final Task task;
@@ -39,7 +40,7 @@ class TaskDetailsScreen extends StatelessWidget {
                 : TabBarView(
               children: [
                 TaskDescriptionTab(task: updatedTask),
-                ChatTab(), // Pass taskId to ChatTab
+                ChatTab(taskId: updatedTask.id,),
                 TaskPeriodTab(task: updatedTask),
                 TaskTeamTab(task: updatedTask),
               ],

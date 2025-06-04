@@ -49,7 +49,6 @@ class TaskCategories {
         title: 'Завершенные задачи на проверке',
         count: 0,
         status: TaskStatus.completedUnderReview),
-    // TaskCategory(title: 'Объявления', count: 0, status: ),
     TaskCategory(title: 'Архив задач', count: 0, status: TaskStatus.completed),
   ];
 
@@ -86,7 +85,6 @@ class TaskCategories {
         title: 'Завершенные задачи на проверке',
         count: 0,
         status: TaskStatus.completedUnderReview),
-    // TaskCategory(title: 'Повторяющиеся задачи', count: 0, status: ),
     TaskCategory(title: 'Архив задач', count: 0, status: TaskStatus.completed),
   ];
 
@@ -111,11 +109,15 @@ class TaskCategories {
   }
 
   Future<List<TaskCategory>> getCategories(
-      String position, String employeeId) async {
+      String position, String employeeId, {String? projectId}) async {
     try {
+      if (projectId != null) {
+        return await getCategoriesProject(projectId);
+      }
+
       // Получаем количество задач для каждого статуса
       final tasksCount =
-          await TaskService().getCountOfTasksByStatus(position, employeeId);
+      await TaskService().getCountOfTasksByStatus(position, employeeId);
 
       // Выбираем соответствующий список категорий
       List<TaskCategory> categories = [];
@@ -138,17 +140,19 @@ class TaskCategories {
         late int count = 0;
         if (position == "Исполнитель" && category.status == TaskStatus.queue) {
           count =
-              (tasksCount[StatusHelper.displayName(category.status)]! + tasksCount[StatusHelper.displayName(TaskStatus.inOrder)]!);
+          (tasksCount[StatusHelper.displayName(category.status)]! + tasksCount[StatusHelper.displayName(TaskStatus.inOrder)]!);
         } else {
           count =
               tasksCount[StatusHelper.displayName(category.status)] ?? 0;
         }
-        category.count = count;
-        return category;
+        return category.copyWith(count: count);
       }).toList();
     } catch (e) {
       print('Error getting categories: $e');
       // В случае ошибки возвращаем список с нулевыми значениями
+      if (projectId != null) {
+        return List<TaskCategory>.from(_communicatorCategories);
+      }
       switch (position) {
         case "Исполнитель":
           return _executerCategories;

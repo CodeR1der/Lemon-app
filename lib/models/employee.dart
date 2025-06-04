@@ -49,4 +49,28 @@ class Employee {
         role: json['role'],
         companyId: json['company_id']);
   }
+
+  Employee copyWith({
+    String? userId,
+    String? name,
+    String? position,
+    String? phone,
+    String? telegramId,
+    String? vkId,
+    String? role,
+    String? companyId,
+    String? avatarUrl,
+  }) {
+    return Employee(
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      position: position ?? this.position,
+      phone: phone ?? this.phone,
+      telegramId: telegramId ?? this.telegramId,
+      vkId: vkId ?? this.vkId,
+      role: role ?? this.role,
+      companyId: companyId ?? this.companyId,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+    );
+  }
 }
