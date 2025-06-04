@@ -120,10 +120,10 @@ class EmployeeService {
               project_id,
               project:project_id(*,
               project_description_id:project_description_id(*),
-              project_observers:project_observers(
+              project_team:project_team:project_id(
               *,
-              employee:employee_id(*)
-              )
+                employee:employee_id(*)
+                )
              )
             )
           )
@@ -149,10 +149,10 @@ class EmployeeService {
   *,
   project:project_id(*,
     project_description_id:project_description_id(*),
-    project_observers:project_observers(
-      *,
-      employee:employee_id(*)
-    )
+   project_team:project_team:project_id(
+        *,
+        employee:employee_id(*)
+      )
   ),
   task_team:task_team(
     *,

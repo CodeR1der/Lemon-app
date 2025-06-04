@@ -13,7 +13,6 @@ class TaskProvider with ChangeNotifier {
   bool _isLoading = false;
 
   bool get isLoading => _isLoading;
-
   String? get error => _error;
 
   Task? getTask(String taskId) => _tasks[taskId];
@@ -32,17 +31,15 @@ class TaskProvider with ChangeNotifier {
     String? employeeId,
   }) async {
     try {
-      _isLoading = true;
-      notifyListeners();
-
-      // Загружаем задачи
       List<Task> tasks = [];
       if (projectId != null) {
+        // Load all tasks for the project
         tasks = await TaskService().getProjectTasksByStatus(
-          status: TaskStatus.values.first, // Загружаем задачи всех статусов
+          status: TaskStatus.values.first, // Load tasks of all statuses
           projectId: projectId,
         );
       } else if (position != null && employeeId != null) {
+        // Load tasks for the specific employee and position
         tasks = await TaskService().getTasksByPosition(
           position: position,
           employeeId: employeeId,
@@ -51,19 +48,18 @@ class TaskProvider with ChangeNotifier {
         throw Exception('Не указаны необходимые параметры (projectId или position и employeeId)');
       }
 
-      // Обновляем локальный кэш задач
+      // Update local cache of tasks
       _tasks.clear();
       for (var task in tasks) {
         _tasks[task.id] = task;
       }
 
-      // Загружаем категории
-      List<TaskCategory> categories;
+      // Load categories based on the context
       if (projectId != null) {
-        categories = await taskCategories.getCategories(position ?? '', employeeId ?? '', projectId: projectId);
+        final categories = await taskCategories.getCategoriesProject(projectId);
         _categories['project:$projectId'] = categories;
-      } else {
-        categories = await taskCategories.getCategories(position!, employeeId!);
+      } else if (position != null && employeeId != null) {
+        final categories = await taskCategories.getCategories(position, employeeId);
         _categories['$position:$employeeId'] = categories;
       }
 
@@ -76,8 +72,7 @@ class TaskProvider with ChangeNotifier {
     }
   }
 
-  List<Task> getTasksByStatus(TaskStatus status,
-      {String? projectId, String? userId, String? position}) {
+  List<Task> getTasksByStatus(TaskStatus status, {String? projectId, String? userId, String? position}) {
     return _tasks.values.where((task) {
       bool matches = task.status == status;
       if (projectId != null) {
@@ -88,8 +83,7 @@ class TaskProvider with ChangeNotifier {
           case 'Коммуникатор':
             matches &= task.team.communicatorId.userId == userId;
           case 'Исполнитель':
-            matches &=
-                task.team.teamMembers.any((member) => member.userId == userId);
+            matches &= task.team.teamMembers.any((member) => member.userId == userId);
           case 'Постановщик':
             matches &= task.team.creatorId.userId == userId;
         }
@@ -120,22 +114,14 @@ class TaskProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      // Создаем копию задачи с новым статусом
       final updatedTask = task.copyWith(status: status);
-
-      // Обновляем в базе данных
       await task.changeStatus(status);
-
-      // Обновляем в локальном кэше
       _tasks[task.id] = updatedTask;
-
-      // Обновляем категории
       await _refreshCategories();
-
       _error = null;
     } catch (e) {
       _error = e.toString();
-      rethrow; // Пробрасываем ошибку для обработки в UI
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -146,14 +132,13 @@ class TaskProvider with ChangeNotifier {
     for (var key in _categories.keys) {
       if (key.startsWith('project:')) {
         final projectId = key.split(':')[1];
-        final categories = await TaskCategories().getCategories('', '', projectId: projectId);
+        final categories = await TaskCategories().getCategoriesProject(projectId);
         _categories[key] = categories;
       } else {
         final parts = key.split(':');
         final position = parts[0];
         final employeeId = parts[1];
-        final categories =
-        await TaskCategories().getCategories(position, employeeId);
+        final categories = await TaskCategories().getCategories(position, employeeId);
         _categories[key] = categories;
       }
     }

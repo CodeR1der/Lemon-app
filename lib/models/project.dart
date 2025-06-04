@@ -9,23 +9,22 @@ class Project {
   final List<Employee> team;
   final String companyId;
 
-  // Конструктор
-  Project(
-      {required this.projectId,
-      required this.name,
-      this.avatarUrl,
-      this.projectDescription,
-      required this.team,
-      required this.companyId});
+  Project({
+    required this.projectId,
+    required this.name,
+    this.avatarUrl,
+    this.projectDescription,
+    required this.team,
+    required this.companyId,
+  });
 
-  // Преобразование объекта в JSON для хранения в Supabase
   Map<String, dynamic> toJson() {
     return {
       'project_id': projectId,
       'name': name,
       'avatar_url': avatarUrl,
       'project_description_id': projectDescription!.projectDescriptionId,
-      'company_id': companyId
+      'company_id': companyId,
     };
   }
 
@@ -37,14 +36,12 @@ class Project {
       projectDescription: json['project_description_id'] != null
           ? ProjectDescription.fromJson(json['project_description_id'])
           : null,
-      team: json['team'] != null
+      team: json['project_team'] != null
           ? List<Employee>.from(
-              json['team'].map((observer) {
-                return Employee.fromJson(observer['employee']);
-              }),
-            )
+          (json['project_team'] as List).map((teamMember) =>
+              Employee.fromJson(teamMember['employee'] ?? {})))
           : <Employee>[],
-      companyId: json['company_id']
+      companyId: json['company_id'],
     );
   }
 }

@@ -4,8 +4,8 @@ import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../models/employee.dart';
 import '/models/project.dart';
+import '../models/employee.dart';
 import '../models/project_description.dart';
 import '../models/task_status.dart';
 
@@ -53,10 +53,10 @@ class ProjectService {
   Future<List<Employee>> getProjectTeam(String projectId) async {
     try {
       final response = await _client.from('project_team')
-          .select('*, employee_id:employee_id(*)')
+          .select('*, employee:employee_id(*)')
           .eq('project_id', projectId);
 
-      return response.map((emp) => Employee.fromJson(emp['employee_id'])).toList();
+      return response.map((emp) => Employee.fromJson(emp['employee'])).toList();
     } catch (e) {
       print('Ошибка при получении команды проекта: $e');
       return [];
@@ -67,13 +67,12 @@ class ProjectService {
   Future<List<Project>> getAllProjects() async {
     try {
       final response = await _client.from('project').select('''*,
-        project_description_id:project_description_id(*),
-        project_team:project_team(
-          *,
-          employee:employee_id(*)
-        )
+      project_description_id:project_description_id(*),
+      project_team:project_team(
+        *,
+        employee:employee_id(*)
       )
-        ''');
+    ''');
 
       List<Project> projectList = (response as List<dynamic>).map((data) {
         return Project.fromJson(data as Map<String, dynamic>);
@@ -164,12 +163,13 @@ class ProjectService {
       *,
       project:project_id(*,
         project_description_id:project_description_id(*),
-        project_observers:project_observers(
+        project_team:project_team(
           *,
           employee:employee_id(*)
         )
       ),
-      task_team: id(*,
+      task_team:task_team(
+        *,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
         team_members:team_id(*,

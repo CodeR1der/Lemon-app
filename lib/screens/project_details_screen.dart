@@ -9,8 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/employee.dart';
 import '../models/project.dart';
 import '../models/task.dart';
-import '../models/task_category.dart';
-import '../services/task_categories.dart';
 import '../services/task_operations.dart';
 import 'employee_details_screen.dart';
 
@@ -55,7 +53,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
 
   Future<void> _loadTasks() async {
     final tasks =
-        await _taskService.getTasksByProjectId(widget.project.projectId);
+    await _taskService.getTasksByProjectId(widget.project.projectId);
     if (mounted) {
       setState(() => _taskList = tasks);
     }
@@ -67,13 +65,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
 
       if (mounted) {
         setState(() {
-          // Коммуникаторы - сотрудники с ролью "Коммуникатор" или те, кто указан как коммуникатор в задачах
           _communicators = employees.where((e) =>
           e.role == 'Коммуникатор' ||
               _taskList.any((task) => task.team.communicatorId.userId == e.userId)
           ).toList();
 
-          // Остальные участники (исключая коммуникаторов)
           _otherEmployees = employees.where((e) =>
           e.role != 'Коммуникатор' &&
               !_communicators.any((c) => c.userId == e.userId)
@@ -139,21 +135,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   }
 
   Widget _buildFutureTab(String projectId) {
-    return FutureBuilder<List<TaskCategory>>(
-      future: TaskCategories().getCategoriesProject( projectId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Ошибка: ${snapshot.error}'));
-        } else if (!snapshot.hasData) {
-          return const Center(child: Text('Нет данных'));
-        }
-
-        return PositionTasksTab(
-          projectId: projectId,
-        );
-      },
+    return PositionTasksTab(
+      projectId: projectId,
     );
   }
 
@@ -166,10 +149,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
             _buildTeamSection('Коммуникатор', _communicators),
           if (_otherEmployees.isNotEmpty)
             _buildTeamSection('Команда проекта', _otherEmployees),
-          // Добавляем отступ снизу для безопасной зоны
           SliverPadding(
             padding:
-                EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+            EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
           ),
         ],
       ),
@@ -212,7 +194,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
           _buildDescriptionSection("Описание проекта", description.description),
           _buildDescriptionSection("Цели проекта", description.goals),
           _buildLinkSection("Ссылка на проект", description.projectLink),
-          // Добавляем отступ снизу для безопасной зоны
           SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
@@ -284,7 +265,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
             fontSize: 16,
             color: link != null ? Colors.blue : Colors.grey,
             decoration:
-                link != null ? TextDecoration.underline : TextDecoration.none,
+            link != null ? TextDecoration.underline : TextDecoration.none,
           ),
         ),
       ),
@@ -294,13 +275,13 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   SliverList _buildTeamSection(String title, List<Employee> employees) {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-        (context, index) {
+            (context, index) {
           if (index == 0) {
             return Padding(
               padding: const EdgeInsets.only(
                   left: 16.0, right: 16.0, top: 16, bottom: 4),
               child:
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
             );
           }
           return _buildEmployeeItem(employees[index - 1]);
@@ -309,8 +290,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
       ),
     );
   }
-
-
 
   Widget _buildEmployeeItem(Employee employee) {
     return ListTile(
@@ -353,4 +332,3 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
     }
   }
 }
-

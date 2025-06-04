@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/models/chat_message.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatTab extends StatefulWidget {
   final String taskId;
@@ -91,7 +92,7 @@ class _ChatTabState extends State<ChatTab> {
       }
 
       final newMessage = ChatMessage(
-        id: '',
+        id: const Uuid().v4(),
         taskId: widget.taskId,
         userId: user.userId,
         message: message.isNotEmpty ? message : null,
@@ -138,14 +139,14 @@ class _ChatTabState extends State<ChatTab> {
       final fileExt = file.path.split('.').last;
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExt';
       await Supabase.instance.client.storage
-          .from('chat_files')
+          .from('chatfiles')
           .uploadBinary(
         fileName,
         await file.readAsBytes(),
         fileOptions: const FileOptions(contentType: 'image/jpeg'),
       );
       final publicUrl = Supabase.instance.client.storage
-          .from('chat_files')
+          .from('chatfiles')
           .getPublicUrl(fileName);
       return publicUrl;
     } catch (e) {
@@ -170,61 +171,134 @@ class _ChatTabState extends State<ChatTab> {
         Expanded(
           child: Obx(
                 () => ListView.builder(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
                 final isCurrentUser = message.userId == UserService.to.currentUser!.userId;
-                return Align(
-                  alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4.0),
-                    padding: const EdgeInsets.all(12.0),
-                    decoration: BoxDecoration(
-                      color: isCurrentUser ? Colors.blue[100] : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    child: Column(
-                      crossAxisAlignment:
-                      isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                      children: [
-                        FutureBuilder<String?>(
-                          future: UserService.to.getUserName(message.userId),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Text(
-                                'Загрузка...',
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                              );
-                            }
-                            return Text(
-                              snapshot.data ?? 'Неизвестный',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  child: Column(
+                    crossAxisAlignment:
+                    isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                    children: [
+                      // Display the name above the message
+                      FutureBuilder<Map<String, String?>>(
+                        future: UserService.to.getUserData(message.userId),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Text(
+                              'Загрузка...',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                             );
-                          },
-                        ),
-                        if (message.message != null)
-                          Text(
-                            message.message!,
-                            style: const TextStyle(fontSize: 14),
+                          }
+                          final userData = snapshot.data ?? {'name': 'Неизвестный', 'avatar_url': null};
+                          final name = userData['name'] ?? 'Неизвестный';
+                          return Text(
+                            name,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 4),
+                      // Display message with avatar
+                      Row(
+                        mainAxisAlignment:
+                        isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if (!isCurrentUser) ...[
+                            // Avatar on the left for other users
+                            FutureBuilder<Map<String, String?>>(
+                              future: UserService.to.getUserData(message.userId),
+                              builder: (context, snapshot) {
+                                final avatarUrl = snapshot.data?['avatar_url'];
+                                return CircleAvatar(
+                                  radius: 16,
+                                  backgroundImage:
+                                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                                  child: avatarUrl == null
+                                      ? const Icon(Icons.person, size: 16)
+                                      : null,
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Flexible(
+                            child: Container(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width * 0.7,
+                              ),
+                              padding: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                color: isCurrentUser ? Colors.blue[100] : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: isCurrentUser
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
+                                children: [
+                                  if (message.message != null)
+                                    Text(
+                                      message.message!,
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                  if (message.fileUrl.isNotEmpty)
+                                    Column(
+                                      crossAxisAlignment: isCurrentUser
+                                          ? CrossAxisAlignment.end
+                                          : CrossAxisAlignment.start,
+                                      children: message.fileUrl.map((url) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(top: 8.0),
+                                          child: Image.network(
+                                            url,
+                                            width: 200,
+                                            height: 200,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  Text(
+                                    message.createdAt
+                                        .toLocal()
+                                        .toString()
+                                        .split(' ')[1]
+                                        .substring(0, 5),
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        if (message.fileUrl.isNotEmpty)
-                          Column(
-                            crossAxisAlignment:
-                            isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                            children: message.fileUrl.map((url) {
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Image.network(url, width: 200, height: 200, fit: BoxFit.cover),
-                              );
-                            }).toList(),
-                          ),
-                        Text(
-                          message.createdAt.toLocal().toString().split(' ')[1].substring(0, 5),
-                          style: const TextStyle(fontSize: 10, color: Colors.grey),
-                        ),
-                      ],
-                    ),
+                          if (isCurrentUser) ...[
+                            const SizedBox(width: 8),
+                            // Avatar on the right for current user
+                            FutureBuilder<Map<String, String?>>(
+                              future: UserService.to.getUserData(message.userId),
+                              builder: (context, snapshot) {
+                                final avatarUrl = snapshot.data?['avatar_url'];
+                                return CircleAvatar(
+                                  radius: 16,
+                                  backgroundImage:
+                                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                                  child: avatarUrl == null
+                                      ? const Icon(Icons.person, size: 16)
+                                      : null,
+                                );
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ),
                 );
               },
@@ -251,8 +325,10 @@ class _ChatTabState extends State<ChatTab> {
                     ),
                     filled: true,
                     fillColor: Colors.grey[200],
-                    contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 16.0,
+                    ),
                   ),
                 ),
               ),

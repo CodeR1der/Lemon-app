@@ -33,13 +33,19 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
     super.didChangeDependencies();
     if (!_initialized) {
       final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-      taskProvider.loadTasksAndCategories(
-        taskCategories: TaskCategories(),
-        projectId: widget.projectId, // Передаем projectId, если он есть
-        position: widget.position,
-        employeeId: widget.employeeId,
-      );
-      _initialized = true; // Предотвращаем повторную загрузку
+      if (widget.projectId != null) {
+        taskProvider.loadTasksAndCategories(
+          taskCategories: TaskCategories(),
+          projectId: widget.projectId,
+        );
+      } else if (widget.position != null && widget.employeeId != null) {
+        taskProvider.loadTasksAndCategories(
+          taskCategories: TaskCategories(),
+          position: widget.position!,
+          employeeId: widget.employeeId!,
+        );
+      }
+      _initialized = true;
     }
   }
 
@@ -50,7 +56,7 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
         final categories = taskProvider.getCategories(
           widget.position ?? '',
           widget.employeeId ?? '',
-          projectId: widget.projectId, // Передаем projectId для фильтрации
+          projectId: widget.projectId,
         );
 
         return Scaffold(
@@ -78,8 +84,7 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
     final icon = StatusHelper.getStatusIcon(category.status);
 
     return ListTile(
-      contentPadding:
-      const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       leading: Icon(icon, color: Colors.blue),
       title: Text(
         category.title,
@@ -118,8 +123,7 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
         );
       } else if (widget.position != null && widget.employeeId != null) {
         if ((widget.position == RoleHelper.convertToString(TaskRole.executor) ||
-            widget.position ==
-                RoleHelper.convertToString(TaskRole.creator)) &&
+            widget.position == RoleHelper.convertToString(TaskRole.creator)) &&
             category.status == TaskStatus.queue) {
           Navigator.push(
             context,
