@@ -8,6 +8,7 @@ import 'package:task_tracker/screens/correction_details_screen.dart';
 import 'package:task_tracker/screens/correction_screen.dart';
 
 import '../models/task.dart';
+import '../screens/add_extra_time_screen.dart';
 
 class RevisionsCard extends StatelessWidget {
   final List<Correction> revisions;
@@ -15,67 +16,70 @@ class RevisionsCard extends StatelessWidget {
   final TaskRole role;
   final String title;
 
-  const RevisionsCard(
-      {super.key,
-      required this.revisions,
-      required this.task,
-      required this.role,
-      required this.title});
+  const RevisionsCard({
+    super.key,
+    required this.revisions,
+    required this.task,
+    required this.role,
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      if (title == "Доработки и запросы")
-        InkWell(
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-            child: Row(
-              children: [
-                const Icon(Iconsax.edit_copy,
-                    size: 24, color: Color(0xFF6D7885)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black,
+    return Column(
+      children: [
+        if (title == "Доработки и запросы")
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              child: Row(
+                children: [
+                  const Icon(Iconsax.edit_copy,
+                      size: 24, color: Color(0xFF6D7885)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      if (revisions.isNotEmpty)
-        Card(
-          color: Colors.white,
-          elevation: 1,
-          margin: const EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: BorderSide(
-              color: Colors.grey.shade200,
-              width: 1,
+        if (revisions.isNotEmpty)
+          Card(
+            color: Colors.white,
+            elevation: 1,
+            margin: const EdgeInsets.only(bottom: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(
+                color: Colors.grey.shade200,
+                width: 1,
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Список доработок
-                ...revisions
-                    .where((revision) => !revision
-                        .isDone) // Фильтруем только невыполненные ревизии
-                    .map((revision) => _buildRevisionItem(context, revision))
-                    .toList(),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Список доработок
+                  ...revisions
+                      .where((revision) =>
+                  !revision.isDone)
+                      .map((revision) => _buildRevisionItem(context, revision))
+                      .toList(),
+                ],
+              ),
             ),
-          ),
-        )
-    ]);
+          )
+      ],
+    );
   }
 
   Widget _buildRevisionItem(BuildContext context, Correction correction) {
@@ -86,8 +90,8 @@ class RevisionsCard extends StatelessWidget {
         Text(
           DateFormat('dd.MM.yyyy').format(correction.date),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.black,
-              ),
+            color: Colors.black,
+          ),
         ),
         const SizedBox(height: 4),
 
@@ -95,17 +99,17 @@ class RevisionsCard extends StatelessWidget {
           Text(
             _getActionTitle(correction.status),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+              color: Colors.grey.shade600,
+            ),
           ),
           const SizedBox(height: 4),
         ],
         // Описание доработки
         Text(
-          correction.description!,
+          correction.description ?? 'Описание отсутствует',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.black,
-              ),
+            color: Colors.black,
+          ),
         ),
 
         if (task.status == TaskStatus.needExplanation)
@@ -140,7 +144,7 @@ class RevisionsCard extends StatelessWidget {
                         backgroundColor: Colors.orange,
                         shape: RoundedRectangleBorder(
                           borderRadius:
-                              BorderRadius.circular(12), // закругление углов
+                          BorderRadius.circular(12), // закругление углов
                         ),
                         padding: const EdgeInsets.symmetric(
                             vertical: 16, horizontal: 24),
@@ -172,7 +176,7 @@ class RevisionsCard extends StatelessWidget {
                         side: const BorderSide(color: Colors.blue, width: 1),
                         shape: RoundedRectangleBorder(
                           borderRadius:
-                              BorderRadius.circular(12), // закругление углов
+                          BorderRadius.circular(12), // закругление углов
                         ),
                         padding: const EdgeInsets.symmetric(
                             vertical: 16, horizontal: 24),
@@ -202,171 +206,127 @@ class RevisionsCard extends StatelessWidget {
           ),
         ] else if (task.status == TaskStatus.atWork)
           ...[]
-        else if (task.status == TaskStatus.overdue &&
-            role == TaskRole.executor) ...[
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () => _showRevisionDetails(context, correction),
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(50, 30),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Padding(
-                padding:
+        else if (task.status == TaskStatus.overdue && role == TaskRole.executor)
+            ...[
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => _showRevisionDetails(context, correction),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(50, 30),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Padding(
+                    padding:
                     const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CorrectionScreen(
-                          task: task,
-                          prevCorrection: correction,
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    backgroundColor: Colors.orange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CorrectionScreen(
+                              task: task,
+                              prevCorrection: correction,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.black,
+                        backgroundColor: Colors.orange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
                           BorderRadius.circular(12), // закругление углов
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 24),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(width: 8),
-                      Text(
-                        'Запрос на объяснительную',
-                        style: TextStyle(
-                          color: Colors.white, // Белый текст
-                          fontSize: 16,
                         ),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 24),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ] else if (task.status == TaskStatus.overdue &&
-            role == TaskRole.communicator && correction.description != 'Просроченная задача')
-          ...[
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => _showRevisionDetails(context, correction),
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(50, 30),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Padding(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CorrectionDetailsScreen(
-                            task: task,
-                            correction: correction,
-                            role: role,
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(width: 8),
+                          Text(
+                            'Запрос на объяснительную',
+                            style: TextStyle(
+                              color: Colors.white, // Белый текст
+                              fontSize: 16,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      side: BorderSide( color:Colors.orange, width: 1),
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(12), // закругление углов
+                        ],
                       ),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 24),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(width: 8),
-                        Text(
-                          'Подробнее',
-                          style: TextStyle(
-                            color: Colors.black, // Белый текст
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),
               ),
-            ),
-          ]
-        else ...[
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () => _showRevisionDetails(context, correction),
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(50, 30),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Padding(
-                padding:
+            ]
+          else ...[
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => _showRevisionDetails(context, correction),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(50, 30),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Padding(
+                    padding:
                     const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CorrectionDetailsScreen(
-                          correction: correction,
-                          task: task,
-                          role: role,
-                        ),
-                      ),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.orange, width: 1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (task.status == TaskStatus.extraTime) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddExtraTimeScreen(
+                                task: task,
+                                correction: correction,
+                              ),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CorrectionDetailsScreen(
+                                correction: correction,
+                                task: task,
+                                role: role,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.black,
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.orange, width: 1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
                           BorderRadius.circular(12), // закругление углов
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 24),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(width: 8),
-                      Text(
-                        'Подробнее',
-                        style: TextStyle(
-                          color: Colors.black, // Белый текст
-                          fontSize: 16,
                         ),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 24),
                       ),
-                    ],
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(width: 8),
+                          Text(
+                            'Подробнее',
+                            style: TextStyle(
+                              color: Colors.black, // Белый текст
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ],
+            ],
 
         // Разделитель (кроме последнего элемента)
         if (correction != revisions.last) ...[
@@ -392,8 +352,8 @@ class RevisionsCard extends StatelessWidget {
               Text(
                 'Подробности доработки',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -402,7 +362,7 @@ class RevisionsCard extends StatelessWidget {
                   DateFormat('dd.MM.yyyy HH:mm').format(correction.date)),
 
               const SizedBox(height: 12),
-              _buildDetailRow(context, 'Описание:', correction.description!),
+              _buildDetailRow(context, 'Описание:', correction.description ?? 'Описание отсутствует'),
 
               const SizedBox(height: 24),
               SizedBox(
@@ -434,8 +394,8 @@ class RevisionsCard extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+              color: Colors.grey.shade600,
+            ),
           ),
         ),
         const SizedBox(width: 8),

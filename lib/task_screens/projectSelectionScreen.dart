@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/services/project_operations.dart';
-import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/task_screens/addedFilesScreen.dart';
 
 import '../models/project.dart';

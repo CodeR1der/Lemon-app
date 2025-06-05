@@ -8,6 +8,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:record/record.dart';
 import 'package:task_tracker/models/task_validate.dart';
 import 'package:task_tracker/services/request_operation.dart';
+import 'package:task_tracker/services/task_operations.dart';
 
 import '../models/task.dart';
 import '../models/task_status.dart';
@@ -39,7 +40,10 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
   final player = AudioPlayer();
 
   bool get _canSubmit {
-    return _descriptionController.text.isNotEmpty || attachments.isNotEmpty;
+    return _descriptionController.text.isNotEmpty ||
+        attachments.isNotEmpty ||
+        audioMessage != null ||
+        videoMessage.isNotEmpty;
   }
 
   Future<void> pickFile() async {
@@ -57,7 +61,8 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
 
   Future<void> recordAudio() async {
     if (await _checkPermission()) {
-      await _audioRecorder.start(const RecordConfig(), path: '');
+      final path = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      await _audioRecorder.start(const RecordConfig(), path: path);
       setState(() {
         isRecording = true;
         audioMessage = 'Запись...';
@@ -75,43 +80,38 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
       setState(() {
         isRecording = false;
         audioMessage = path;
-        widget.task.setAudioMessage(path);
       });
     }
   }
 
   Future<void> playAudio() async {
-    if (audioMessage != null) {
+    if (audioMessage != null && audioMessage != 'Запись...') {
       await player.setFilePath(audioMessage!);
       player.play();
     }
   }
 
-  // Метод для отображения меню с действиями
   Future<void> _showMediaPicker() async {
     showModalBottomSheet(
       context: context,
       builder: (context) => Wrap(
         children: [
-          // Запись видео
           ListTile(
             leading: const Icon(Icons.videocam),
             title: const Text('Записать видео'),
             onTap: () async {
-              Navigator.pop(context); // Закрыть меню
+              Navigator.pop(context);
               await _recordVideo();
             },
           ),
-          // Выбор видео из галереи
           ListTile(
             leading: const Icon(Icons.video_library),
             title: const Text('Выбрать из галереи'),
             onTap: () async {
-              Navigator.pop(context); // Закрыть меню
+              Navigator.pop(context);
               await pickVideo();
             },
           ),
-          // Отмена
           ListTile(
             leading: const Icon(Icons.cancel),
             title: const Text('Отмена'),
@@ -122,38 +122,32 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
     );
   }
 
-  // Метод для записи видео
   Future<void> _recordVideo() async {
-    final XFile? recordedFile =
-        await _imagePicker.pickVideo(source: ImageSource.camera);
+    final XFile? recordedFile = await _imagePicker.pickVideo(source: ImageSource.camera);
     if (recordedFile != null) {
       setState(() {
         videoMessage.add(recordedFile.path);
-        widget.task.setVideoMessage(recordedFile.path);
       });
     }
   }
 
   Future<void> pickVideo() async {
-    final XFile? pickedFile =
-        await _imagePicker.pickVideo(source: ImageSource.gallery);
+    final XFile? pickedFile = await _imagePicker.pickVideo(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         videoMessage.add(pickedFile.path);
-        widget.task.setVideoMessage(pickedFile.path);
       });
     }
-    //не добавляется video_message
   }
 
   void removeAttachment(String filePath) {
     setState(() {
       if (attachments.contains(filePath)) {
         attachments.remove(filePath);
-        widget.task.removeAttachment(filePath);
-      } else {
+      } else if (videoMessage.contains(filePath)) {
         videoMessage.remove(filePath);
-        widget.task.removeVideoMessage(filePath);
+      } else if (audioMessage == filePath) {
+        audioMessage = null;
       }
     });
   }
@@ -176,20 +170,14 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
 
     try {
       final validate = _createValidate();
-
       await RequestService().addTaskValidate(validate);
+      await TaskService().changeStatus(TaskStatus.completedUnderReview, widget.task.id);
 
-      await widget.task.changeStatus(TaskStatus.completedUnderReview);
-
-      // 4. Показываем уведомление
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Задача отправлена на доработку')),
+        const SnackBar(content: Text('Задача отправлена на проверку')),
       );
 
-      // 5. Закрываем экран и возвращаем результат
-      Navigator.pop(
-        context,
-      );
+      Navigator.pop(context, TaskStatus.completedUnderReview);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Ошибка: ${e.toString()}')),
@@ -209,18 +197,11 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text(
             'Ссылка',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-
-          // Поле ввода описания
           Container(
-            constraints: BoxConstraints(
-              minHeight: _textFieldHeight,
-            ),
+            constraints: BoxConstraints(minHeight: _textFieldHeight),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade300),
               borderRadius: BorderRadius.circular(8),
@@ -238,14 +219,10 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
                 ),
                 onChanged: (text) {
                   final textPainter = TextPainter(
-                    text: TextSpan(
-                      text: text,
-                      style: const TextStyle(fontSize: 16),
-                    ),
+                    text: TextSpan(text: text, style: const TextStyle(fontSize: 16)),
                     maxLines: null,
                     textDirection: TextDirection.ltr,
                   )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
-
                   setState(() {
                     _textFieldHeight = textPainter.size.height + 24;
                     if (_textFieldHeight < 60) _textFieldHeight = 60;
@@ -254,21 +231,14 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
               ),
             ),
           ),
-
+          const SizedBox(height: 16),
           const Text(
             'Описание',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-
-          // Поле ввода описания
           Container(
-            constraints: BoxConstraints(
-              minHeight: _textFieldHeight,
-            ),
+            constraints: BoxConstraints(minHeight: _textFieldHeight),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade300),
               borderRadius: BorderRadius.circular(8),
@@ -286,14 +256,10 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
                 ),
                 onChanged: (text) {
                   final textPainter = TextPainter(
-                    text: TextSpan(
-                      text: text,
-                      style: const TextStyle(fontSize: 16),
-                    ),
+                    text: TextSpan(text: text, style: const TextStyle(fontSize: 16)),
                     maxLines: null,
                     textDirection: TextDirection.ltr,
                   )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
-
                   setState(() {
                     _textFieldHeight = textPainter.size.height + 24;
                     if (_textFieldHeight < 60) _textFieldHeight = 60;
@@ -302,27 +268,19 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
               ),
             ),
           ),
-
-          // Добавление файлов
+          const SizedBox(height: 16),
           const Text(
-            'Добавить файлы',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+            'Добавить файлы по задаче (в том числе фото)',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 12),
-
-          // Кнопка добавления файла
+          const SizedBox(height: 8),
           OutlinedButton(
             onPressed: pickFile,
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.black,
               side: const BorderSide(color: Colors.orange),
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -333,132 +291,125 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
           const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Записать аудио сообщение',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
+          const Text(
+            'Записать аудио сообщение',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-          ElevatedButton.icon(
+          OutlinedButton(
             onPressed: isRecording ? stopRecording : recordAudio,
-            icon:
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.black,
+              side: const BorderSide(color: Colors.orange),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 Icon(isRecording ? Icons.stop : Icons.mic, color: Colors.black),
-            label: Text(isRecording ? 'Остановить запись' : 'Записать аудио'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              side: const BorderSide(color: Colors.orange),
-              minimumSize: const Size(double.infinity, 50),
+                const SizedBox(width: 8),
+                Text(isRecording ? 'Остановить запись' : 'Записать аудио'),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: playAudio,
-            icon: const Icon(Icons.play_arrow, color: Colors.black),
-            label: const Text('Прослушать запись'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              side: const BorderSide(color: Colors.orange),
-              minimumSize: const Size(double.infinity, 50),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Прикрепить видео',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: _showMediaPicker,
-            icon: const Icon(Icons.video_library, color: Colors.black),
-            label: const Text('Добавить видео'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              side: const BorderSide(color: Colors.orange),
-              minimumSize: const Size(double.infinity, 50),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: attachments.length + videoMessage.length,
-              itemBuilder: (context, index) {
-                String filePath;
-                bool isVideo = false;
-
-                if (index < attachments.length) {
-                  filePath = attachments[index];
-                  if (filePath.endsWith(".mp4")) {
-                    isVideo = true;
-                  }
-                } else {
-                  filePath = videoMessage[index - attachments.length];
-                  isVideo = true;
-                }
-
-                return ListTile(
-                  leading: isVideo
-                      ? const Icon(Icons.video_library, color: Colors.red)
-                      : Image.file(File(filePath),
-                          width: 50, height: 50, fit: BoxFit.cover),
-                  title: Text(filePath.split('/').last),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => removeAttachment(filePath),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Секция с прикрепленными файлами
-          if (attachments.isNotEmpty) ...[
-            const Text(
-              'Прикрепленные файлы:',
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
+          if (audioMessage != null) ...[
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: attachments.map((file) {
-                return Chip(
-                  label: Text(file.split('/').last),
-                  onDeleted: () {
-                    setState(() {
-                      attachments.remove(file);
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(
-                    context,
-                  );
-                  widget.task.changeStatus(TaskStatus.completedUnderReview);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Отправить'),
+            OutlinedButton(
+              onPressed: playAudio,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.orange),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.play_arrow, color: Colors.black),
+                  SizedBox(width: 8),
+                  Text('Прослушать запись'),
+                ],
               ),
             ),
-          ]
+          ],
+          const SizedBox(height: 16),
+          const Text(
+            'Прикрепить видео',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: _showMediaPicker,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.black,
+              side: const BorderSide(color: Colors.orange),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.video_library, color: Colors.black),
+                SizedBox(width: 8),
+                Text('Добавить видео'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (attachments.isNotEmpty || videoMessage.isNotEmpty || audioMessage != null) ...[
+            const Text(
+              'Добавленные файлы:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.builder(
+                itemCount: attachments.length + videoMessage.length + (audioMessage != null ? 1 : 0),
+                itemBuilder: (context, index) {
+                  String filePath;
+                  bool isVideo = false;
+                  bool isAudio = false;
+
+                  if (index < attachments.length) {
+                    filePath = attachments[index];
+                    if (filePath.endsWith(".mp4") || filePath.endsWith(".mov")) {
+                      isVideo = true;
+                    }
+                  } else if (index < attachments.length + videoMessage.length) {
+                    filePath = videoMessage[index - attachments.length];
+                    isVideo = true;
+                  } else {
+                    filePath = audioMessage!;
+                    isAudio = true;
+                  }
+
+                  return ListTile(
+                    leading: isVideo
+                        ? const Icon(Icons.video_library, color: Colors.red)
+                        : isAudio
+                        ? const Icon(Icons.audiotrack, color: Colors.blue)
+                        : Image.file(
+                      File(filePath),
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.broken_image,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    title: Text(filePath.split('/').last),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => removeAttachment(filePath),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ]),
       ),
       bottomSheet: Container(
@@ -471,9 +422,7 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
             backgroundColor: _canSubmit ? Colors.orange : Colors.grey,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: const Text('Отправить'),
         ),
@@ -484,15 +433,15 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
   @override
   void dispose() {
     _descriptionController.dispose();
+    _linkController.dispose();
     super.dispose();
   }
 
   String _getAppBarTitle(TaskStatus status) {
     switch (status) {
-      case TaskStatus.newTask || TaskStatus.needExplanation:
+      case TaskStatus.newTask:
+      case TaskStatus.needExplanation:
         return "Задача поставлена плохо / некорректно";
-      case TaskStatus.needTicket:
-        return "Письмо-решение";
       case TaskStatus.notRead:
         return "Причина разъяснения";
       case TaskStatus.needTicket:

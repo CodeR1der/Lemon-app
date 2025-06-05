@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:task_tracker/services/task_categories.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/employee.dart';
@@ -647,6 +648,51 @@ class TaskService {
         .from('task')
         .update(task.toMap())
         .eq('id', task.id);
+  }
+
+
+  Future<Map<TaskStatus, int>> getTasksAsExecutor(String employeeId) async {
+    try {
+      final response = await _client
+          .from('team_members')
+          .select('''
+          task_team:team_id(*,
+            task:task_id(*)
+          )
+        ''')
+          .eq('employee_id', employeeId);
+
+      // Извлекаем задачи из ответа
+      final tasks = response
+          .map((item) => item['task_team']?['task'])
+          .where((task) => task != null)
+          .toList();
+
+      // Группируем задачи по статусам
+      final Map<TaskStatus, int> taskCounts = {};
+      // Await the result of getCategoriesList to get the actual List<TaskCategory>
+      final categories = await TaskCategories().getCategoriesList(
+          'Исполнитель');
+      for (var category in categories) {
+        if (category.status == TaskStatus.completed)
+          continue; // Исключаем архив
+        taskCounts[category.status] = 0;
+      }
+
+      for (var task in tasks) {
+        final status = TaskStatus.values.firstWhere(
+              (e) => e.toString() == 'TaskStatus.${task['status']}',
+          orElse: () => TaskStatus.newTask,
+        );
+        if (status != TaskStatus.completed) {
+          taskCounts[status] = (taskCounts[status] ?? 0) + 1;
+        }
+      }
+
+      return taskCounts;
+    } catch (e) {
+      throw Exception('Error getting tasks as executor: $e');
+    }
   }
 
   Future<void> updateDeadline(DateTime deadline, String taskId) async {

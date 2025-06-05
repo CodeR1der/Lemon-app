@@ -142,7 +142,6 @@ class _TaskCompletionPageState extends State<TaskCompletionPage> {
                       }
                       TaskService()
                           .updateDeadline(_selectedDay, widget.task.id);
-                      Navigator.pop(context);
                       Navigator.pop(context, _selectedDay);
                     },
                     child: const Text('Готово', style: TextStyle(fontSize: 18)),

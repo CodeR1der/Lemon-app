@@ -84,8 +84,7 @@ class TaskLayoutBuilder extends StatelessWidget {
 
           switch (role) {
             case TaskRole.executor:
-              return Column(
-              );
+              return Column();
             case TaskRole.communicator:
               return Column(children: [
                 _buildSectionItem(
@@ -942,8 +941,9 @@ class TaskLayoutBuilder extends StatelessWidget {
             case TaskRole.executor:
               return Column(
                 children: [
-                  if (notDoneRevisions != null && notDoneRevisions.status ==
-                      TaskStatus.completedUnderReview)
+                  if (notDoneRevisions != null &&
+                      notDoneRevisions.status ==
+                          TaskStatus.completedUnderReview)
                     RevisionsCard(
                         revisions: revisions,
                         task: task,
@@ -1170,8 +1170,17 @@ class TaskLayoutBuilder extends StatelessWidget {
             case TaskRole.creator:
               return Column(
                 children: [
-                  _buildSectionItem(
-                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  if (revisions.isNotEmpty &&
+                      revisions.any((revision) => !revision.isDone))
+                    RevisionsCard(
+                        revisions: revisions,
+                        task: task,
+                        role: role,
+                        title: 'Доработки и запросы')
+                  else ...[
+                    _buildSectionItem(
+                        icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  ],
                   const Divider(),
                   _buildSectionItem(
                     icon: Iconsax.clock_copy,
@@ -1217,7 +1226,11 @@ class TaskLayoutBuilder extends StatelessWidget {
                 children: [
                   if (revisions.isNotEmpty &&
                       revisions.any((revision) => !revision.isDone))
-                    RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы'),
+                    RevisionsCard(
+                        revisions: revisions,
+                        task: task,
+                        role: role,
+                        title: 'Доработки и запросы'),
                   const Divider(),
                   _buildSectionItem(
                     icon: Iconsax.clock_copy,
@@ -1227,7 +1240,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
                         ),
                       );
                     },
@@ -1240,9 +1254,26 @@ class TaskLayoutBuilder extends StatelessWidget {
                 _buildSectionItem(
                     icon: Iconsax.clock_copy, title: 'Контрольные точки'),
                 const Divider(),
-                if (revisions.isNotEmpty &&
+                if (task.status == TaskStatus.overdue &&
+                    role == TaskRole.communicator &&
+                    revisions
+                        .isNotEmpty && // Добавляем проверку, что revisions не пустой
+                    revisions.any((revision) =>
+                    (revision.description ?? '').trim() ==
+                        'Просроченная задача' &&
+                        !revision.isDone))
+                  _buildSectionItem(
+                    icon: Iconsax.edit_copy,
+                    title: 'Доработки и запросы',
+                  )
+                else if (revisions.isNotEmpty &&
                     revisions.any((revision) => !revision.isDone))
-                  RevisionsCard(revisions: revisions, task: task, role: role, title: 'Доработки и запросы')
+                  RevisionsCard(
+                    revisions: revisions,
+                    task: task,
+                    role: role,
+                    title: 'Доработки и запросы',
+                  )
                 else ...[
                   _buildSectionItem(
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
@@ -1277,7 +1308,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TaskHistoryScreen(revisions: revisions),
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
                         ),
                       );
                     },
@@ -1286,7 +1318,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-            // TODO: Handle this case.
+              // TODO: Handle this case.
               throw UnimplementedError();
           }
         });
@@ -1394,7 +1426,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.orange, width: 1),
+                          side:
+                              const BorderSide(color: Colors.orange, width: 1),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -1405,7 +1438,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                           children: [
                             SizedBox(width: 8),
                             Text(
-                              'Подробнее',
+                              'Проверить задачу',
                               style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 16,
@@ -1497,5 +1530,4 @@ class TaskLayoutBuilder extends StatelessWidget {
       ),
     );
   }
-
 }

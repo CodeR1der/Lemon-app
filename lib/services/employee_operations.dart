@@ -111,25 +111,17 @@ class EmployeeService {
 
   Future<List<Project>> getEmployeeProjects(String employeeId) async {
     try {
-      // Получаем проекты, где сотрудник является членом команды
-      final teamProjects = await _client.from('team_members').select('''
-          team_id,
-          task_team:team_id(
-            task_id,
-            task:task_id(
-              project_id,
-              project:project_id(*,
-              project_description_id:project_description_id(*),
-              project_team:project_team:project_id(
-              *,
-                employee:employee_id(*)
-                )
-             )
-            )
+      final teamProjects = await _client.from('project_team').select('''
+        project_id,
+        project:project_id(*,
+          project_description_id:project_description_id(*),
+          project_team(
+            *,
+            employee:employee_id(*)
           )
-          ''').eq('employee_id', employeeId);
+        )
+        ''').eq('employee_id', employeeId);
 
-      // Объединяем все проекты и убираем дубликаты
       final allProjects = <dynamic>{
         ..._extractProjectsFromResponse(teamProjects),
       }.toList();
@@ -149,17 +141,14 @@ class EmployeeService {
   *,
   project:project_id(*,
     project_description_id:project_description_id(*),
-   project_team:project_team:project_id(
-        *,
-        employee:employee_id(*)
-      )
+    project_team:project_team(*,
+      employee:employee_id(*)
+    )
   ),
-  task_team:task_team(
-    *,
+  task_team:task_team(*,
     creator_id:creator_id(*),
     communicator_id:communicator_id(*),
-    team_members:team_members(
-      *,
+    team_members:team_members(*,
       employee_id:employee_id(*)
     )
   )

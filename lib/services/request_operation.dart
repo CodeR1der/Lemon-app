@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/models/correction.dart';
 import 'package:task_tracker/models/task_validate.dart';
@@ -12,9 +14,20 @@ class RequestService {
   Future<void> addTaskValidate(TaskValidate taskValidate) async {
     taskValidate.id = _uuid.v4();
 
+    // Загружаем файлы в bucket
+    if (taskValidate.attachments != null) {
+      taskValidate.attachments = await _uploadFiles(taskValidate.attachments!, 'validateattachments');
+    }
+    if (taskValidate.videoMessage != null) {
+      taskValidate.videoMessage = await _uploadFiles(taskValidate.videoMessage!, 'validateattachments');
+    }
+    if (taskValidate.audioMessage != null) {
+      taskValidate.audioMessage = await _uploadFile(taskValidate.audioMessage!, 'validateattachments');
+    }
+
     try {
       await _client.from('task_validate').insert(taskValidate.toJson());
-      print('Запрос на проверку задачи успешно добавлена');
+      print('Запрос на проверку задачи успешно добавлен');
     } on PostgrestException catch (error) {
       print('Ошибка при добавлении запроса на проверку: ${error.message}');
     }
@@ -45,13 +58,19 @@ class RequestService {
     }
   }
 
-  String getValidateAttachment(String? fileName) {
-    return _client.storage.from('ValidateAttachments').getPublicUrl(fileName!);
-  }
-
-
   Future<void> addCorrection(Correction correction) async {
     correction.id = _uuid.v4();
+
+    // Загружаем файлы в bucket
+    if (correction.attachments != null) {
+      correction.attachments = await _uploadFiles(correction.attachments!, 'correctionattachments');
+    }
+    if (correction.audioMessage != null) {
+      correction.audioMessage = await _uploadFile(correction.audioMessage!, 'correctionattachments');
+    }
+    if (correction.videoMessage != null) {
+      correction.videoMessage = await _uploadFiles(correction.videoMessage!, 'correctionattachments');
+    }
 
     try {
       await _client.from('correction').insert(correction.toJson());
@@ -114,9 +133,40 @@ class RequestService {
     }
   }
 
+  // Вспомогательный метод для загрузки одного файла
+  Future<String> _uploadFile(String filePath, String bucketName) async {
+    final file = File(filePath);
+    final fileName = '${_uuid.v4()}_${file.uri.pathSegments.last}';
+    try {
+      await _client.storage.from(bucketName).upload(
+        fileName,
+        file,
+        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+      );
+      return fileName; // Возвращаем имя файла в bucket
+    } catch (e) {
+      print('Ошибка загрузки файла: $e');
+      rethrow;
+    }
+  }
+
+  // Вспомогательный метод для загрузки списка файлов
+  Future<List<String>> _uploadFiles(List<String> filePaths, String bucketName) async {
+    final uploadedFiles = <String>[];
+    for (final filePath in filePaths) {
+      final fileName = await _uploadFile(filePath, bucketName);
+      uploadedFiles.add(fileName);
+    }
+    return uploadedFiles;
+  }
+
+  String getValidateAttachment(String? fileName) {
+    if (fileName == null) return '';
+    return _client.storage.from('validateattachments').getPublicUrl(fileName);
+  }
+
   String getAttachment(String? fileName) {
-    return _client.storage
-        .from('CorrectionAttachments')
-        .getPublicUrl(fileName!);
+    if (fileName == null) return '';
+    return _client.storage.from('correctionattachments').getPublicUrl(fileName);
   }
 }

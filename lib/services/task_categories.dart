@@ -169,4 +169,17 @@ class TaskCategories {
       }
     }
   }
+  Future<List<TaskCategory>> getCategoriesList(String position)
+  async {
+    switch (position) {
+      case "Исполнитель":
+        return List.of(_executerCategories);
+      case "Коммуникатор" || "Наблюдатель":
+        return _communicatorCategories;
+      case "Постановщик":
+        return _createrCategories;
+      default:
+        return _executerCategories;
+    }
+  }
 }

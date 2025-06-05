@@ -63,6 +63,62 @@ class ProjectService {
     }
   }
 
+  Future<void> updateProjectTeam(String projectId, List<String> employeeIds) async {
+    try {
+      // 1. Получаем company_id проекта
+      final projectResponse = await _client
+          .from('project')
+          .select('company_id')
+          .eq('project_id', projectId)
+          .single();
+
+      if (projectResponse.isEmpty) {
+        throw Exception('Проект с ID $projectId не найден');
+      }
+
+      final companyId = projectResponse['company_id'] as String;
+
+      // 2. Получаем текущих сотрудников проекта
+      final currentEmployeesResponse = await _client
+          .from('project_team')
+          .select('employee_id')
+          .eq('project_id', projectId);
+
+      final currentEmployeeIds = (currentEmployeesResponse as List<dynamic>)
+          .map((e) => e['employee_id'] as String)
+          .toList();
+
+      // 3. Определяем, кого нужно удалить и кого добавить
+      final employeesToRemove = currentEmployeeIds
+          .where((id) => !employeeIds.contains(id))
+          .toList();
+      final employeesToAdd = employeeIds
+          .where((id) => !currentEmployeeIds.contains(id))
+          .toList();
+
+      // 4. Удаляем сотрудников, которые больше не в проекте
+      if (employeesToRemove.isNotEmpty) {
+        await _client
+            .from('project_team')
+            .delete()
+            .eq('project_id', projectId)
+            .inFilter('employee_id', employeesToRemove);
+      }
+
+      // 5. Добавляем новых сотрудников в проект
+      if (employeesToAdd.isNotEmpty) {
+        final newEntries = employeesToAdd.map((employeeId) => {
+          'project_id': projectId,
+          'employee_id': employeeId,
+          'company_id': companyId,
+        }).toList();
+
+        await _client.from('project_team').insert(newEntries);
+      }
+    } catch (e) {
+      throw Exception('Ошибка обновления команды проекта: $e');
+    }
+  }
   // Получение списка всех проектов
   Future<List<Project>> getAllProjects() async {
     try {

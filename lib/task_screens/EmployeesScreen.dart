@@ -32,7 +32,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
   }
 
   Future<List<Employee>> loadEmployees() async {
-    return _database.getAllEmployees();
+    // Загружаем только сотрудников из команды проекта
+    return widget.taskData.project!.team;
   }
 
   @override
@@ -51,7 +52,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
             } else if (snapshot.hasError) {
               return const Center(child: Text('Ошибка загрузки сотрудников'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('Нет доступных сотрудников'));
+              return const Center(child: Text('Нет доступных сотрудников в проекте'));
             }
 
             final employees = snapshot.data!;
@@ -91,7 +92,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                       });
                     }
                   },
-                  employees: employees,
+                  employees: employees.where((employee) => employee.role == 'Коммуникатор').toList(),
                 ),
                 const SizedBox(height: 16),
                 _buildEmployeeSelectionTile(
@@ -112,37 +113,6 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   employees: employees,
                 ),
                 const SizedBox(height: 16),
-                // Column(
-                //   crossAxisAlignment: CrossAxisAlignment.start,
-                //   children: [
-                //     const Text(
-                //       'Наблюдатели',
-                //       style:
-                //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                //     ),
-                //     const SizedBox(height: 8),
-                //     ListView.builder(
-                //       shrinkWrap: true,
-                //       physics: const NeverScrollableScrollPhysics(),
-                //       itemCount: widget.taskData.project!.observers.length,
-                //       itemBuilder: (context, index) {
-                //         final member =
-                //             widget.taskData.project!.observers[index];
-                //         return ListTile(
-                //           leading: CircleAvatar(
-                //             backgroundImage: NetworkImage(
-                //                 _database.getAvatarUrl(member.avatarUrl)),
-                //           ),
-                //           title: Text(
-                //             member.name,
-                //             style: const TextStyle(fontWeight: FontWeight.bold),
-                //           ),
-                //           subtitle: Text(member.position),
-                //         );
-                //       },
-                //     ),
-                //   ],
-                // ),
                 const Spacer(),
                 SizedBox(
                   width: double.infinity,
@@ -150,7 +120,6 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                     onPressed: () {
                       if (selectedPerformer != null &&
                           selectedCommunicator != null) {
-                        // Создаем новую команду или обновляем существующую
                         final newTeam = TaskTeam(
                           teamId: const Uuid().v4(),
                           taskId: widget.taskData.id,
@@ -164,8 +133,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DeadlineScreen(
-                                widget.taskData),
+                            builder: (context) => DeadlineScreen(widget.taskData),
                           ),
                         );
                       }
@@ -241,7 +209,6 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   child: Text('Выберите сотрудника'),
                 ),
                 ...employees.map((employee) {
-                  const SizedBox(height: 4);
                   return DropdownMenuItem<Employee?>(
                     value: employee,
                     child: Row(

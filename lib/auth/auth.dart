@@ -35,7 +35,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
             .initializeUser(widget.supabase.auth.currentSession!.user.id);
       }
     } catch (error) {
-      Get.snackbar('Ошибка', 'Не удалось проверить статус авторизации: $error');
+      //Get.snackbar('Ошибка', 'Не удалось проверить статус авторизации: $error');
     }
   }
 
