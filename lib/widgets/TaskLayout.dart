@@ -207,8 +207,22 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-              // TODO: Handle this case.
-              throw UnimplementedError();
+  return Column(
+    children: [
+      _buildSectionItem(
+        icon: Iconsax.clock_copy,
+        title: 'История задачи',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskHistoryScreen(revisions: revisions),
+            ),
+          );
+        },
+      ),
+    ],
+  );
           }
         });
   }
@@ -498,8 +512,22 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-              // TODO: Handle this case.
-              throw UnimplementedError();
+  return Column(
+    children: [
+      _buildSectionItem(
+        icon: Iconsax.clock_copy,
+        title: 'История задачи',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskHistoryScreen(revisions: revisions),
+            ),
+          );
+        },
+      ),
+    ],
+  );
           }
         });
   }
@@ -636,8 +664,22 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-              // TODO: Handle this case.
-              throw UnimplementedError();
+  return Column(
+    children: [
+      _buildSectionItem(
+        icon: Iconsax.clock_copy,
+        title: 'История задачи',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskHistoryScreen(revisions: revisions),
+            ),
+          );
+        },
+      ),
+    ],
+  );
           }
         });
   }
@@ -707,8 +749,22 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-              // TODO: Handle this case.
-              throw UnimplementedError();
+  return Column(
+    children: [
+      _buildSectionItem(
+        icon: Iconsax.clock_copy,
+        title: 'История задачи',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskHistoryScreen(revisions: revisions),
+            ),
+          );
+        },
+      ),
+    ],
+  );
           }
         });
   }
@@ -810,8 +866,22 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-              // TODO: Handle this case.
-              throw UnimplementedError();
+  return Column(
+    children: [
+      _buildSectionItem(
+        icon: Iconsax.clock_copy,
+        title: 'История задачи',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskHistoryScreen(revisions: revisions),
+            ),
+          );
+        },
+      ),
+    ],
+  );
           }
         });
   }
@@ -910,8 +980,22 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-              // TODO: Handle this case.
-              throw UnimplementedError();
+  return Column(
+    children: [
+      _buildSectionItem(
+        icon: Iconsax.clock_copy,
+        title: 'История задачи',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskHistoryScreen(revisions: revisions),
+            ),
+          );
+        },
+      ),
+    ],
+  );
           }
         });
   }
@@ -1091,8 +1175,22 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-              // TODO: Handle this case.
-              throw UnimplementedError();
+  return Column(
+    children: [
+      _buildSectionItem(
+        icon: Iconsax.clock_copy,
+        title: 'История задачи',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskHistoryScreen(revisions: revisions),
+            ),
+          );
+        },
+      ),
+    ],
+  );
           }
         });
   }
@@ -1200,8 +1298,22 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-              // TODO: Handle this case.
-              throw UnimplementedError();
+  return Column(
+    children: [
+      _buildSectionItem(
+        icon: Iconsax.clock_copy,
+        title: 'История задачи',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskHistoryScreen(revisions: revisions),
+            ),
+          );
+        },
+      ),
+    ],
+  );
           }
         });
   }
@@ -1259,8 +1371,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                     revisions
                         .isNotEmpty && // Добавляем проверку, что revisions не пустой
                     revisions.any((revision) =>
-                    (revision.description ?? '').trim() ==
-                        'Просроченная задача' &&
+                        (revision.description ?? '').trim() ==
+                            'Просроченная задача' &&
                         !revision.isDone))
                   _buildSectionItem(
                     icon: Iconsax.edit_copy,
@@ -1318,8 +1430,22 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-              // TODO: Handle this case.
-              throw UnimplementedError();
+  return Column(
+    children: [
+      _buildSectionItem(
+        icon: Iconsax.clock_copy,
+        title: 'История задачи',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskHistoryScreen(revisions: revisions),
+            ),
+          );
+        },
+      ),
+    ],
+  );
           }
         });
   }

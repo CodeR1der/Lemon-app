@@ -148,6 +148,7 @@ class EmployeeService {
   task_team:task_team(*,
     creator_id:creator_id(*),
     communicator_id:communicator_id(*),
+    observer_id:observer_id(*),
     team_members:team_members(*,
       employee_id:employee_id(*)
     )

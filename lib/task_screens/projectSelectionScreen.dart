@@ -7,8 +7,13 @@ import '../models/task.dart';
 
 class ProjectSelectionScreen extends StatefulWidget {
   final Task taskData;
+  final ProjectService projectService;
 
-  const ProjectSelectionScreen(this.taskData, {super.key});
+  ProjectSelectionScreen(
+    this.taskData, {
+    super.key,
+    ProjectService? projectService,
+  }) : projectService = projectService ?? ProjectService();
 
   @override
   _ProjectSelectionScreenState createState() => _ProjectSelectionScreenState();
@@ -16,17 +21,12 @@ class ProjectSelectionScreen extends StatefulWidget {
 
 class _ProjectSelectionScreenState extends State<ProjectSelectionScreen> {
   late Future<List<Project>> projectsFuture;
-  Project? selectedProject; // Храним выбранный проект
-  final _database = ProjectService();
+  Project? selectedProject;
 
   @override
   void initState() {
     super.initState();
-    projectsFuture = loadProjects();
-  }
-
-  Future<List<Project>> loadProjects() async {
-    return _database.getAllProjects();
+    projectsFuture = widget.projectService.getAllProjects();
   }
 
   @override

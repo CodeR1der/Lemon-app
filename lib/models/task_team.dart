@@ -5,6 +5,7 @@ class TaskTeam {
   late String taskId;
   late Employee communicatorId;
   late Employee creatorId;
+  late Employee? observerId;
   late List<Employee> teamMembers;
 
   TaskTeam(
@@ -12,6 +13,7 @@ class TaskTeam {
       required this.taskId,
       required this.communicatorId,
       required this.creatorId,
+      this.observerId,
       required this.teamMembers});
 
   Map<String, dynamic> toJson() {
@@ -19,6 +21,7 @@ class TaskTeam {
       'team_id': teamId,
       'task_id': taskId,
       'communicator_id': communicatorId.userId,
+      'observer_id': observerId?.userId,
       'creator_id': creatorId.userId
     };
   }
@@ -30,6 +33,7 @@ class TaskTeam {
       communicatorId:
           Employee.fromJson(json['communicator_id'] as Map<String, dynamic>),
       creatorId: Employee.fromJson(json['creator_id'] as Map<String, dynamic>),
+      observerId: json['observer_id'] != null ? Employee.fromJson(json['observer_id'] as Map<String, dynamic>) : null,
       teamMembers: json['team_members'] != null
           ? List<Employee>.from(
               (json['team_members'] as List).map(

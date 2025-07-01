@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/models/task_role.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/task_screens/DeadlineScreen.dart';
@@ -74,7 +75,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                       });
                     }
                   },
-                  employees: employees,
+                  employees: employees.where((employee) => employee.userId != UserService.to.currentUser!.userId && employee.role != 'Коммуникатор').toList(),
                 ),
                 const SizedBox(height: 16),
                 _buildEmployeeSelectionTile(
@@ -125,6 +126,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                           taskId: widget.taskData.id,
                           communicatorId: selectedCommunicator!,
                           creatorId: UserService.to.currentUser!,
+                          observerId: selectedObserver,
                           teamMembers: [selectedPerformer!],
                         );
 

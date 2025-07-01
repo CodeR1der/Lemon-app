@@ -35,7 +35,6 @@ class TaskProvider with ChangeNotifier {
       if (projectId != null) {
         // Load all tasks for the project
         tasks = await TaskService().getProjectTasksByStatus(
-          status: TaskStatus.values.first, // Load tasks of all statuses
           projectId: projectId,
         );
       } else if (position != null && employeeId != null) {
@@ -86,6 +85,8 @@ class TaskProvider with ChangeNotifier {
             matches &= task.team.teamMembers.any((member) => member.userId == userId);
           case 'Постановщик':
             matches &= task.team.creatorId.userId == userId;
+          case 'Наблюдатель':
+            matches &= task.team.observerId?.userId == userId;
         }
       }
       return matches;

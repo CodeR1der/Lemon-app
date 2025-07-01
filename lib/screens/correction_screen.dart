@@ -180,6 +180,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
       await RequestService().addCorrection(correction);
 
       if (task.status == TaskStatus.notRead) {
+        Navigator.pop(context);
         await taskProvider.updateTaskStatus(task, TaskStatus.needExplanation);
       } else if (task.status == TaskStatus.completedUnderReview) {
         Navigator.pop(context);

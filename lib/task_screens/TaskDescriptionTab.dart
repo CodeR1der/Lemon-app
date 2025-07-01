@@ -43,6 +43,19 @@ class TaskDescriptionTab extends StatelessWidget {
     );
   }
 
+  String _getPosition() {
+    if (task.team.creatorId == UserService.to.currentUser!.userId) {
+      return "Постановщик";
+    } else if (task.team.communicatorId == UserService.to.currentUser!.userId) {
+      return "Коммуникатор";
+    } else if (task.team.teamMembers.first ==
+        UserService.to.currentUser!.userId) {
+      return "Исполнитель";
+    } else {
+      return "Наблюдатель";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -64,19 +77,26 @@ class TaskDescriptionTab extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    StatusHelper.getStatusIcon(task.status),
+                    task.status == TaskStatus.controlPoint &&
+                            _getPosition() != "Коммуникатор"
+                        ? StatusHelper.getStatusIcon(TaskStatus.atWork)
+                        : StatusHelper.getStatusIcon(task.status),
                     size: 16,
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    StatusHelper.displayName(task.status),
+                    task.status == TaskStatus.controlPoint &&
+                            _getPosition() != "Коммуникатор"
+                        ? StatusHelper.displayName(TaskStatus.atWork)
+                        : StatusHelper.displayName(task.status),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0), // Добавляем отступы по бокам
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              // Добавляем отступы по бокам
               child: Divider(),
             ),
 
@@ -294,13 +314,16 @@ class TaskDescriptionTab extends StatelessWidget {
             const SizedBox(height: 16),
             const Divider(),
 
-            TaskLayoutBuilder(task: task, role: RoleHelper.determineUserRoleInTask(currentUserId: UserService.to.currentUser!.userId, task: task))
+            TaskLayoutBuilder(
+                task: task,
+                role: RoleHelper.determineUserRoleInTask(
+                    currentUserId: UserService.to.currentUser!.userId,
+                    task: task))
           ],
         ),
       ),
     );
   }
-
 
   void _openPhotoGallery(
       BuildContext context, int initialIndex, List<String> files) {

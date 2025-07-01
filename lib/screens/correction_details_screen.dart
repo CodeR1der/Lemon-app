@@ -264,8 +264,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (RoleHelper.determineUserRoleInTask(currentUserId: UserService.to.currentUser!.userId, task: task) ==
-              TaskRole.creator) ...[
+          if (task.status == TaskStatus.overdue) ...[
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
