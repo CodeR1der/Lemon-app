@@ -33,6 +33,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
@@ -535,6 +536,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )

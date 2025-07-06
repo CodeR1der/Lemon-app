@@ -16,6 +16,7 @@ import '../models/task_status.dart';
 import '../services/request_operation.dart';
 import '../services/task_provider.dart';
 import '../task_screens/TaskDescriptionTab.dart';
+import 'EditTaskDetailsScreen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {
   final Correction correction;
@@ -46,68 +47,19 @@ class CorrectionDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _showEditDescriptionDialog(BuildContext context) {
-    final TextEditingController _descriptionController =
-    TextEditingController(text: task.description ?? '');
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(task.taskName ?? 'Редактирование задачи'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _descriptionController,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  labelText: 'Описание задачи',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Отмена'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final newDescription = _descriptionController.text.trim();
-                if (newDescription.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Описание не может быть пустым')),
-                  );
-                  return;
-                }
-
-                try {
-                  final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-                  final updatedTask = task.copyWith(description: newDescription);
-                  await taskProvider.updateTask(updatedTask);
-                  await TaskService().updateTask(updatedTask);
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Описание обновлено')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Ошибка обновления: $e')),
-                  );
-                }
-              },
-              child: const Text('Сохранить'),
-            ),
-          ],
-        );
-      },
-    );
+  void _navigateToEditDescriptionScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTaskDetailsScreen(task: task),
+      ),
+    ).then((updatedTask) {
+      if (updatedTask != null && updatedTask is Task) {
+        // Обновляем задачу, если были изменения
+        Provider.of<TaskProvider>(context, listen: false)
+            .updateTask(updatedTask);
+      }
+    });
   }
 
   @override
@@ -321,9 +273,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                     RequestService().updateCorrection(correction..isDone = true);
                     RequestService().updateCorrectionByStatus(task.id, TaskStatus.notRead);
                   } else {
-                    _showEditDescriptionDialog(context);
+                    _navigateToEditDescriptionScreen(context);
                   }
-                  Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
