@@ -19,10 +19,17 @@ class EmployeeService {
     }
 
     try {
+      print('Добавляем сотрудника с данными: ${employee.toJson()}');
       await _client.from('employee').insert(employee.toJson());
       print('Сотрудник успешно добавлен');
     } on PostgrestException catch (error) {
       print('Ошибка при добавлении сотрудника: ${error.message}');
+      print('Детали ошибки: ${error.details}');
+      print('Подсказка: ${error.hint}');
+      throw Exception('Ошибка при добавлении сотрудника: ${error.message}');
+    } catch (e) {
+      print('Неожиданная ошибка при добавлении сотрудника: $e');
+      throw Exception('Неожиданная ошибка при добавлении сотрудника: $e');
     }
   }
 
@@ -148,6 +155,7 @@ class EmployeeService {
   task_team:task_team(*,
     creator_id:creator_id(*),
     communicator_id:communicator_id(*),
+    observer_id:observer_id(*),
     team_members:team_members(*,
       employee_id:employee_id(*)
     )

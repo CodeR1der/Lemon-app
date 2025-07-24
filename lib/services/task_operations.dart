@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:path/path.dart';
@@ -11,7 +12,11 @@ import '../models/task.dart';
 import '../models/task_status.dart';
 
 class TaskService {
-  final SupabaseClient _client = Supabase.instance.client;
+  late SupabaseClient _client = Supabase.instance.client;
+
+  TaskService();
+
+  TaskService.forTest(this._client);
 
   Future<Task> getTask(String taskId) async {
     try {
@@ -77,21 +82,12 @@ class TaskService {
 
         if (tasksResponse.isEmpty) return _initializeEmptyStatusMap();
       } else if (position == 'Наблюдатель') {
-        final projectsResponse = await _client
-            .from('project_observers')
-            .select('project_id')
-            .eq('employee_id', employeeId);
-
-        if (projectsResponse.isEmpty) return _initializeEmptyStatusMap();
-
-        final projectIds = (projectsResponse as List)
-            .map((team) => team['project_id'] as String)
-            .toList();
-
         tasksResponse = await _client
-            .from('task')
-            .select('status')
-            .inFilter('project_id', projectIds);
+            .from('task_team')
+            .select('task:task_id(status)')
+            .eq('observer_id', employeeId);
+
+        if (tasksResponse.isEmpty) return _initializeEmptyStatusMap();
       }
 
       // Общая логика обработки задач
@@ -123,10 +119,8 @@ class TaskService {
     };
   }
 
-  Future<List<Task>> getProjectTasksByStatus({required TaskStatus status, required String projectId}) async {
+  Future<List<Task>> getProjectTasksByStatus({required String projectId}) async {
     try {
-      final statusString = status.toString().substring(11);
-
       final tasksResponse = await _client.from('task').select('''
       *,
       project:project_id(*,
@@ -139,11 +133,12 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
       )
-    ''').eq('project_id', projectId).eq('status', statusString);
+    ''').eq('project_id', projectId);
 
       if (tasksResponse.isEmpty) return [];
 
@@ -167,7 +162,7 @@ class TaskService {
         if (taskIdsResponse.isEmpty) return [];
 
         final taskIds =
-            taskIdsResponse.map((item) => item['task_id'] as String).toList();
+        taskIdsResponse.map((item) => item['task_id'] as String).toList();
 
         // 2. Получаем полные данные задач с фильтрацией по статусу
         final tasksResponse = await _client.from('task').select('''
@@ -182,6 +177,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
@@ -201,7 +197,7 @@ class TaskService {
         if (taskIdsResponse.isEmpty) return [];
 
         final taskIds =
-            taskIdsResponse.map((item) => item['task_id'] as String).toList();
+        taskIdsResponse.map((item) => item['task_id'] as String).toList();
 
         final tasksResponse = await _client.from('task').select('''
       *,
@@ -215,6 +211,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
@@ -249,6 +246,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
@@ -282,6 +280,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
@@ -324,6 +323,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
@@ -357,6 +357,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
@@ -391,6 +392,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
@@ -401,22 +403,22 @@ class TaskService {
             .map((taskData) => Task.fromJson(taskData))
             .toList();
       } else {
-        final projectsResponse = await _client
-            .from('project_observers')
-            .select('project_id')
-            .eq('employee_id', employeeId);
+        // 1. Получаем список ID задач с нужным статусом и creator_id
+        final taskIdsResponse = await _client
+            .from('task_team')
+            .select('task_id')
+            .eq('observer_id', employeeId);
 
-        if (projectsResponse.isEmpty) return [];
+        if (taskIdsResponse.isEmpty) return [];
 
-        final projectIds = (projectsResponse as List)
-            .map((team) => team['project_id'] as String)
-            .toList();
+        final taskIds =
+        taskIdsResponse.map((item) => item['task_id'] as String).toList();
 
         final tasksResponse = await _client.from('task').select('''
       *,
       project:project_id(*,
         project_description_id:project_description_id(*),
-        project_team:project_team(
+       project_team:project_team(
         *,
         employee:employee_id(*)
       )
@@ -424,11 +426,12 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
       )
-    ''').inFilter('project_id', projectIds);
+    ''').inFilter('id', taskIds);
 
         return tasksResponse
             .map((taskData) => Task.fromJson(taskData))
@@ -494,16 +497,13 @@ class TaskService {
   }
 
   Future<String?> uploadFile(File file, String id) async {
-    final fileName = '${id}_${basename(file.path)}'; // Уникальное имя файла
+    final fileName = '${id}_${basename(file.path)}';
     try {
       await _client.storage.from('TaskAttachments').upload(fileName, file);
-      print("Файл успешно загружен");
-      return fileName; // Возвращаем имя файла для сохранения в базе данных
+      return fileName;
     } on PostgrestException catch (error) {
-      print("Ошибка загрузки файла: ${error.message}");
+      log(error.message);
     }
-    print("Файл успешно загружен");
-    return null;
   }
 
   Future<List<Employee>> getAllEmployees() async {
@@ -522,7 +522,7 @@ class TaskService {
   Future<List<Task>> getTasksByProjectId(String projectId) async {
     try {
       final List<Map<String, dynamic>> response =
-          await _client.from('task').select('''
+      await _client.from('task').select('''
       *,
       project:project_id(*,
         project_description_id:project_description_id(*),
@@ -550,7 +550,6 @@ class TaskService {
       return [];
     }
   }
-
 
 
   Future<List<Employee>> getUniqueEmployees(List<Task> tasks) async {
@@ -610,7 +609,7 @@ class TaskService {
         if (statusStr != null) {
           try {
             final status = TaskStatus.values.firstWhere(
-              (e) => e.toString().split('.').last == statusStr,
+                  (e) => e.toString().split('.').last == statusStr,
             );
             counts[status] = (counts[status] ?? 0) + 1;
           } catch (_) {

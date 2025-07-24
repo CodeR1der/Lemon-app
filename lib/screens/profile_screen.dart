@@ -28,7 +28,8 @@ class ViewProfileState implements ProfileState {
         screen._buildBorders(),
         screen._buildProfileSection('Должность', screen.position),
         screen._buildBorders(),
-        screen._buildPhoneSection('Контактный телефон', screen._phoneController, false),
+        screen._buildPhoneSection(
+            'Контактный телефон', screen._phoneController, false),
         screen._buildBorders(),
         screen._buildEditableProfileSection(
             'Имя пользователя в Телеграм', screen._telegramController, false),
@@ -65,7 +66,8 @@ class EditProfileState implements ProfileState {
         screen._buildBorders(),
         screen._buildProfileSection('Должность', screen.position),
         screen._buildBorders(),
-        screen._buildPhoneSection('Контактный телефон', screen._phoneController, false),
+        screen._buildPhoneSection(
+            'Контактный телефон', screen._phoneController, false),
         screen._buildBorders(),
         screen._buildEditableProfileSection(
             'Имя пользователя в Телеграм', screen._telegramController, true),
@@ -190,11 +192,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _selectAndUploadAvatar() async {
-    final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
+    final pickedFile =
+        await _imagePicker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       final uploadedFileName =
-      await _employeeService.uploadAvatar(file, widget.user.userId);
+          await _employeeService.uploadAvatar(file, widget.user.userId);
       if (uploadedFileName != null) {
         setState(() {
           avatarUrl = uploadedFileName;
@@ -268,7 +271,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildPhoneSection(String title, TextEditingController controller, bool isEditing) {
+  Widget _buildPhoneSection(
+      String title, TextEditingController controller, bool isEditing) {
     return GestureDetector(
       onLongPress: () {
         if (!isEditing && controller.text.isNotEmpty) {
@@ -383,14 +387,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _currentState.buildBody(this),
+      body: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _currentState.buildBody(this),
+        ),
       ),
       floatingActionButton:
-      isLoading ? null : _currentState.buildFloatingActionButton(this),
+          isLoading ? null : _currentState.buildFloatingActionButton(this),
     );
   }
 }

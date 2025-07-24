@@ -5,20 +5,23 @@ class TaskTeam {
   late String taskId;
   late Employee communicatorId;
   late Employee creatorId;
+  late Employee? observerId;
   late List<Employee> teamMembers;
 
   TaskTeam(
       {required this.teamId,
-      required this.taskId,
-      required this.communicatorId,
-      required this.creatorId,
-      required this.teamMembers});
+        required this.taskId,
+        required this.communicatorId,
+        required this.creatorId,
+        this.observerId,
+        required this.teamMembers});
 
   Map<String, dynamic> toJson() {
     return {
       'team_id': teamId,
       'task_id': taskId,
       'communicator_id': communicatorId.userId,
+      'observer_id': observerId?.userId,
       'creator_id': creatorId.userId
     };
   }
@@ -28,15 +31,15 @@ class TaskTeam {
       teamId: json['team_id'] as String,
       taskId: json['task_id'] as String,
       communicatorId:
-          Employee.fromJson(json['communicator_id'] as Map<String, dynamic>),
+      Employee.fromJson(json['communicator_id'] as Map<String, dynamic>),
       creatorId: Employee.fromJson(json['creator_id'] as Map<String, dynamic>),
       teamMembers: json['team_members'] != null
           ? List<Employee>.from(
-              (json['team_members'] as List).map(
-                (member) => Employee.fromJson(
-                    member['employee_id'] as Map<String, dynamic>),
-              ),
-            )
+        (json['team_members'] as List).map(
+              (member) => Employee.fromJson(
+              member['employee_id'] as Map<String, dynamic>),
+        ),
+      )
           : <Employee>[],
     );
   }

@@ -14,21 +14,27 @@ class AnnouncementDetailScreen extends StatefulWidget {
   const AnnouncementDetailScreen({super.key, required this.announcement});
 
   @override
-  State<AnnouncementDetailScreen> createState() => _AnnouncementDetailScreenState();
+  State<AnnouncementDetailScreen> createState() =>
+      _AnnouncementDetailScreenState();
 }
 
-class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> with SingleTickerProviderStateMixin {
+class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Employee> _employees = [];
+  List<AnnouncementLog> _logs = [];
   bool _isLoadingEmployees = true;
+  bool _isLoadingLogs = true;
   final AnnouncementService _database = AnnouncementService();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadEmployees();
+    _loadLogs();
   }
+
   bool _isImage(String fileName) {
     return fileName.endsWith('.jpg') ||
         fileName.endsWith('.jpeg') ||
@@ -43,7 +49,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
     try {
       final employees = await EmployeeService().getAllEmployees();
       setState(() {
-        _employees = employees.where((e) => e.userId != UserService.to.currentUser!.userId).toList();
+        _employees = employees
+            .where((e) => e.userId != UserService.to.currentUser!.userId)
+            .toList();
         _isLoadingEmployees = false;
       });
     } catch (e) {
@@ -51,6 +59,21 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
         _isLoadingEmployees = false;
       });
       Get.snackbar('Ошибка', 'Не удалось загрузить сотрудников: $e');
+    }
+  }
+
+  Future<void> _loadLogs() async {
+    try {
+      final logs = await _database.getAnnouncementLogs(widget.announcement.id);
+      setState(() {
+        _logs = logs;
+        _isLoadingLogs = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingLogs = false;
+      });
+      Get.snackbar('Ошибка', 'Не удалось загрузить логи: $e');
     }
   }
 
@@ -63,7 +86,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
   @override
   Widget build(BuildContext context) {
     final userRole = UserService.to.currentUser!.role;
-    final showTabs = userRole == 'Директор';
+    final showTabs = userRole == 'Директор' || userRole == 'Коммуникатор';
 
     return Scaffold(
       appBar: AppBar(
@@ -72,25 +95,40 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
           onPressed: () => Get.back(),
         ),
         title: Text(widget.announcement.title),
+        actions: [
+          // Кнопка закрытия объявления для директоров и коммуникаторов
+          if ((userRole == 'Директор' || userRole == 'Коммуникатор') &&
+              widget.announcement.status == 'active')
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: _closeAnnouncement,
+              tooltip: 'Закрыть объявление',
+            ),
+        ],
         bottom: showTabs
             ? TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Текст объявления'),
-            Tab(text: 'Прочитано'),
-          ],
-        )
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'Текст объявления'),
+                  Tab(text: 'Прочитано'),
+                  Tab(text: 'Логи'),
+                ],
+              )
             : null,
       ),
-      body: showTabs
-          ? TabBarView(
-        controller: _tabController,
-        children: [
-          _buildAnnouncementTab(),
-          _buildEmployeesTab(),
-        ],
-      )
-          : _buildAnnouncementTab(),
+      body: SafeArea(
+        top: false,
+        child: showTabs
+            ? TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildAnnouncementTab(),
+                  _buildEmployeesTab(),
+                  _buildLogsTab(),
+                ],
+              )
+            : _buildAnnouncementTab(),
+      ),
     );
   }
 
@@ -103,13 +141,39 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Статус объявления
+                if (widget.announcement.status == 'closed')
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.close, color: Colors.red.shade700, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Объявление закрыто',
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 16),
+
                 Text(
                   widget.announcement.fullText,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Дата: ${widget.announcement.date.toLocal().toString().split(' ')[0]}', // Обновлено с date на announcementDate
+                  'Дата: ${widget.announcement.date.toLocal().toString().split(' ')[0]}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 20),
@@ -117,14 +181,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      // Фотографии
                       Text('Фотографии',
                           style: Theme.of(context).textTheme.titleSmall),
                       const SizedBox(width: 8),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Color(0xFFF9F9F9),
+                          color: const Color(0xFFF9F9F9),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -139,71 +203,81 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
                     ],
                   ),
                   const SizedBox(height: 12),
-
-                  widget.announcement.attachments.where((file) => _isImage(file)).isNotEmpty
-                      ? GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 8.0,
-                      mainAxisSpacing: 8.0,
-                    ),
-                    itemCount:
-                    widget.announcement.attachments.where((file) => _isImage(file)).length,
-                    itemBuilder: (context, index) {
-                      final photo = widget.announcement.attachments
+                  widget.announcement.attachments
                           .where((file) => _isImage(file))
-                          .toList()[index];
-                      return GestureDetector(
-                        onTap: () => _openPhotoGallery(
-                          context,
-                          index,
-                          widget.announcement.attachments
-                              .where((file) => _isImage(file))
-                              .toList(),
-                        ),
-                        child: Hero(
-                          tag: 'photo_$index',
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8.0),
-                            child: Container(
-                              color: Colors.white, // Белый фон для изображения
-                              child: Image.network(
-                                _database.getTaskAttachment(photo),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                      color: Colors.grey.shade200,
-                                      child:
-                                      const Icon(Icons.broken_image, size: 32),
-                                    ),
-                              ),
-                            ),
+                          .isNotEmpty
+                      ? GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
                           ),
-                        ),
-                      );
-                    },
-                  )
-                      : Text(''),
+                          itemCount: widget.announcement.attachments
+                              .where((file) => _isImage(file))
+                              .length,
+                          itemBuilder: (context, index) {
+                            final photo = widget.announcement.attachments
+                                .where((file) => _isImage(file))
+                                .toList()[index];
+                            return GestureDetector(
+                              onTap: () => _openPhotoGallery(
+                                context,
+                                index,
+                                widget.announcement.attachments
+                                    .where((file) => _isImage(file))
+                                    .toList(),
+                              ),
+                              child: Hero(
+                                tag: 'photo_$index',
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  child: Container(
+                                    color: Colors.white,
+                                    child: Image.network(
+                                      _database.getTaskAttachment(photo),
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Container(
+                                        color: Colors.grey.shade200,
+                                        child: const Icon(Icons.broken_image,
+                                            size: 32),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : const Text(''),
                 ],
-
               ],
             ),
           ),
         ),
-        if (UserService.to.currentUser!.role != 'Директор')
+        if (UserService.to.currentUser!.role != 'Директор' &&
+            widget.announcement.status == 'active')
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: SizedBox(
-              width: double.infinity, // Кнопка на всю ширину
+              width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // Отмечаем как прочитанное
-                  AnnouncementService.markAsRead(
-                      UserService.to.currentUser!.userId, widget.announcement);
-                  Get.back();
+                onPressed: () async {
+                  try {
+                    await AnnouncementService.markAsRead(
+                        UserService.to.currentUser!.userId,
+                        widget.announcement);
+                    Get.snackbar(
+                        'Успех', 'Объявление отмечено как прочитанное');
+                    setState(() {}); // Обновляем UI
+                  } catch (e) {
+                    Get.snackbar(
+                        'Ошибка', 'Не удалось отметить как прочитанное: $e');
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
@@ -228,33 +302,184 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
       return const Center(child: CircularProgressIndicator());
     }
 
+    final userRole = UserService.to.currentUser!.role;
+    final canMarkAsRead =
+        userRole == 'Коммуникатор' && widget.announcement.status == 'active';
+
     return ListView.builder(
       padding: const EdgeInsets.all(16.0),
       itemCount: _employees.length,
       itemBuilder: (context, index) {
         final employee = _employees[index];
         final hasRead = widget.announcement.readBy.contains(employee.userId);
+        final isSelected =
+            widget.announcement.selectedEmployees.contains(employee.userId);
 
         return ListTile(
           leading: CircleAvatar(
             radius: 20,
-            backgroundImage: employee.avatarUrl != null && employee.avatarUrl!.isNotEmpty
-                ? NetworkImage(employee.avatarUrl!)
-                : null,
+            backgroundImage:
+                employee.avatarUrl != null && employee.avatarUrl!.isNotEmpty
+                    ? NetworkImage(employee.avatarUrl!)
+                    : null,
             child: employee.avatarUrl == null || employee.avatarUrl!.isEmpty
                 ? const Icon(Icons.person)
                 : null,
           ),
           title: Text(employee.name),
-          subtitle: Text(employee.position),
-          trailing: Icon(
-            hasRead ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: hasRead ? Colors.green : Colors.grey,
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(employee.position),
+              if (!isSelected)
+                Text(
+                  'Не выбран для объявления',
+                  style: TextStyle(
+                    color: Colors.red.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                hasRead ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: hasRead ? Colors.green : Colors.grey,
+              ),
+              if (canMarkAsRead && !hasRead && isSelected) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 16),
+                  onPressed: () => _markEmployeeAsRead(employee),
+                  tooltip: 'Отметить как прочитанное',
+                ),
+              ],
+            ],
           ),
         );
       },
     );
   }
+
+  Widget _buildLogsTab() {
+    if (_isLoadingLogs) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      itemCount: _logs.length,
+      itemBuilder: (context, index) {
+        final log = _logs[index];
+
+        String actionText = '';
+        IconData actionIcon = Icons.info;
+        Color actionColor = Colors.blue;
+
+        switch (log.action) {
+          case 'created':
+            actionText = 'Создал объявление';
+            actionIcon = Icons.add;
+            actionColor = Colors.green;
+            break;
+          case 'read':
+            actionText = 'Прочитал объявление';
+            actionIcon = Icons.check;
+            actionColor = Colors.blue;
+            break;
+          case 'marked_read':
+            actionText =
+                'Отметил как прочитанное для ${log.targetUserName ?? 'сотрудника'}';
+            actionIcon = Icons.edit;
+            actionColor = Colors.orange;
+            break;
+          case 'closed':
+            actionText = 'Закрыл объявление';
+            actionIcon = Icons.close;
+            actionColor = Colors.red;
+            break;
+        }
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: actionColor.withOpacity(0.1),
+              child: Icon(actionIcon, color: actionColor, size: 20),
+            ),
+            title: Text(actionText),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${log.userName} (${log.userRole})'),
+                Text(
+                  '${log.timestamp.day}.${log.timestamp.month}.${log.timestamp.year} ${log.timestamp.hour}:${log.timestamp.minute.toString().padLeft(2, '0')}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _markEmployeeAsRead(Employee employee) async {
+    try {
+      final currentUser = UserService.to.currentUser!;
+      await AnnouncementService.markAsReadForEmployee(
+        employee.userId,
+        employee.name,
+        widget.announcement,
+        currentUser.userId,
+        currentUser.name,
+        currentUser.role,
+      );
+      Get.snackbar('Успех', '${employee.name} отмечен как прочитавший');
+      setState(() {}); // Обновляем UI
+    } catch (e) {
+      Get.snackbar('Ошибка', 'Не удалось отметить как прочитанное: $e');
+    }
+  }
+
+  Future<void> _closeAnnouncement() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Закрыть объявление'),
+        content: const Text('Вы уверены, что хотите закрыть это объявление?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context, true);
+              try {
+                final currentUser = UserService.to.currentUser!;
+                await AnnouncementService.closeAnnouncement(
+                  widget.announcement,
+                  currentUser.userId,
+                  currentUser.name,
+                  currentUser.role,
+                );
+                Get.snackbar('Успех', 'Объявление закрыто');
+                setState(() {}); // Обновляем UI
+              } catch (e) {
+                print('Ошибка Не удалось закрыть объявление: $e');
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Закрыть', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _openPhotoGallery(
       BuildContext context, int initialIndex, List<String> files) {
     Navigator.push(
@@ -281,4 +506,3 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
     );
   }
 }
-

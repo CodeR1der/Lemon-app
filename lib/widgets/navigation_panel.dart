@@ -17,10 +17,12 @@ class BottomNavigationMenu extends StatelessWidget {
     NavigationController controller = Get.put(NavigationController());
     ever(UserService.to.isLoggedIn, (bool isLoggedIn) {
       Get.delete<NavigationController>(); // Dispose current instance
-      controller = Get.put(NavigationController()); // Create new instance, triggering onInit
+      controller = Get.put(
+          NavigationController()); // Create new instance, triggering onInit
     });
     return Obx(() {
-      if (!UserService.to.isInitialized.value || !controller.isScreensReady.value) {
+      if (!UserService.to.isInitialized.value ||
+          !controller.isScreensReady.value) {
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );
@@ -57,7 +59,10 @@ class BottomNavigationMenu extends StatelessWidget {
                 icon: Icon(Iconsax.profile_circle_copy), label: 'Профиль'),
           ],
         ),
-        body: controller.screens[controller.selectedIndex.value],
+        body: SafeArea(
+          top: false,
+          child: controller.screens[controller.selectedIndex.value],
+        ),
       );
     });
   }
