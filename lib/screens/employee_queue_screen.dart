@@ -9,7 +9,7 @@ class QueueScreen extends StatefulWidget {
   final String position;
   final String userId;
 
-  const QueueScreen({
+  const QueueScreen({super.key, 
     required this.position,
     required this.userId,
   });

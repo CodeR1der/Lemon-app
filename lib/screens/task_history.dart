@@ -7,7 +7,7 @@ import '../models/task_status.dart';
 class TaskHistoryScreen extends StatelessWidget {
   final List<Correction> revisions;
 
-  TaskHistoryScreen({super.key, required this.revisions});
+  const TaskHistoryScreen({super.key, required this.revisions});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class TaskHistoryScreen extends StatelessWidget {
           children: [
             ...revisions
                 .map((revision) => _buildRevisionItem(context, revision))
-                .toList(),
+                ,
           ],
         ),
       ),

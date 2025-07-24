@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/employee.dart';
 import '../models/project.dart';
 import '../models/project_description.dart';

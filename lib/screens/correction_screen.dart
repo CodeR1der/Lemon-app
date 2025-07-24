@@ -34,7 +34,7 @@ class CorrectionScreen extends StatefulWidget {
 class _CorrectionScreenState extends State<CorrectionScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   double _textFieldHeight = 60.0;
-  List<String> _attachments = [];
+  final List<String> _attachments = [];
   String? audioMessage;
   List<String> videoMessage = [];
   bool isRecording = false;

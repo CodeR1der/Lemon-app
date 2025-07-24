@@ -12,8 +12,7 @@ class AuthWrapper extends StatefulWidget {
   final SupabaseClient supabase;
 
   const AuthWrapper(
-      {required this.homeScreen, required this.supabase, Key? key})
-      : super(key: key);
+      {required this.homeScreen, required this.supabase, super.key});
 
   @override
   _AuthWrapperState createState() => _AuthWrapperState();
@@ -58,7 +57,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 class AuthScreen extends StatefulWidget {
   final SupabaseClient supabase;
 
-  const AuthScreen({required this.supabase, Key? key}) : super(key: key);
+  const AuthScreen({required this.supabase, super.key});
 
   @override
   _AuthScreenState createState() => _AuthScreenState();
@@ -519,7 +518,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   }
 
                   return TextEditingValue(
-                    text: '$newText',
+                    text: newText,
                     selection: TextSelection.collapsed(offset: newText.length),
                   );
                 },

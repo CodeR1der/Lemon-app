@@ -10,7 +10,7 @@ import '../services/project_provider.dart';
 import '../services/user_service.dart';
 
 class AddProjectScreen extends StatefulWidget {
-  const AddProjectScreen({Key? key}) : super(key: key);
+  const AddProjectScreen({super.key});
 
   @override
   _AddProjectScreenState createState() => _AddProjectScreenState();
@@ -28,7 +28,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
   final EmployeeService _employeeService = EmployeeService();
   List<Employee> _allEmployees = [];
-  List<Employee> _selectedEmployees = [UserService.to.currentUser!];
+  final List<Employee> _selectedEmployees = [UserService.to.currentUser!];
   bool _isLoadingEmployees = false;
 
   @override
@@ -108,7 +108,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                   });
                                 },
                                 secondary: CircleAvatar(
-                                  child: Text(employee.name?[0] ?? 'N'),
+                                  child: Text(employee.name[0] ?? 'N'),
                                 ),
                               );
                             },
@@ -498,7 +498,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     ),
                     ..._selectedEmployees.map((employee) => ListTile(
                           leading: CircleAvatar(
-                            child: Text(employee.name?[0] ?? 'N'),
+                            child: Text(employee.name[0] ?? 'N'),
                           ),
                           title: Text(employee.name ?? 'Без имени'),
                           subtitle: Text(employee.role ?? 'Без роли'),

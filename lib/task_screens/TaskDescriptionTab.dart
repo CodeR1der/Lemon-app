@@ -129,14 +129,14 @@ class TaskDescriptionTab extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(width: 8),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Color(0xFFF9F9F9),
+                    color: const Color(0xFFF9F9F9),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     task.attachments.length.toString(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -221,14 +221,14 @@ class TaskDescriptionTab extends StatelessWidget {
                 Text('Видео', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(width: 8),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Color(0xFFF9F9F9),
+                    color: const Color(0xFFF9F9F9),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     task.videoMessage!.length.toString(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -296,9 +296,9 @@ class TaskDescriptionTab extends StatelessWidget {
                                       height: double.infinity,
                                     ),
                                   ),
-                                  Icon(
+                                  const Icon(
                                     Iconsax.play_circle,
-                                    color: const Color(0xFF049FFF),
+                                    color: Color(0xFF049FFF),
                                     size: 48.0,
                                   ),
                                 ],

@@ -377,7 +377,7 @@ class _QueueScreenState extends State<QueueScreen> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Iconsax.calendar),
+                  const Icon(Iconsax.calendar),
                   const SizedBox(width: 4),
                   Text(
                     formatDeadline(deadline),
@@ -407,7 +407,7 @@ class _QueueScreenState extends State<QueueScreen> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Iconsax.flash_1, color: Colors.yellow),
+                  const Icon(Iconsax.flash_1, color: Colors.yellow),
                   const SizedBox(width: 4),
                   Text(
                     priority,

@@ -122,14 +122,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
                           style: Theme.of(context).textTheme.titleSmall),
                       const SizedBox(width: 8),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Color(0xFFF9F9F9),
+                          color: const Color(0xFFF9F9F9),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           widget.announcement.attachments.length.toString(),
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -186,7 +186,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> wit
                       );
                     },
                   )
-                      : Text(''),
+                      : const Text(''),
                 ],
 
               ],

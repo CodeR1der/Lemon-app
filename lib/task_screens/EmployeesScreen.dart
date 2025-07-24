@@ -231,7 +231,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

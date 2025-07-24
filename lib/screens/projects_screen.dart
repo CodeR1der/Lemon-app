@@ -8,7 +8,7 @@ import 'project_details_screen.dart';
 import 'add_project_screen.dart';
 
 class ProjectScreen extends StatelessWidget {
-  const ProjectScreen({Key? key}) : super(key: key);
+  const ProjectScreen({super.key});
 
   void _openProjectDetails(BuildContext context, Project project) {
     Navigator.push(

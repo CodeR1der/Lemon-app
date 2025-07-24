@@ -84,7 +84,7 @@ class TaskLayoutBuilder extends StatelessWidget {
 
           switch (role) {
             case TaskRole.executor:
-              return Column();
+              return const Column();
             case TaskRole.communicator:
               return Column(children: [
                 _buildSectionItem(
@@ -1013,7 +1013,7 @@ class TaskLayoutBuilder extends StatelessWidget {
           }
 
           final revisions = snapshot.data ?? [];
-          late Correction? notDoneRevisions = null;
+          Correction? notDoneRevisions;
           if (revisions.isNotEmpty) {
             final unfinishedRevisions = revisions.where((r) => !r.isDone);
             if (unfinishedRevisions.isNotEmpty) {
@@ -1096,7 +1096,7 @@ class TaskLayoutBuilder extends StatelessWidget {
                     },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      side: BorderSide(color: Colors.orange, width: 1),
+                      side: const BorderSide(color: Colors.orange, width: 1),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

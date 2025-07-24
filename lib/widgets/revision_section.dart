@@ -73,7 +73,7 @@ class RevisionsCard extends StatelessWidget {
                       .where((revision) =>
                   !revision.isDone)
                       .map((revision) => _buildRevisionItem(context, revision))
-                      .toList(),
+                      ,
                 ],
               ),
             ),

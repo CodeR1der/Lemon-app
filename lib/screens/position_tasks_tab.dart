@@ -15,11 +15,11 @@ class PositionTasksTab extends StatefulWidget {
   final String? projectId;
 
   const PositionTasksTab({
-    Key? key,
+    super.key,
     this.position,
     this.employeeId,
     this.projectId,
-  }) : super(key: key);
+  });
 
   @override
   State<PositionTasksTab> createState() => _PositionTasksTabState();

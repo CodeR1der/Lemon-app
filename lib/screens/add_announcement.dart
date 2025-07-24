@@ -21,7 +21,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   final _titleController = TextEditingController();
   final _fullTextController = TextEditingController();
   bool _isLoading = false;
-  List<String> _attachments = [];
+  final List<String> _attachments = [];
   final String _companyId = UserService.to.currentUser!.companyId;
 
 

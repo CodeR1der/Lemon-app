@@ -117,7 +117,7 @@ class TaskValidateDetailsScreen extends StatelessWidget {
                         child: Container(
                           color: Colors.white,
                           child: Image.network(
-                            RequestService().getAttachment(photo),
+                            RequestService().getValidateAttachment(photo),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) => Container(
                               color: Colors.grey.shade200,
@@ -244,7 +244,7 @@ class TaskValidateDetailsScreen extends StatelessWidget {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
-              side: BorderSide(color: Colors.orange, width: 1),
+              side: const BorderSide(color: Colors.orange, width: 1),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -270,7 +270,7 @@ class TaskValidateDetailsScreen extends StatelessWidget {
             },
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.white,
-              side: BorderSide(color: Colors.orange, width: 1),
+              side: const BorderSide(color: Colors.orange, width: 1),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

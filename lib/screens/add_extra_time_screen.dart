@@ -27,11 +27,9 @@ class _AddExtraTimeScreen extends State<AddExtraTimeScreen> {
   void initState() {
     super.initState();
     // Устанавливаем текущий дедлайн как начальную дату, если он есть
-    if (widget.task.endDate != null) {
-      _selectedDay = widget.task.endDate!;
-      _focusedDay = widget.task.endDate!;
+    _selectedDay = widget.task.endDate!;
+    _focusedDay = widget.task.endDate!;
     }
-  }
 
   String _formatDeadline(DateTime? dateTime) {
     if (dateTime == null) return 'Не установлен';
@@ -132,26 +130,14 @@ class _AddExtraTimeScreen extends State<AddExtraTimeScreen> {
                 // Сохраняем время из текущего дедлайна, если он есть
                 final currentDeadline = widget.task.endDate;
                 DateTime newDeadline;
-                if (currentDeadline != null) {
-                  newDeadline = DateTime(
-                    _selectedDay.year,
-                    _selectedDay.month,
-                    _selectedDay.day,
-                    currentDeadline.hour,
-                    currentDeadline.minute,
-                  );
-                } else {
-                  // Если дедлайна не было, используем текущее время
-                  final now = DateTime.now();
-                  newDeadline = DateTime(
-                    _selectedDay.year,
-                    _selectedDay.month,
-                    _selectedDay.day,
-                    now.hour,
-                    now.minute,
-                  );
-                }
-
+                newDeadline = DateTime(
+                  _selectedDay.year,
+                  _selectedDay.month,
+                  _selectedDay.day,
+                  currentDeadline.hour,
+                  currentDeadline.minute,
+                );
+              
                 // Обновляем дедлайн в базе данных
                 TaskService().updateDeadline(newDeadline, widget.task.id);
                 TaskService().changeStatus(TaskStatus.atWork, widget.task.id);

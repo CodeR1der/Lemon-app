@@ -11,6 +11,8 @@ import '../services/user_service.dart';
 import 'employee_details_screen.dart';
 
 class EmployeesScreen extends StatefulWidget {
+  const EmployeesScreen({super.key});
+
   @override
   _EmployeesScreenState createState() => _EmployeesScreenState();
 }
@@ -22,9 +24,9 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
   final CompanyService _companyService = CompanyService();
   List<Employee> _employees = [];
   List<Employee> _filteredEmployees = [];
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   bool _isLoading = true;
-  Map<String, Map<TaskStatus, int>> _employeeTaskCounts = {};
+  final Map<String, Map<TaskStatus, int>> _employeeTaskCounts = {};
 
   @override
   void initState() {
@@ -143,7 +145,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  const Text(
                     'Назначить роль сотруднику',
                     style: TextStyle(color: Colors.black, fontSize: 18, fontFamily: 'Roboto'),
                   ),
@@ -201,13 +203,13 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
 
   void _showCompanyCode() async {
     final currentUser = _userService.currentUser;
-    if (currentUser == null || currentUser.companyId == null) {
+    if (currentUser == null) {
       Get.snackbar('Ошибка', 'Компания не найдена для текущего пользователя');
       return;
     }
 
     try {
-      final companyCode = await _companyService.getCompanyCode(currentUser.companyId!);
+      final companyCode = await _companyService.getCompanyCode(currentUser.companyId);
       showModalBottomSheet(
         backgroundColor: Colors.white,
         context: context,
@@ -221,7 +223,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Код компании',
                   style: TextStyle(
                     fontSize: 18,
@@ -232,7 +234,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                 const SizedBox(height: 16),
                 Text(
                   companyCode ?? 'Код не найден',
-                  style: TextStyle(fontSize: 16, fontFamily: 'Roboto'),
+                  style: const TextStyle(fontSize: 16, fontFamily: 'Roboto'),
                 ),
                 const SizedBox(height: 16),
                 Align(

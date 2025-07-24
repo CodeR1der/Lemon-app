@@ -55,7 +55,7 @@ class _TaskTitleScreenState extends State<TaskTitleScreen> {
                 hintText: 'Название',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
               ),
             ),
@@ -71,7 +71,7 @@ class _TaskTitleScreenState extends State<TaskTitleScreen> {
                 hintText: 'Описание',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
               ),
               maxLines: 3, // Для многослойного текстового поля

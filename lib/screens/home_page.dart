@@ -433,22 +433,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSearchBox() {
-    return TextField(
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.grey[200],
-        prefixIcon: const Icon(Icons.search, color: Colors.grey),
-        hintText: 'Поиск',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      ),
-      onChanged: (value) {
-        // TODO: Реализуйте логику поиска
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed('/search');
       },
+      child: TextField(
+        enabled: false,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey[200],
+          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+          hintText: 'Поиск по задачам и исполнителям',
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        ),
+      ),
     );
   }
 
@@ -575,10 +578,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Iconsax.eye, size: 18, color: Colors.black),
+                        const Icon(Iconsax.eye, size: 18, color: Colors.black),
                         const SizedBox(width: 8),
                         Text(
-                          'Прочитали ' + announcement.readBy.length.toString(),
+                          'Прочитали ${announcement.readBy.length}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -605,7 +608,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Text(
                      UserService.to.currentUser!.role=='Директор'?'Посмотреть':'Прочитать',
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.normal),
                   ),
                 ),
@@ -900,9 +903,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 radius: 17,
                 backgroundImage: (project.project.avatarUrl != null &&
                         project.project.avatarUrl!.isNotEmpty)
-                    ? NetworkImage(ProjectService()
-                            .getAvatarUrl(project.project.avatarUrl!) ??
-                        '')
+                    ? NetworkImage(project.project.avatarUrl!)
                     : null,
                 child: (project.project.avatarUrl == null ||
                         project.project.avatarUrl!.isEmpty)

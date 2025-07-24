@@ -34,10 +34,10 @@ class RequestService {
   }
 
   Future<TaskValidate?> getValidate(
-      String task_id, TaskStatus status) async {
+      String taskId, TaskStatus status) async {
     try {
       final validateResponse =
-      await _client.from('task_validate').select('*').eq('task_id', task_id);
+      await _client.from('task_validate').select('*').eq('task_id', taskId);
 
       return validateResponse
           .map((data) => TaskValidate.fromJson(data)).first;
@@ -81,11 +81,11 @@ class RequestService {
   }
 
   Future<List<Correction>> getCorrection(
-      String task_id, TaskStatus status) async {
+      String taskId, TaskStatus status) async {
     try {
       final statusString = status.toString().substring(11);
       final correctionResponse =
-          await _client.from('correction').select('*').eq('task_id', task_id);
+          await _client.from('correction').select('*').eq('task_id', taskId);
       //.eq('status', statusString);
 
       return correctionResponse
@@ -109,12 +109,12 @@ class RequestService {
   }
 
   Future<void> updateCorrectionByStatus(
-      String task_id, TaskStatus status) async {
+      String taskId, TaskStatus status) async {
     try {
       final latestCorrection = await _client
           .from('correction')
           .select('date')
-          .eq('task_id', task_id)
+          .eq('task_id', taskId)
           .eq('status', status.toString().substring(11))
           .order('date', ascending: false)
           .limit(1)
@@ -125,7 +125,7 @@ class RequestService {
       final response = await _client
           .from('correction')
           .update({'is_done': false})
-          .eq('task_id', task_id)
+          .eq('task_id', taskId)
           .eq('status', status.toString().substring(11))
           .eq('date', latestDate.toIso8601String());
     } on PostgrestException catch (error) {

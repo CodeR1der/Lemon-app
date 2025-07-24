@@ -17,7 +17,7 @@ import 'employee_details_screen.dart';
 class ProjectDetailsScreen extends StatefulWidget {
   final Project project;
 
-  const ProjectDetailsScreen({Key? key, required this.project}) : super(key: key);
+  const ProjectDetailsScreen({super.key, required this.project});
 
   @override
   State<ProjectDetailsScreen> createState() => _ProjectDetailsScreenState();
@@ -242,7 +242,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
                         final isInProject = _tempSelectedEmployees.contains(employee);
                         return CheckboxListTile(
                           secondary: CircleAvatar(
-                            child: Text(employee.name?[0] ?? 'N'),
+                            child: Text(employee.name[0] ?? 'N'),
                           ),
                           title: Text(employee.name ?? 'Без имени'),
                           subtitle: Text(employee.role ?? 'Без роли'),

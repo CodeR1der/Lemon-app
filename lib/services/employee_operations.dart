@@ -41,12 +41,12 @@ class EmployeeService {
   }
 
   // Получение данных сотрудника по userId
-  Future<Employee?> getEmployee(String user_id) async {
+  Future<Employee?> getEmployee(String userId) async {
     try {
       final response = await _client
           .from('employee')
           .select()
-          .eq('user_id', user_id)
+          .eq('user_id', userId)
           .single();
       return Employee.fromJson(response);
     } on PostgrestException catch (error) {
@@ -185,15 +185,15 @@ class EmployeeService {
 
     for (final item in response) {
       if (item['task_team'] != null) {
-        final task_team = item['task_team'];
-        if (task_team['task'] != null && task_team['task']['project'] != null) {
+        final taskTeam = item['task_team'];
+        if (taskTeam['task'] != null && taskTeam['task']['project'] != null) {
           if (projects.isEmpty) {
-            projects.add(task_team['task']['project']);
+            projects.add(taskTeam['task']['project']);
           } else if (projects
               .where((p) =>
-                  p['project_id'] == task_team['task']['project']['project_id'])
+                  p['project_id'] == taskTeam['task']['project']['project_id'])
               .isEmpty) {
-            projects.add(task_team['task']['project']);
+            projects.add(taskTeam['task']['project']);
           }
         }
       } else if (item['task'] != null && item['task']['project'] != null) {

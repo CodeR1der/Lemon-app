@@ -44,6 +44,11 @@ class ProjectService {
         });
       }
 
+      if (project.avatarUrl != null) {
+        var filename = uploadAvatar(File(project.avatarUrl!), project.projectId);
+        project.avatarUrl = 'https://xusyxtgdmtpupmroemzb.supabase.co/storage/v1/object/public/Avatars/$filename';
+      }
+
       print('Проект успешно добавлен');
     } on PostgrestException catch (error) {
       print('Ошибка при добавлении проекта: ${error.message}');
@@ -146,7 +151,7 @@ class ProjectService {
         .from('project')
         .select()
         .eq('project_id', projectId)
-        .single() as Map<String, dynamic>;
+        .single();
     return Project.fromJson(response);
   }
 
@@ -158,7 +163,7 @@ class ProjectService {
           .from('project_description')
           .select()
           .eq('project_description_id', projectDescriptionId)
-          .single() as Map<String, dynamic>;
+          .single();
       return ProjectDescription.fromJson(response);
     } on PostgrestException catch (error) {
       print('Ошибка при получении данных описания проекта: ${error.message}');
@@ -265,7 +270,14 @@ class ProjectService {
 
   Future<int> getAllWorkersCount(String projectId) async {
     try {
-      //await
+      final projectResponse = await _client
+          .from('project_team')
+          .select('employee_id')
+          .eq('project_id', projectId);
+
+      // Если ответ содержит список, возвращаем его длину
+      return projectResponse.length;
+          // Если ответ в другом формате, возможно нужно адаптировать
       return 0;
     } catch (e) {
       print('Error getting count of project workers: $e');
