@@ -15,7 +15,6 @@ import '../models/task_status.dart';
 import '../services/request_operation.dart';
 import '../services/task_provider.dart';
 import '../task_screens/TaskDescriptionTab.dart';
-import 'EditTaskDetailsScreen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {
   final Correction correction;
@@ -47,10 +46,10 @@ class CorrectionDetailsScreen extends StatelessWidget {
       quality: 75,
     );
   }
-  
+
   void _showEditDescriptionDialog(BuildContext context) {
     final TextEditingController _descriptionController =
-        TextEditingController(text: task.description);
+    TextEditingController(text: task.description);
 
     showDialog(
       context: context,
@@ -92,9 +91,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
 
                 try {
                   final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
+                  Provider.of<TaskProvider>(context, listen: false);
                   final updatedTask =
-                      task.copyWith(description: newDescription);
+                  task.copyWith(description: newDescription);
                   await taskProvider.updateTask(updatedTask);
                   await TaskService().updateTask(updatedTask);
                   Navigator.of(context).pop();
@@ -190,7 +189,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF9F9F9),
                       borderRadius: BorderRadius.circular(10),
@@ -207,8 +206,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               if (correction.attachments
-                      ?.where((file) => _isImage(file))
-                      .isEmpty ??
+                  ?.where((file) => _isImage(file))
+                  .isEmpty ??
                   true)
                 const Text('Нет фотографий')
               else
@@ -246,9 +245,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
-                                color: Colors.grey.shade200,
-                                child: const Icon(Icons.broken_image, size: 32),
-                              ),
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(Icons.broken_image, size: 32),
+                                  ),
                             ),
                           ),
                         ),
@@ -326,7 +325,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () async {
                   final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
+                  Provider.of<TaskProvider>(context, listen: false);
 
                   if (correction.status == TaskStatus.needTicket) {
                     await taskProvider.updateTaskStatus(
@@ -360,7 +359,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
                 onPressed: () {
                   if (correction.status == TaskStatus.needTicket) {
                     final taskProvider =
-                        Provider.of<TaskProvider>(context, listen: false);
+                    Provider.of<TaskProvider>(context, listen: false);
                     taskProvider.updateTaskStatus(
                         task, TaskStatus.needExplanation);
                     RequestService()
@@ -368,8 +367,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
                     RequestService()
                         .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                   } else {
-                    _navigateToEditDescriptionScreen(context);
+                    _showEditDescriptionDialog(context);
                   }
+                  Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -480,7 +480,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
+                  Provider.of<TaskProvider>(context, listen: false);
                   taskProvider.updateTaskStatus(task, TaskStatus.completed);
                   RequestService().updateCorrection(correction..isDone = true);
                   Navigator.pop(context, task);
@@ -507,7 +507,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
+                  Provider.of<TaskProvider>(context, listen: false);
                   taskProvider.updateTaskStatus(task, TaskStatus.notRead);
                   RequestService().updateCorrection(correction..isDone = true);
                   Navigator.pop(context, task);
@@ -531,7 +531,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
+                  Provider.of<TaskProvider>(context, listen: false);
                   if (correction.status == TaskStatus.needTicket) {
                     taskProvider.updateTaskStatus(
                         task, TaskStatus.needExplanation);

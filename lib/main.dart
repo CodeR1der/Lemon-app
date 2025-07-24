@@ -82,8 +82,6 @@ class MyApp extends StatelessWidget {
               name: '/create_announcement',
               page: () => const CreateAnnouncementScreen()),
           GetPage(name: '/search', page: () => const SearchScreen()),
-
-              page: () => CreateAnnouncementScreen()),
           GetPage(
               name: '/announcement_detail',
               page: () => AnnouncementDetailScreen(
