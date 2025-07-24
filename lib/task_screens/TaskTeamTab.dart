@@ -19,7 +19,7 @@ class TaskTeamTab extends StatefulWidget {
 
 class _TaskTeamTab extends State<TaskTeamTab> {
   List<Employee> _allEmployees = [];
-  List<Employee> _selectedEmployees = [UserService.to.currentUser!];
+  final List<Employee> _selectedEmployees = [UserService.to.currentUser!];
   bool _isLoadingEmployees = false;
   final EmployeeService _employeeService = EmployeeService();
 
@@ -171,7 +171,7 @@ class _TaskTeamTab extends State<TaskTeamTab> {
                                   });
                                 },
                                 secondary: CircleAvatar(
-                                  child: Text(employee.name?[0] ?? 'N'),
+                                  child: Text(employee.name[0] ?? 'N'),
                                 ),
                               );
                             },

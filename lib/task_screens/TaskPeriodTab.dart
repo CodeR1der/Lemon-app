@@ -16,7 +16,7 @@ class TaskPeriodTab extends StatelessWidget {
   }
   @override
   Widget build(BuildContext context) {
-    final formattedDate;
+    final String formattedDate;
     if(task.deadline == null)
       {
         formattedDate = DateFormat('dd.MM.yyyy').format(task.endDate);

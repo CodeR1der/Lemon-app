@@ -18,8 +18,8 @@ class TaskListByStatusScreen extends StatelessWidget {
     this.userId,
     this.projectId,
     required this.status,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   Widget _buildTaskCard(BuildContext context, Task task) {
     return GestureDetector(

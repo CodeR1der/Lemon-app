@@ -13,7 +13,7 @@ class EmployeeDetailScreen extends StatefulWidget {
   final Employee employee;
   final EmployeeService _employeeService = EmployeeService();
 
-  EmployeeDetailScreen({Key? key, required this.employee}) : super(key: key);
+  EmployeeDetailScreen({super.key, required this.employee});
 
   @override
   _EmployeeDetailScreenState createState() => _EmployeeDetailScreenState();

@@ -41,11 +41,11 @@ class _ProjectSelectionScreenState extends State<ProjectSelectionScreen> {
           future: projectsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              return Center(child: Text('Ошибка загрузки проектов'));
+              return const Center(child: Text('Ошибка загрузки проектов'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text('Нет доступных проектов'));
+              return const Center(child: Text('Нет доступных проектов'));
             }
 
             final projects = snapshot.data!;

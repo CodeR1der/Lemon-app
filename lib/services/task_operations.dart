@@ -42,7 +42,7 @@ class TaskService {
 
       return Task.fromJson(response);
     } catch (e) {
-      print('Ошибка при загрузке задачи: ${e}');
+      print('Ошибка при загрузке задачи: $e');
       rethrow;
     }
   }
@@ -506,6 +506,7 @@ class TaskService {
     } on PostgrestException catch (error) {
       log(error.message);
     }
+    return null;
   }
 
   Future<List<Employee>> getAllEmployees() async {
@@ -583,6 +584,34 @@ class TaskService {
       return projects;
     } catch (e) {
       print('Ошибка при получении списка проектов: $e');
+      return [];
+    }
+  }
+
+  Future<List<Task>> getAllTasks() async {
+    try {
+      final response = await _client.from('task').select('''
+      *,
+      project:project_id(*,
+        project_description_id:project_description_id(*),
+        project_team:project_team(
+        *,
+        employee:employee_id(*)
+      )
+      ),
+      task_team: task_team!task_team_task_id_fkey(*,
+        creator_id:creator_id(*),
+        communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
+        team_members:team_id(*,
+          employee_id:employee_id(*)
+        )
+      )
+    ''');
+
+      return response.map((taskData) => Task.fromJson(taskData)).toList();
+    } catch (e) {
+      print('Ошибка при получении всех задач: $e');
       return [];
     }
   }
@@ -676,8 +705,9 @@ class TaskService {
       final categories = await TaskCategories().getCategoriesList(
           'Исполнитель');
       for (var category in categories) {
-        if (category.status == TaskStatus.completed)
+        if (category.status == TaskStatus.completed) {
           continue; // Исключаем архив
+        }
         taskCounts[category.status] = 0;
       }
 

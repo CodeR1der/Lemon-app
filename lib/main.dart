@@ -10,6 +10,7 @@ import 'package:task_tracker/screens/employees_screen.dart';
 import 'package:task_tracker/screens/home_page.dart';
 import 'package:task_tracker/screens/profile_screen.dart';
 import 'package:task_tracker/screens/projects_screen.dart';
+import 'package:task_tracker/screens/search_screen.dart';
 import 'package:task_tracker/screens/tasks_screen.dart';
 import 'package:task_tracker/services/project_provider.dart';
 import 'package:task_tracker/services/task_provider.dart';
@@ -39,6 +40,8 @@ class InitialBindings extends Bindings {
 class MyApp extends StatelessWidget {
   final SupabaseClient supabaseClient = Supabase.instance.client;
 
+  MyApp({super.key});
+
   Future<void> _initializeApp() async {
     try {
       AuthWrapper(
@@ -66,7 +69,7 @@ class MyApp extends StatelessWidget {
           GetPage(
               name: TaskTitleScreen.routeName,
               page: () => const TaskTitleScreen()),
-          GetPage(name: '/projects', page: () => ProjectScreen()),
+          GetPage(name: '/projects', page: () => const ProjectScreen()),
           GetPage(
               name: '/tasks',
               page: () => TasksScreen(user: UserService.to.currentUser!)),
@@ -74,9 +77,12 @@ class MyApp extends StatelessWidget {
           GetPage(
               name: '/profile',
               page: () => ProfileScreen(user: UserService.to.currentUser!)),
-          GetPage(name: '/homePage', page: () => HomeScreen()),
+          GetPage(name: '/homePage', page: () => const HomeScreen()),
           GetPage(
               name: '/create_announcement',
+              page: () => const CreateAnnouncementScreen()),
+          GetPage(name: '/search', page: () => const SearchScreen()),
+
               page: () => CreateAnnouncementScreen()),
           GetPage(
               name: '/announcement_detail',

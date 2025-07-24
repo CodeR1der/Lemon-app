@@ -40,7 +40,7 @@ class _ChatTabState extends State<ChatTab> {
           .order('created_at', ascending: true);
       if (response.isNotEmpty) {
         _messages.assignAll(response
-            .map((json) => ChatMessage.fromJson(json as Map<String, dynamic>))
+            .map((json) => ChatMessage.fromJson(json))
             .toList());
       }
     } catch (e) {
@@ -64,11 +64,9 @@ class _ChatTabState extends State<ChatTab> {
       ),
       callback: (payload) {
         final newData = payload.newRecord;
-        if (newData != null) {
-          final newMessage = ChatMessage.fromJson(newData);
-          _messages.add(newMessage);
-        }
-      },
+        final newMessage = ChatMessage.fromJson(newData);
+        _messages.add(newMessage);
+            },
     )
         .subscribe((status, [error]) {
       if (status == 'SUBSCRIBED') {

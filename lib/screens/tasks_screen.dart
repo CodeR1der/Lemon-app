@@ -9,7 +9,7 @@ import 'position_tasks_tab.dart';
 class TasksScreen extends StatefulWidget {
   final Employee user;
 
-  const TasksScreen({required this.user, Key? key}) : super(key: key);
+  const TasksScreen({required this.user, super.key});
 
   @override
   State<TasksScreen> createState() => _TasksScreenState();
@@ -29,10 +29,10 @@ class _TasksScreenState extends State<TasksScreen> {
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             tabs: [
-              if (user.role == "Коммуникатор") Tab(text: 'Я коммуникатор'),
-              Tab(text: 'Я исполнитель'),
-              Tab(text: 'Я постановщик'),
-              Tab(text: 'Я наблюдатель'),
+              if (user.role == "Коммуникатор") const Tab(text: 'Я коммуникатор'),
+              const Tab(text: 'Я исполнитель'),
+              const Tab(text: 'Я постановщик'),
+              const Tab(text: 'Я наблюдатель'),
             ],
           ),
         ),

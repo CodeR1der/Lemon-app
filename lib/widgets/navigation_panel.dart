@@ -99,7 +99,7 @@ class NavigationController extends GetxController {
       // Initialize screens with currentUser
       _screens.addAll([
         const HomeScreen(),
-        ProjectScreen(),
+        const ProjectScreen(),
         TasksScreen(user: UserService.to.currentUser!),
         EmployeesScreen(),
         ProfileScreen(user: UserService.to.currentUser!),

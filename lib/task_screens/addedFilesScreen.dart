@@ -51,7 +51,7 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
       final filePath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.m4a'; // имя файла
 
       await _audioRecorder.start(
-        RecordConfig(),
+        const RecordConfig(),
         path: filePath,
       );
 

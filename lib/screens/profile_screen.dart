@@ -111,7 +111,7 @@ class EditProfileState implements ProfileState {
 class ProfileScreen extends StatefulWidget {
   final Employee user;
 
-  const ProfileScreen({required this.user, Key? key}) : super(key: key);
+  const ProfileScreen({required this.user, super.key});
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
