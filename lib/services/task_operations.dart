@@ -164,7 +164,7 @@ class TaskService {
         if (taskIdsResponse.isEmpty) return [];
 
         final taskIds =
-            taskIdsResponse.map((item) => item['task_id'] as String).toList();
+        taskIdsResponse.map((item) => item['task_id'] as String).toList();
 
         // 2. Получаем полные данные задач с фильтрацией по статусу
         final tasksResponse = await _client.from('task').select('''
@@ -199,7 +199,7 @@ class TaskService {
         if (taskIdsResponse.isEmpty) return [];
 
         final taskIds =
-            taskIdsResponse.map((item) => item['task_id'] as String).toList();
+        taskIdsResponse.map((item) => item['task_id'] as String).toList();
 
         final tasksResponse = await _client.from('task').select('''
       *,
@@ -524,7 +524,7 @@ class TaskService {
   Future<List<Task>> getTasksByProjectId(String projectId) async {
     try {
       final List<Map<String, dynamic>> response =
-          await _client.from('task').select('''
+      await _client.from('task').select('''
       *,
       project:project_id(*,
         project_description_id:project_description_id(*),
@@ -612,7 +612,7 @@ class TaskService {
         if (statusStr != null) {
           try {
             final status = TaskStatus.values.firstWhere(
-              (e) => e.toString().split('.').last == statusStr,
+                  (e) => e.toString().split('.').last == statusStr,
             );
             counts[status] = (counts[status] ?? 0) + 1;
           } catch (_) {

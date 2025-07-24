@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_status.dart';
 
 import '../models/task.dart';
 import '../models/task_role.dart';
 import '../services/task_operations.dart';
+import '../services/task_provider.dart';
 import 'choose_task_deadline_screen.dart';
 
 class QueueScreen extends StatefulWidget {
@@ -106,18 +108,21 @@ class _QueueScreenState extends State<QueueScreen> {
                   itemCount: maxPosition,
                   itemBuilder: (context, index) {
                     final position = index + 1;
-                    return RadioListTile<int>(
-                      title: Text('$position'),
-                      value: position,
-                      groupValue: _selectedPosition,
-                      onChanged: (value) {
-                        if (value != null) {
-                          _addToQueue(value);
-                          Navigator.pop(context);
-                          _currentTask.changeStatus(TaskStatus.queue);
-                          setState(() {}); // Обновляем UI
-                        }
-                      },
+                    return Consumer<TaskProvider>(
+                      builder: (context, taskProvider, child) =>
+                          RadioListTile<int>(
+                        title: Text('$position'),
+                        value: position,
+                        groupValue: _selectedPosition,
+                        onChanged: (value) {
+                          if (value != null) {
+                            _addToQueue(value);
+                            Navigator.pop(context);
+                            taskProvider.updateTaskStatus(
+                                _currentTask, TaskStatus.queue);
+                          }
+                        },
+                      ),
                     );
                   },
                 ),
@@ -136,50 +141,53 @@ class _QueueScreenState extends State<QueueScreen> {
         title: const Text('Очередь задач'),
         centerTitle: true,
       ),
-      body: FutureBuilder<List<Task>>(
-        future: _queuedTasks,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<List<Task>>(
+          future: _queuedTasks,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (snapshot.hasError) {
-            return Center(child: Text('Ошибка: ${snapshot.error}'));
-          }
+            if (snapshot.hasError) {
+              return Center(child: Text('Ошибка: ${snapshot.error}'));
+            }
 
-          final tasks = snapshot.data ?? [];
+            final tasks = snapshot.data ?? [];
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                if(_currentTask.status == TaskStatus.inOrder)   ...[
-                _buildTaskCard(task: _currentTask, count: tasks.length),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12.0),
-                  child: Divider(),
-                ),
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  if (_currentTask.status == TaskStatus.inOrder) ...[
+                    _buildTaskCard(task: _currentTask, count: tasks.length),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12.0),
+                      child: Divider(),
+                    ),
+                  ],
+                  if (tasks.isEmpty)
+                    const Center(child: Text('Нет задач в очереди'))
+                  else
+                    ...tasks.asMap().entries.map((entry) {
+                      final queueTask = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: _buildQueueCard(
+                          queueNumber: queueTask.queuePosition,
+                          title: queueTask.taskName,
+                          deadline: queueTask.deadline,
+                          priority: queueTask.priorityToString(),
+                          project: queueTask.project!.name,
+                        ),
+                      );
+                    }),
                 ],
-                if (tasks.isEmpty)
-                  const Center(child: Text('Нет задач в очереди'))
-                else
-                  ...tasks.asMap().entries.map((entry) {
-                    final queueTask = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: _buildQueueCard(
-                        queueNumber: queueTask.queuePosition,
-                        title: queueTask.taskName,
-                        deadline: queueTask.endDate,
-                        priority: queueTask.priorityToString(),
-                        project: queueTask.project!.name,
-                      ),
-                    );
-                  }),
-              ],
-            ),
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -346,7 +354,8 @@ class _QueueScreenState extends State<QueueScreen> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(12.0),

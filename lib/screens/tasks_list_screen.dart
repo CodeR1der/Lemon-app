@@ -47,15 +47,19 @@ class TaskListByStatusScreen extends StatelessWidget {
             children: [
               Text(
                 'Статус',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey.shade600),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(color: Colors.grey.shade600),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const CircleAvatar(radius: 16, backgroundColor: Colors.blue),
-                  const SizedBox(width: 8),
+                  //const CircleAvatar(radius: 16, backgroundColor: Colors.blue),
+                  //const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEBEDF0),
                       borderRadius: BorderRadius.circular(12),
@@ -65,50 +69,72 @@ class TaskListByStatusScreen extends StatelessWidget {
                       children: [
                         Icon(StatusHelper.getStatusIcon(task.status), size: 16),
                         const SizedBox(width: 6),
-                        Text(StatusHelper.displayName(task.status), style: Theme.of(context).textTheme.bodySmall),
+                        Text(StatusHelper.displayName(task.status),
+                            style: Theme.of(context).textTheme.bodySmall),
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              if (position == RoleHelper.convertToString(TaskRole.communicator) && status == TaskStatus.queue) ...[
+              if (position ==
+                      RoleHelper.convertToString(TaskRole.communicator) &&
+                  status == TaskStatus.queue) ...[
                 Text(
                   'Очередность задачи',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey.shade600),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEBEDF0),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     task.queuePosition.toString(),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: Colors.black),
                   ),
                 ),
               ],
               const SizedBox(height: 16),
               Text(
                 'Название задачи',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey.shade600),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(color: Colors.grey.shade600),
               ),
               const SizedBox(height: 4),
               Text(
                 task.taskName,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: Colors.black),
               ),
               const SizedBox(height: 16),
               Text(
                 'Проект',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey.shade600),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(color: Colors.grey.shade600),
               ),
               const SizedBox(height: 4),
               Text(
                 task.project?.name ?? 'Не указан',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: Colors.black),
               ),
             ],
           ),
@@ -125,48 +151,55 @@ class TaskListByStatusScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         title: Text(StatusHelper.displayName(status)),
       ),
-      body: Consumer<TaskProvider>(
-        builder: (context, taskProvider, child) {
-          var tasks = [];
+      body: SafeArea(
+        top: false,
+        child: Consumer<TaskProvider>(
+          builder: (context, taskProvider, child) {
+            var tasks = [];
 
-          if (taskProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (taskProvider.error != null) {
-            return Center(child: Text('Ошибка: ${taskProvider.error}'));
-          }
-          if (status == TaskStatus.controlPoint && (position == TaskRole.executor || position == TaskRole.creator)) {
-            tasks = taskProvider.getTasksByStatus(
-              TaskStatus.atWork,
-              projectId: projectId,
-              userId: userId,
-              position: position,
+            if (taskProvider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (taskProvider.error != null) {
+              return Center(child: Text('Ошибка: ${taskProvider.error}'));
+            }
+            if (status == TaskStatus.controlPoint &&
+                (position == TaskRole.executor ||
+                    position == TaskRole.creator)) {
+              tasks = taskProvider.getTasksByStatus(
+                TaskStatus.atWork,
+                projectId: projectId,
+                userId: userId,
+                position: position,
+              );
+              tasks += taskProvider.getTasksByStatus(
+                status,
+                projectId: projectId,
+                userId: userId,
+                position: position,
+              );
+            } else {
+              tasks = taskProvider.getTasksByStatus(
+                status,
+                projectId: projectId,
+                userId: userId,
+                position: position,
+              );
+            }
+            print(
+                'Найдено задач: ${tasks.length} для статуса: $status, position: $position, userId: $userId');
+            if (tasks.isEmpty) {
+              return const Center(child: Text('Нет задач с таким статусом'));
+            }
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children:
+                    tasks.map((task) => _buildTaskCard(context, task)).toList(),
+              ),
             );
-            tasks += taskProvider.getTasksByStatus(
-              status,
-              projectId: projectId,
-              userId: userId,
-              position: position,
-            );
-          } else {
-            tasks = taskProvider.getTasksByStatus(
-              status,
-              projectId: projectId,
-              userId: userId,
-              position: position,
-            );
-          }
-          print('Найдено задач: ${tasks.length} для статуса: $status, position: $position, userId: $userId');
-          if (tasks.isEmpty) {
-            return const Center(child: Text('Нет задач с таким статусом'));
-          }
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: tasks.map((task) => _buildTaskCard(context, task)).toList(),
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }

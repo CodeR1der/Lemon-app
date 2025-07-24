@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/screens/task_details_screen.dart';
 
 import '../models/task.dart';
 import '../models/task_status.dart';
 import '../services/task_operations.dart';
+import '../services/task_provider.dart';
 
 class QueueScreen extends StatefulWidget {
   final String position;
   final String userId;
 
   const QueueScreen({
+    super.key,
     required this.position,
     required this.userId,
   });
@@ -46,7 +49,8 @@ class _QueueScreenState extends State<QueueScreen> {
   Widget _buildTaskCard(Task task) {
     // Безопасное получение queuePosition
     final queuePosition = task.queuePosition;
-    final queuePositionInt = queuePosition != null ? int.tryParse(queuePosition) : null;
+    final queuePositionInt =
+        queuePosition != null ? int.tryParse(queuePosition) : null;
 
     return GestureDetector(
       onTap: () {
@@ -78,8 +82,8 @@ class _QueueScreenState extends State<QueueScreen> {
               Text(
                 'Статус',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+                      color: Colors.grey.shade600,
+                    ),
               ),
               const SizedBox(height: 4),
               Row(
@@ -87,7 +91,8 @@ class _QueueScreenState extends State<QueueScreen> {
                   const CircleAvatar(radius: 16, backgroundColor: Colors.blue),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEBEDF0),
                       borderRadius: BorderRadius.circular(12),
@@ -111,12 +116,13 @@ class _QueueScreenState extends State<QueueScreen> {
                 Text(
                   'Очередность задачи',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
+                        color: Colors.grey.shade600,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEBEDF0),
                     borderRadius: BorderRadius.circular(12),
@@ -124,8 +130,8 @@ class _QueueScreenState extends State<QueueScreen> {
                   child: Text(
                     queuePosition,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.black,
-                    ),
+                          color: Colors.black,
+                        ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -135,15 +141,15 @@ class _QueueScreenState extends State<QueueScreen> {
               Text(
                 'Название задачи',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+                      color: Colors.grey.shade600,
+                    ),
               ),
               const SizedBox(height: 4),
               Text(
                 task.taskName,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.black,
-                ),
+                      color: Colors.black,
+                    ),
               ),
               const SizedBox(height: 16),
 
@@ -151,44 +157,47 @@ class _QueueScreenState extends State<QueueScreen> {
               Text(
                 'Проект',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+                      color: Colors.grey.shade600,
+                    ),
               ),
               const SizedBox(height: 4),
               Text(
                 task.project?.name ?? 'Не указан',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.black,
-                ),
+                      color: Colors.black,
+                    ),
               ),
 
               if (queuePositionInt == 1) ...[
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    TaskService().updateQueuePosTask(task..queuePosition=null);
-                    task.changeStatus(TaskStatus.atWork);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(width: 8),
-                      Text(
-                        'Взять задачу в работу',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
+                Consumer<TaskProvider>(
+                  builder: (context, taskProvider, child) => ElevatedButton(
+                    onPressed: () {
+                      TaskService()
+                          .updateQueuePosTask(task..queuePosition = null);
+                      taskProvider.updateTaskStatus(task, TaskStatus.atWork);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Взять задачу в работу',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ]
@@ -210,51 +219,55 @@ class _QueueScreenState extends State<QueueScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: FutureBuilder<List<List<Task>>>(
-        future: _tasksFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<List<List<Task>>>(
+          future: _tasksFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (snapshot.hasError) {
-            return Center(child: Text('Ошибка загрузки задач: ${snapshot.error}'));
-          }
+            if (snapshot.hasError) {
+              return Center(
+                  child: Text('Ошибка загрузки задач: ${snapshot.error}'));
+            }
 
-          final tasksInOrder = snapshot.data![0];
-          final tasksQueue = snapshot.data![1];
+            final tasksInOrder = snapshot.data![0];
+            final tasksQueue = snapshot.data![1];
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                if (tasksInOrder.isNotEmpty) ...[
-                  const Row(
-                    children: [
-                      Text('В очереди на выполнение',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ...tasksInOrder.map(_buildTaskCard),
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  if (tasksInOrder.isNotEmpty) ...[
+                    const Row(
+                      children: [
+                        Text('В очереди на выполнение',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...tasksInOrder.map(_buildTaskCard),
+                  ],
+                  if (tasksQueue.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    const Row(
+                      children: [
+                        Text('В очереди на подтверждение',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...tasksQueue.map(_buildTaskCard),
+                  ],
                 ],
-                if (tasksQueue.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  const Row(
-                    children: [
-                      Text('В очереди на подтверждение',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ...tasksQueue.map(_buildTaskCard),
-                ],
-              ],
-            ),
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }

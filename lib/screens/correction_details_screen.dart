@@ -8,7 +8,6 @@ import 'package:task_tracker/models/task_role.dart';
 import 'package:task_tracker/screens/add_extra_time_screen.dart';
 import 'package:task_tracker/screens/change_executer_screen.dart';
 import 'package:task_tracker/services/task_operations.dart';
-import 'package:task_tracker/services/user_service.dart';
 
 import '../models/correction.dart';
 import '../models/task.dart';
@@ -31,7 +30,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
   });
 
   bool _isImage(String fileName) {
-    return fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png');
+    return fileName.endsWith('.jpg') ||
+        fileName.endsWith('.jpeg') ||
+        fileName.endsWith('.png');
   }
 
   bool _isVideo(String fileName) {
@@ -46,20 +47,72 @@ class CorrectionDetailsScreen extends StatelessWidget {
       quality: 75,
     );
   }
+  
+  void _showEditDescriptionDialog(BuildContext context) {
+    final TextEditingController _descriptionController =
+        TextEditingController(text: task.description);
 
-  void _navigateToEditDescriptionScreen(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditTaskDetailsScreen(task: task),
-      ),
-    ).then((updatedTask) {
-      if (updatedTask != null && updatedTask is Task) {
-        // Обновляем задачу, если были изменения
-        Provider.of<TaskProvider>(context, listen: false)
-            .updateTask(updatedTask);
-      }
-    });
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(task.taskName),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _descriptionController,
+                maxLines: 5,
+                decoration: const InputDecoration(
+                  labelText: 'Описание задачи',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Отмена'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newDescription = _descriptionController.text.trim();
+                if (newDescription.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Описание не может быть пустым')),
+                  );
+                  return;
+                }
+
+                try {
+                  final taskProvider =
+                      Provider.of<TaskProvider>(context, listen: false);
+                  final updatedTask =
+                      task.copyWith(description: newDescription);
+                  await taskProvider.updateTask(updatedTask);
+                  await TaskService().updateTask(updatedTask);
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Описание обновлено')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Ошибка обновления: $e')),
+                  );
+                }
+              },
+              child: const Text('Сохранить'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -84,105 +137,135 @@ class CorrectionDetailsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(correction.status == TaskStatus.needTicket ? "Письмо-решение" : 'Правки по задаче'),
+        title: Text(correction.status == TaskStatus.needTicket
+            ? "Письмо-решение"
+            : 'Правки по задаче'),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (correction.status == TaskStatus.needTicket) ...[
-              Text(
-                'Решение',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ] else if (correction.status == TaskStatus.overdue) ...[
-              Text(
-                'Объяснительная',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ] else ...[
-              Text(
-                'Описание ошибки',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ],
-            const SizedBox(height: 12),
-            Text(
-              correction.description ?? 'Нет описания',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Text('Фотографии', style: Theme.of(context).textTheme.titleSmall),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9F9F9),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '${correction.attachments?.where((file) => _isImage(file)).length ?? 0}',
-                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (correction.status == TaskStatus.needTicket) ...[
+                Text(
+                  'Решение',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ] else if (correction.status == TaskStatus.overdue) ...[
+                Text(
+                  'Объяснительная',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ] else ...[
+                Text(
+                  'Описание ошибки',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
-            ),
-            const SizedBox(height: 12),
-            if (correction.attachments?.where((file) => _isImage(file)).isEmpty ?? true)
-              const Text('Нет фотографий')
-            else
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
-                ),
-                itemCount: correction.attachments!.where((file) => _isImage(file)).length,
-                itemBuilder: (context, index) {
-                  final photo = correction.attachments!.where((file) => _isImage(file)).toList()[index];
-                  return GestureDetector(
-                    onTap: () => _openPhotoGallery(
-                      context,
-                      index,
-                      correction.attachments!.where((file) => _isImage(file)).toList(),
+              const SizedBox(height: 12),
+              Text(
+                correction.description ?? 'Нет описания',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text('Фотографии',
+                      style: Theme.of(context).textTheme.titleSmall),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9F9F9),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Hero(
-                      tag: 'correction_photo_$index',
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: Container(
-                          color: Colors.white,
-                          child: Image.network(
-                            RequestService().getAttachment(photo),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: Colors.grey.shade200,
-                              child: const Icon(Icons.broken_image, size: 32),
+                    child: Text(
+                      '${correction.attachments?.where((file) => _isImage(file)).length ?? 0}',
+                      style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (correction.attachments
+                      ?.where((file) => _isImage(file))
+                      .isEmpty ??
+                  true)
+                const Text('Нет фотографий')
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 8.0,
+                    mainAxisSpacing: 8.0,
+                  ),
+                  itemCount: correction.attachments!
+                      .where((file) => _isImage(file))
+                      .length,
+                  itemBuilder: (context, index) {
+                    final photo = correction.attachments!
+                        .where((file) => _isImage(file))
+                        .toList()[index];
+                    return GestureDetector(
+                      onTap: () => _openPhotoGallery(
+                        context,
+                        index,
+                        correction.attachments!
+                            .where((file) => _isImage(file))
+                            .toList(),
+                      ),
+                      child: Hero(
+                        tag: 'correction_photo_$index',
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: Container(
+                            color: Colors.white,
+                            child: Image.network(
+                              RequestService().getAttachment(photo),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                color: Colors.grey.shade200,
+                                child: const Icon(Icons.broken_image, size: 32),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-          ],
+                    );
+                  },
+                ),
+            ],
+          ),
         ),
       ),
       bottomSheet: bottomSheet,
     );
   }
 
-  void _openPhotoGallery(BuildContext context, int initialIndex, List<String> files) {
+  void _openPhotoGallery(
+      BuildContext context, int initialIndex, List<String> files) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -194,7 +277,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _openVideoGallery(BuildContext context, int initialIndex, List<String> videoUrls) {
+  void _openVideoGallery(
+      BuildContext context, int initialIndex, List<String> videoUrls) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -226,7 +310,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
@@ -240,13 +325,17 @@ class CorrectionDetailsScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+                  final taskProvider =
+                      Provider.of<TaskProvider>(context, listen: false);
 
                   if (correction.status == TaskStatus.needTicket) {
-                    await taskProvider.updateTaskStatus(task, TaskStatus.notRead);
-                    RequestService().updateCorrection(correction..isDone = true);
+                    await taskProvider.updateTaskStatus(
+                        task, TaskStatus.notRead);
+                    RequestService()
+                        .updateCorrection(correction..isDone = true);
                   } else {
-                    await taskProvider.updateTaskStatus(task, TaskStatus.newTask);
+                    await taskProvider.updateTaskStatus(
+                        task, TaskStatus.newTask);
                   }
 
                   Navigator.pop(context, task);
@@ -254,7 +343,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
@@ -269,9 +359,14 @@ class CorrectionDetailsScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   if (correction.status == TaskStatus.needTicket) {
-                    task.changeStatus(TaskStatus.needExplanation);
-                    RequestService().updateCorrection(correction..isDone = true);
-                    RequestService().updateCorrectionByStatus(task.id, TaskStatus.notRead);
+                    final taskProvider =
+                        Provider.of<TaskProvider>(context, listen: false);
+                    taskProvider.updateTaskStatus(
+                        task, TaskStatus.needExplanation);
+                    RequestService()
+                        .updateCorrection(correction..isDone = true);
+                    RequestService()
+                        .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                   } else {
                     _navigateToEditDescriptionScreen(context);
                   }
@@ -279,12 +374,16 @@ class CorrectionDetailsScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.grey,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
-                  correction.status == TaskStatus.needTicket ? 'Не принять' : 'Отредактировать задачу',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  correction.status == TaskStatus.needTicket
+                      ? 'Не принять'
+                      : 'Отредактировать задачу',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -313,7 +412,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AddExtraTimeScreen(task: task, correction: correction),
+                      builder: (context) => AddExtraTimeScreen(
+                          task: task, correction: correction),
                     ),
                   ).then((result) {
                     if (result != null && result is Map<String, dynamic>) {
@@ -327,7 +427,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text(
@@ -344,7 +445,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ChangeExecuterScreen(task: task, correction: correction),
+                      builder: (context) => ChangeExecuterScreen(
+                          task: task, correction: correction),
                     ),
                   ).then((result) {
                     if (result != null && result is Map<String, dynamic>) {
@@ -359,12 +461,16 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   foregroundColor: Colors.grey,
                   side: const BorderSide(color: Colors.grey, width: 1),
                   backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text(
                   "Заменить исполнителя",
-                  style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -373,19 +479,25 @@ class CorrectionDetailsScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  task.changeStatus(TaskStatus.completed);
+                  final taskProvider =
+                      Provider.of<TaskProvider>(context, listen: false);
+                  taskProvider.updateTaskStatus(task, TaskStatus.completed);
                   RequestService().updateCorrection(correction..isDone = true);
                   Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.grey,
                   backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text(
                   "Завершить задачу и сдать в архив",
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -394,14 +506,17 @@ class CorrectionDetailsScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  task.changeStatus(TaskStatus.notRead);
+                  final taskProvider =
+                      Provider.of<TaskProvider>(context, listen: false);
+                  taskProvider.updateTaskStatus(task, TaskStatus.notRead);
                   RequestService().updateCorrection(correction..isDone = true);
                   Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text(
@@ -415,12 +530,17 @@ class CorrectionDetailsScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
+                  final taskProvider =
+                      Provider.of<TaskProvider>(context, listen: false);
                   if (correction.status == TaskStatus.needTicket) {
-                    task.changeStatus(TaskStatus.needExplanation);
-                    RequestService().updateCorrection(correction..isDone = true);
-                    RequestService().updateCorrectionByStatus(task.id, TaskStatus.notRead);
+                    taskProvider.updateTaskStatus(
+                        task, TaskStatus.needExplanation);
+                    RequestService()
+                        .updateCorrection(correction..isDone = true);
+                    RequestService()
+                        .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                   } else {
-                    task.changeStatus(TaskStatus.revision);
+                    taskProvider.updateTaskStatus(task, TaskStatus.revision);
                   }
                   Navigator.pop(context, task);
                 },
@@ -428,12 +548,18 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   foregroundColor: Colors.grey,
                   side: const BorderSide(color: Colors.grey, width: 1),
                   backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
-                  correction.status == TaskStatus.needTicket ? "Не принять" : 'Правки выполнены некорректно',
-                  style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
+                  correction.status == TaskStatus.needTicket
+                      ? "Не принять"
+                      : 'Правки выполнены некорректно',
+                  style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ),

@@ -19,15 +19,13 @@ class TaskHistoryScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ...revisions
-                .map((revision) => _buildRevisionItem(context, revision))
-                .toList(),
-          ],
+      body: SafeArea(
+        top: false,
+        child: ListView.builder(
+          itemCount: revisions.length,
+          itemBuilder: (context, index) {
+            return _buildRevisionItem(context, revisions[index]);
+          },
         ),
       ),
     );

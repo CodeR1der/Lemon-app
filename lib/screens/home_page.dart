@@ -83,8 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       _projects.assignAll(projectsWithCounts);
 
-      _announcement.assignAll(await AnnouncementService().getAnnouncements(currentUser.companyId));
-
+      _announcement.assignAll(
+          await AnnouncementService().getAnnouncements(currentUser.companyId));
 
       // Загружаем сотрудников
       final employees = await EmployeeService().getAllEmployees();
@@ -341,36 +341,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
       return Scaffold(
         backgroundColor: Colors.white,
-        body: _errorMessage != null
-            ? Center(child: Text(_errorMessage!))
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-                    _buildUserInfo(),
-                    const SizedBox(height: 20),
-                    _buildSearchBox(),
-                    const SizedBox(height: 20),
-                    _buildAddTaskButton(),
-                    const SizedBox(height: 20),
-                    if(UserService.to.currentUser!.role == 'Директор')...[
-                      _buildAddAnnouncementButton(),
+        body: SafeArea(
+          top: false,
+          child: _errorMessage != null
+              ? Center(child: Text(_errorMessage!))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       const SizedBox(height: 20),
-                    ],
-                    if(_announcement.isNotEmpty) ...[
-                      _buildAnnouncementCard(),
+                      _buildUserInfo(),
                       const SizedBox(height: 20),
+                      _buildSearchBox(),
+                      const SizedBox(height: 20),
+                      _buildAddTaskButton(),
+                      const SizedBox(height: 20),
+                      if (UserService.to.currentUser!.role == 'Директор') ...[
+                        _buildAddAnnouncementButton(),
+                        const SizedBox(height: 20),
+                      ],
+                      if (_announcement.isNotEmpty) ...[
+                        _buildAnnouncementCard(),
+                        const SizedBox(height: 20),
+                      ],
+                      _buildTasksSection(),
+                      const SizedBox(height: 20),
+                      _buildEmployeesSection(),
+                      const SizedBox(height: 20),
+                      _buildProjectsSection(),
                     ],
-                    _buildTasksSection(),
-                    const SizedBox(height: 20),
-                    _buildEmployeesSection(),
-                    const SizedBox(height: 20),
-                    _buildProjectsSection(),
-                  ],
+                  ),
                 ),
-              ),
+        ),
       );
     });
   }
@@ -492,7 +495,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
-          side: const BorderSide(color: Colors.orange,width: 1),
+          side: const BorderSide(color: Colors.orange, width: 1),
           foregroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -507,7 +510,8 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(width: 8),
             Text(
               'Написать объявление',
-              style: TextStyle(fontSize: 16, color: Colors.black, fontFamily: 'Roboto'),
+              style: TextStyle(
+                  fontSize: 16, color: Colors.black, fontFamily: 'Roboto'),
             ),
           ],
         ),
@@ -541,33 +545,41 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Iconsax.flash, size: 18, color: Colors.red),
-                  SizedBox(width: 8),
+                  Icon(
+                      announcement.status == 'closed'
+                          ? Icons.close
+                          : Iconsax.flash,
+                      size: 18,
+                      color: announcement.status == 'closed'
+                          ? Colors.grey
+                          : Colors.red),
+                  const SizedBox(width: 8),
                   Text(
-                    'ОБЪЯВЛЕНИЕ',
+                    announcement.status == 'closed'
+                        ? 'ОБЪЯВЛЕНИЕ ЗАКРЫТО'
+                        : 'ОБЪЯВЛЕНИЕ',
                     style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 14, color: Colors.red
-                    ),
+                        fontFamily: 'Roboto',
+                        fontSize: 14,
+                        color: announcement.status == 'closed'
+                            ? Colors.grey
+                            : Colors.red),
                   ),
                 ],
               ),
-              Text(
-                announcement.title,
-                style: Theme.of(context).textTheme.bodyMedium
-              ),
+              Text(announcement.title,
+                  style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 16),
-              Text(
-                'Cтатус объявления',
-                style: Theme.of(context).textTheme.titleSmall
-              ),
+              Text('Cтатус объявления',
+                  style: Theme.of(context).textTheme.titleSmall),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0, vertical: 6.0),
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(12.0),
@@ -578,7 +590,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icon(Iconsax.eye, size: 18, color: Colors.black),
                         const SizedBox(width: 8),
                         Text(
-                          'Прочитали ' + announcement.readBy.length.toString(),
+                          'Прочитали ${announcement.readBy.length} из ${announcement.selectedEmployees.length}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -591,9 +603,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) => AnnouncementDetailScreen(announcement: announcement,),
-                    ));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AnnouncementDetailScreen(
+                            announcement: announcement,
+                          ),
+                        ));
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.black,
@@ -604,9 +620,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 16, horizontal: 24),
                   ),
                   child: Text(
-                     UserService.to.currentUser!.role=='Директор'?'Посмотреть':'Прочитать',
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.normal),
+                    UserService.to.currentUser!.role == 'Директор'
+                        ? 'Посмотреть'
+                        : 'Прочитать',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
                   ),
                 ),
               ),

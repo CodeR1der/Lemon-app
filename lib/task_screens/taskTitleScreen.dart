@@ -44,6 +44,25 @@ class _TaskTitleScreenState extends State<TaskTitleScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            // повторяющееся обязательство
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //   children: [
+            //     Text(
+            //       'Повторяющаяся обязательство',
+            //       style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+            //     ),
+            //     Switch(
+            //       value: isRecurring,
+            //       onChanged: (value) {
+            //         setState(() {
+            //           isRecurring = value;
+            //         });
+            //       },
+            //     ),
+            //   ],
+            // ),
+            const SizedBox(height: 16),
             Text(
               'Название задачи',
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),

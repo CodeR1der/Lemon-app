@@ -19,10 +19,17 @@ class EmployeeService {
     }
 
     try {
+      print('Добавляем сотрудника с данными: ${employee.toJson()}');
       await _client.from('employee').insert(employee.toJson());
       print('Сотрудник успешно добавлен');
     } on PostgrestException catch (error) {
       print('Ошибка при добавлении сотрудника: ${error.message}');
+      print('Детали ошибки: ${error.details}');
+      print('Подсказка: ${error.hint}');
+      throw Exception('Ошибка при добавлении сотрудника: ${error.message}');
+    } catch (e) {
+      print('Неожиданная ошибка при добавлении сотрудника: $e');
+      throw Exception('Неожиданная ошибка при добавлении сотрудника: $e');
     }
   }
 

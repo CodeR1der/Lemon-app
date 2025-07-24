@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:task_tracker/models/announcement.dart';
 import 'package:task_tracker/screens/add_announcement.dart';
+import 'package:task_tracker/screens/announcement_screen.dart';
 import 'package:task_tracker/screens/employees_screen.dart';
 import 'package:task_tracker/screens/home_page.dart';
 import 'package:task_tracker/screens/profile_screen.dart';
@@ -76,7 +78,11 @@ class MyApp extends StatelessWidget {
           GetPage(
               name: '/create_announcement',
               page: () => CreateAnnouncementScreen()),
-
+          GetPage(
+              name: '/announcement_detail',
+              page: () => AnnouncementDetailScreen(
+                    announcement: Get.arguments as Announcement,
+                  )),
         ],
         initialBinding: InitialBindings(),
         theme: ThemeData(

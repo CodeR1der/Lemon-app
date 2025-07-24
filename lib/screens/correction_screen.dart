@@ -127,7 +127,8 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
   }
 
   Future<void> _recordVideo() async {
-    final XFile? recordedFile = await _imagePicker.pickVideo(source: ImageSource.camera);
+    final XFile? recordedFile =
+        await _imagePicker.pickVideo(source: ImageSource.camera);
     if (recordedFile != null) {
       setState(() {
         videoMessage.add(recordedFile.path);
@@ -136,7 +137,8 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
   }
 
   Future<void> pickVideo() async {
-    final XFile? pickedFile = await _imagePicker.pickVideo(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _imagePicker.pickVideo(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         videoMessage.add(pickedFile.path);
@@ -189,10 +191,12 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
       } else if (task.status == TaskStatus.atWork) {
         await taskProvider.updateTaskStatus(task, TaskStatus.extraTime);
       } else if (task.status == TaskStatus.overdue) {
-        await RequestService().updateCorrection(widget.prevCorrection!..isDone = true);
+        await RequestService()
+            .updateCorrection(widget.prevCorrection!..isDone = true);
       } else {
         if (task.status == TaskStatus.needTicket) {
-          await RequestService().updateCorrection(widget.prevCorrection!..isDone = true);
+          await RequestService()
+              .updateCorrection(widget.prevCorrection!..isDone = true);
         }
         await taskProvider.updateTaskStatus(task, TaskStatus.revision);
       }
@@ -216,142 +220,159 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
         backgroundColor: Colors.white,
         title: Text(_getAppBarTitle(widget.task.status)),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (widget.task.status == TaskStatus.needTicket || widget.task.status == TaskStatus.overdue) ...[
-            const Text(
-              'Решение',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-          ] else if (widget.task.status == TaskStatus.atWork) ...[
-            const Text(
-              'Причина запроса',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-          ] else ...[
-            Text(
-              widget.task.status == TaskStatus.completedUnderReview
-                  ? 'Описание ошибок в задаче'
-                  : 'Описание ошибок в постановке задачи',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-          ],
-          Container(
-            constraints: BoxConstraints(minHeight: _textFieldHeight),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: SingleChildScrollView(
-              child: TextField(
-                controller: _descriptionController,
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.all(12),
-                  border: InputBorder.none,
-                  hintText: 'Описание',
-                  hintStyle: TextStyle(color: Colors.grey),
-                ),
-                onChanged: (text) {
-                  final textPainter = TextPainter(
-                    text: TextSpan(text: text, style: const TextStyle(fontSize: 16)),
-                    maxLines: null,
-                    textDirection: TextDirection.ltr,
-                  )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
-                  setState(() {
-                    _textFieldHeight = textPainter.size.height + 24;
-                    if (_textFieldHeight < 60) _textFieldHeight = 60;
-                  });
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          if (widget.task.status == TaskStatus.newTask ||
-              widget.task.status == TaskStatus.needTicket ||
-              widget.task.status == TaskStatus.overdue) ...[
-            const Text(
-              'Добавить файлы по задаче (в том числе фото)',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: pickFile,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.orange),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Iconsax.add_circle_copy),
-                  SizedBox(width: 8),
-                  Text('Добавить файл'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (_attachments.isNotEmpty || videoMessage.isNotEmpty || audioMessage != null) ...[
+      body: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (widget.task.status == TaskStatus.needTicket ||
+                widget.task.status == TaskStatus.overdue) ...[
               const Text(
-                'Добавленные файлы:',
+                'Решение',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _attachments.length + videoMessage.length + (audioMessage != null ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    String filePath;
-                    bool isVideo = false;
-                    bool isAudio = false;
-
-                    if (index < _attachments.length) {
-                      filePath = _attachments[index];
-                      if (filePath.endsWith(".mp4") || filePath.endsWith(".mov")) {
-                        isVideo = true;
-                      }
-                    } else if (index < _attachments.length + videoMessage.length) {
-                      filePath = videoMessage[index - _attachments.length];
-                      isVideo = true;
-                    } else {
-                      filePath = audioMessage!;
-                      isAudio = true;
-                    }
-
-                    return ListTile(
-                      leading: isVideo
-                          ? const Icon(Icons.video_library, color: Colors.red)
-                          : isAudio
-                          ? const Icon(Icons.audiotrack, color: Colors.blue)
-                          : Image.file(
-                        File(filePath),
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.broken_image,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      title: Text(filePath.split('/').last),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => removeAttachment(filePath),
-                      ),
-                    );
+            ] else if (widget.task.status == TaskStatus.atWork) ...[
+              const Text(
+                'Причина запроса',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+            ] else ...[
+              Text(
+                widget.task.status == TaskStatus.completedUnderReview
+                    ? 'Описание ошибок в задаче'
+                    : 'Описание ошибок в постановке задачи',
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+            ],
+            Container(
+              constraints: BoxConstraints(minHeight: _textFieldHeight),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                child: TextField(
+                  controller: _descriptionController,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.all(12),
+                    border: InputBorder.none,
+                    hintText: 'Описание',
+                    hintStyle: TextStyle(color: Colors.grey),
+                  ),
+                  onChanged: (text) {
+                    final textPainter = TextPainter(
+                      text: TextSpan(
+                          text: text, style: const TextStyle(fontSize: 16)),
+                      maxLines: null,
+                      textDirection: TextDirection.ltr,
+                    )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
+                    setState(() {
+                      _textFieldHeight = textPainter.size.height + 24;
+                      if (_textFieldHeight < 60) _textFieldHeight = 60;
+                    });
                   },
                 ),
               ),
+            ),
+            const SizedBox(height: 24),
+            if (widget.task.status == TaskStatus.newTask ||
+                widget.task.status == TaskStatus.needTicket ||
+                widget.task.status == TaskStatus.overdue) ...[
+              const Text(
+                'Добавить файлы по задаче (в том числе фото)',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: pickFile,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.orange),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Iconsax.add_circle_copy),
+                    SizedBox(width: 8),
+                    Text('Добавить файл'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (_attachments.isNotEmpty ||
+                  videoMessage.isNotEmpty ||
+                  audioMessage != null) ...[
+                const Text(
+                  'Добавленные файлы:',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _attachments.length +
+                        videoMessage.length +
+                        (audioMessage != null ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      String filePath;
+                      bool isVideo = false;
+                      bool isAudio = false;
+
+                      if (index < _attachments.length) {
+                        filePath = _attachments[index];
+                        if (filePath.endsWith(".mp4") ||
+                            filePath.endsWith(".mov")) {
+                          isVideo = true;
+                        }
+                      } else if (index <
+                          _attachments.length + videoMessage.length) {
+                        filePath = videoMessage[index - _attachments.length];
+                        isVideo = true;
+                      } else {
+                        filePath = audioMessage!;
+                        isAudio = true;
+                      }
+
+                      return ListTile(
+                        leading: isVideo
+                            ? const Icon(Icons.video_library, color: Colors.red)
+                            : isAudio
+                                ? const Icon(Icons.audiotrack,
+                                    color: Colors.blue)
+                                : Image.file(
+                                    File(filePath),
+                                    width: 50,
+                                    height: 50,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(
+                                      Icons.broken_image,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                        title: Text(filePath.split('/').last),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => removeAttachment(filePath),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ],
-          ],
-        ]),
+          ]),
+        ),
       ),
       bottomSheet: Container(
         color: Colors.white,
@@ -363,7 +384,8 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
             backgroundColor: _canSubmit ? Colors.orange : Colors.grey,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: const Text('Отправить'),
         ),

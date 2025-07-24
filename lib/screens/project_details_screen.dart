@@ -17,17 +17,19 @@ import 'employee_details_screen.dart';
 class ProjectDetailsScreen extends StatefulWidget {
   final Project project;
 
-  const ProjectDetailsScreen({Key? key, required this.project}) : super(key: key);
+  const ProjectDetailsScreen({Key? key, required this.project})
+      : super(key: key);
 
   @override
   State<ProjectDetailsScreen> createState() => _ProjectDetailsScreenState();
 }
 
-class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with SingleTickerProviderStateMixin {
+class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
+    with SingleTickerProviderStateMixin {
   static const _primaryColor = Color(0xFF6750A4);
   List<Employee> _allEmployees = [];
-  List<Employee> _projectEmployees = []; // Сотрудники, уже в проекте
-  List<Employee> _tempSelectedEmployees = []; // Временный список для редактирования
+  List<Employee> _projectEmployees = [];
+  List<Employee> _tempSelectedEmployees = [];
   bool _isLoadingEmployees = false;
 
   late final TabController _tabController;
@@ -45,8 +47,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
     _tabController = TabController(length: 3, vsync: this);
     _taskService = TaskService();
     _employeeService = EmployeeService();
-    _projectDescription = ProjectService()
-        .getProjectDescription(widget.project.projectDescription!.projectDescriptionId);
+    _projectDescription = ProjectService().getProjectDescription(
+        widget.project.projectDescription!.projectDescriptionId);
     _initializeData();
   }
 
@@ -59,11 +61,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
   Future<void> _loadEmployees() async {
     setState(() => _isLoadingEmployees = true);
     try {
-      final employees = await _employeeService.getAllEmployees();
-      // Исключаем текущего пользователя из списка
-      final currentUser = UserService.to.currentUser!;
+      final employees =
+          await ProjectService().getProjectTeam(widget.project.projectId);
       setState(() {
-        _allEmployees = employees.where((e) => e.userId != currentUser.userId).toList();
+        _allEmployees = employees;
         _isLoadingEmployees = false;
       });
     } catch (e) {
@@ -73,7 +74,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
   }
 
   Future<void> _loadTasks() async {
-    final tasks = await _taskService.getTasksByProjectId(widget.project.projectId);
+    final tasks =
+        await _taskService.getTasksByProjectId(widget.project.projectId);
     if (mounted) {
       setState(() => _taskList = tasks);
     }
@@ -81,24 +83,27 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
 
   Future<void> _loadTeam() async {
     try {
-      final employees = await ProjectService().getProjectTeam(widget.project.projectId);
+      final employees =
+          await ProjectService().getProjectTeam(widget.project.projectId);
       if (mounted) {
         setState(() {
           _communicators = employees
               .where((e) =>
-          e.role == 'Коммуникатор' ||
-              _taskList.any((task) => task.team.communicatorId.userId == e.userId))
+                  e.role == 'Коммуникатор' ||
+                  _taskList.any(
+                      (task) => task.team.communicatorId.userId == e.userId))
               .toList();
 
           _otherEmployees = employees
               .where((e) =>
-          e.role != 'Коммуникатор' &&
-              !_communicators.any((c) => c.userId == e.userId))
+                  e.role != 'Коммуникатор' &&
+                  !_communicators.any((c) => c.userId == e.userId))
               .toList();
 
           // Обновляем список сотрудников проекта
           _projectEmployees = [..._communicators, ..._otherEmployees];
-          _tempSelectedEmployees = List.from(_projectEmployees); // Копируем для редактирования
+          _tempSelectedEmployees =
+              List.from(_projectEmployees); // Копируем для редактирования
         });
       }
     } catch (e) {
@@ -141,22 +146,25 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(bottom: bottomPadding),
-            child: _buildFutureTab(widget.project.projectId),
-          ),
-          Padding(
-            padding: EdgeInsets.only(bottom: bottomPadding),
-            child: _buildTeamTab(),
-          ),
-          Padding(
-            padding: EdgeInsets.only(bottom: bottomPadding),
-            child: _buildDescriptionTab(),
-          ),
-        ],
+      body: SafeArea(
+        top: false,
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(bottom: bottomPadding),
+              child: _buildFutureTab(widget.project.projectId),
+            ),
+            Padding(
+              padding: EdgeInsets.only(bottom: bottomPadding),
+              child: _buildTeamTab(),
+            ),
+            Padding(
+              padding: EdgeInsets.only(bottom: bottomPadding),
+              child: _buildDescriptionTab(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -172,40 +180,45 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
       backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
-          if (_communicators.isNotEmpty) _buildTeamSection('Коммуникатор', _communicators),
-          if (_otherEmployees.isNotEmpty) _buildTeamSection('Команда проекта', _otherEmployees),
+          if (_communicators.isNotEmpty)
+            _buildTeamSection('Коммуникатор', _communicators),
+          if (_otherEmployees.isNotEmpty)
+            _buildTeamSection('Команда проекта', _otherEmployees),
           SliverPadding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+            padding:
+                EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
           ),
         ],
       ),
       bottomSheet: UserService.to.currentUser!.role.trim() == 'Директор'
-          ? Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
-        child: OutlinedButton(
-          onPressed: _showEmployeesModalSheet,
-          style: OutlinedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            side: const BorderSide(color: Colors.orange),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Iconsax.user_cirlce_add,
-                size: 24,
+          ? Container(
+              color: Colors.white,
+              padding:
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
+              child: OutlinedButton(
+                onPressed: _showEmployeesModalSheet,
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.orange),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Iconsax.user_cirlce_add,
+                      size: 24,
+                    ),
+                    SizedBox(width: 8),
+                    Text('Добавить новых сотрудников'),
+                  ],
+                ),
               ),
-              SizedBox(width: 8),
-              Text('Добавить новых сотрудников'),
-            ],
-          ),
-        ),
-      )
+            )
           : null,
     );
   }
@@ -235,35 +248,37 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
                   _isLoadingEmployees
                       ? const Center(child: CircularProgressIndicator())
                       : Expanded(
-                    child: ListView.builder(
-                      itemCount: _allEmployees.length,
-                      itemBuilder: (context, index) {
-                        final employee = _allEmployees[index];
-                        final isInProject = _tempSelectedEmployees.contains(employee);
-                        return CheckboxListTile(
-                          secondary: CircleAvatar(
-                            child: Text(employee.name?[0] ?? 'N'),
+                          child: ListView.builder(
+                            itemCount: _allEmployees.length,
+                            itemBuilder: (context, index) {
+                              final employee = _allEmployees[index];
+                              final isInProject =
+                                  _tempSelectedEmployees.contains(employee);
+                              return CheckboxListTile(
+                                secondary: CircleAvatar(
+                                  child: Text(employee.name?[0] ?? 'N'),
+                                ),
+                                title: Text(employee.name ?? 'Без имени'),
+                                subtitle: Text(employee.role ?? 'Без роли'),
+                                value: isInProject,
+                                onChanged: (bool? value) {
+                                  setModalState(() {
+                                    if (value == true) {
+                                      _tempSelectedEmployees.add(employee);
+                                    } else {
+                                      _tempSelectedEmployees.remove(employee);
+                                    }
+                                  });
+                                },
+                              );
+                            },
                           ),
-                          title: Text(employee.name ?? 'Без имени'),
-                          subtitle: Text(employee.role ?? 'Без роли'),
-                          value: isInProject,
-                          onChanged: (bool? value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _tempSelectedEmployees.add(employee);
-                              } else {
-                                _tempSelectedEmployees.remove(employee);
-                              }
-                            });
-                          },
-                        );
-                      },
-                    ),
-                  ),
+                        ),
                   const SizedBox(height: 16),
                   Container(
                     color: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 30, horizontal: 16),
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () async {
@@ -271,27 +286,33 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
                         try {
                           await ProjectService().updateProjectTeam(
                             widget.project.projectId,
-                            _tempSelectedEmployees.map((e) => e.userId).toList(),
+                            _tempSelectedEmployees
+                                .map((e) => e.userId)
+                                .toList(),
                           );
                           // Обновляем локальные данные
                           setState(() {
-                            _projectEmployees = List.from(_tempSelectedEmployees);
+                            _projectEmployees =
+                                List.from(_tempSelectedEmployees);
                             _communicators = _projectEmployees
                                 .where((e) =>
-                            e.role == 'Коммуникатор' ||
-                                _taskList.any((task) =>
-                                task.team.communicatorId.userId == e.userId))
+                                    e.role == 'Коммуникатор' ||
+                                    _taskList.any((task) =>
+                                        task.team.communicatorId.userId ==
+                                        e.userId))
                                 .toList();
                             _otherEmployees = _projectEmployees
                                 .where((e) =>
-                            e.role != 'Коммуникатор' &&
-                                !_communicators.any((c) => c.userId == e.userId))
+                                    e.role != 'Коммуникатор' &&
+                                    !_communicators
+                                        .any((c) => c.userId == e.userId))
                                 .toList();
                           });
                           Navigator.pop(context);
                           Get.snackbar('Успех', 'Команда проекта обновлена');
                         } catch (e) {
-                          Get.snackbar('Ошибка', 'Не удалось обновить команду: $e');
+                          Get.snackbar(
+                              'Ошибка', 'Не удалось обновить команду: $e');
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -404,7 +425,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
         const SizedBox(height: 8),
         ...['facebook', 'twitter', 'instagram', 'linkedin'].map((network) =>
             _buildSocialNetworkLink(
-                network[0].toUpperCase() + network.substring(1), socialNetworks[network])),
+                network[0].toUpperCase() + network.substring(1),
+                socialNetworks[network])),
       ],
     );
   }
@@ -419,7 +441,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
           style: TextStyle(
             fontSize: 16,
             color: link != null ? Colors.blue : Colors.grey,
-            decoration: link != null ? TextDecoration.underline : TextDecoration.none,
+            decoration:
+                link != null ? TextDecoration.underline : TextDecoration.none,
           ),
         ),
       ),
@@ -429,11 +452,13 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Single
   SliverList _buildTeamSection(String title, List<Employee> employees) {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-            (context, index) {
+        (context, index) {
           if (index == 0) {
             return Padding(
-              padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16, bottom: 4),
-              child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+              padding: const EdgeInsets.only(
+                  left: 16.0, right: 16.0, top: 16, bottom: 4),
+              child:
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
             );
           }
           return _buildEmployeeItem(employees[index - 1]);
