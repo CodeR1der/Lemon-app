@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:get/get.dart';
 import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/services/task_categories.dart';
@@ -32,6 +33,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )
@@ -534,6 +536,7 @@ class TaskService {
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
         communicator_id:communicator_id(*),
+        observer_id:observer_id(*),
         team_members:team_id(*,
           employee_id:employee_id(*)
         )

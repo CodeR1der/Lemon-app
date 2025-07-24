@@ -15,6 +15,7 @@ import '../models/task_status.dart';
 import '../services/request_operation.dart';
 import '../services/task_provider.dart';
 import '../task_screens/TaskDescriptionTab.dart';
+import 'EditTaskDetailsScreen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {
   final Correction correction;
@@ -46,7 +47,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
       quality: 75,
     );
   }
-
+  
   void _showEditDescriptionDialog(BuildContext context) {
     final TextEditingController _descriptionController =
         TextEditingController(text: task.description);
@@ -367,9 +368,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
                     RequestService()
                         .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                   } else {
-                    _showEditDescriptionDialog(context);
+                    _navigateToEditDescriptionScreen(context);
                   }
-                  Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,

@@ -33,6 +33,7 @@ class TaskTeam {
       communicatorId:
       Employee.fromJson(json['communicator_id'] as Map<String, dynamic>),
       creatorId: Employee.fromJson(json['creator_id'] as Map<String, dynamic>),
+      observerId: json['observer_id'] != null ? Employee.fromJson(json['observer_id'] as Map<String, dynamic>) : null,
       teamMembers: json['team_members'] != null
           ? List<Employee>.from(
         (json['team_members'] as List).map(

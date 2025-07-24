@@ -397,40 +397,40 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        IconButton(
-          icon: Stack(
-            children: [
-              const Icon(Icons.notifications),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: const Text(
-                    '3', // TODO: Замените на реальное количество уведомлений
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          onPressed: () {
-            // TODO: Реализуйте переход на экран уведомлений
-            // Get.toNamed('/notifications');
-          },
-        ),
+        // IconButton(
+        //   icon: Stack(
+        //     children: [
+        //       const Icon(Icons.notifications),
+        //       Positioned(
+        //         right: 0,
+        //         top: 0,
+        //         child: Container(
+        //           padding: const EdgeInsets.all(2),
+        //           decoration: BoxDecoration(
+        //             color: Colors.red,
+        //             borderRadius: BorderRadius.circular(10),
+        //           ),
+        //           constraints: const BoxConstraints(
+        //             minWidth: 16,
+        //             minHeight: 16,
+        //           ),
+        //           child: const Text(
+        //             '3', // TODO: Замените на реальное количество уведомлений
+        //             style: TextStyle(
+        //               color: Colors.white,
+        //               fontSize: 10,
+        //             ),
+        //             textAlign: TextAlign.center,
+        //           ),
+        //         ),
+        //       ),
+        //     ],
+        //   ),
+        //   onPressed: () {
+        //     // TODO: Реализуйте переход на экран уведомлений
+        //     // Get.toNamed('/notifications');
+        //   },
+        // ),
       ],
     );
   }
