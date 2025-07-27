@@ -320,7 +320,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
             radius: 20,
             backgroundImage:
                 employee.avatarUrl != null && employee.avatarUrl!.isNotEmpty
-                    ? NetworkImage(employee.avatarUrl!)
+                    ? NetworkImage(EmployeeService().getAvatarUrl(employee.avatarUrl!))
                     : null,
             child: employee.avatarUrl == null || employee.avatarUrl!.isEmpty
                 ? const Icon(Icons.person)

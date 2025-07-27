@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:task_tracker/models/task_role.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/task_screens/DeadlineScreen.dart';
@@ -8,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../models/employee.dart';
 import '../models/task.dart';
 import '../models/task_team.dart';
+import '../services/employee_operations.dart';
 
 class EmployeeSelectionScreen extends StatefulWidget {
   final Task taskData;
@@ -53,7 +53,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
             } else if (snapshot.hasError) {
               return const Center(child: Text('Ошибка загрузки сотрудников'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('Нет доступных сотрудников в проекте'));
+              return const Center(
+                  child: Text('Нет доступных сотрудников в проекте'));
             }
 
             final employees = snapshot.data!;
@@ -75,7 +76,12 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                       });
                     }
                   },
-                  employees: employees.where((employee) => employee.userId != UserService.to.currentUser!.userId && employee.role != 'Коммуникатор').toList(),
+                  employees: employees
+                      .where((employee) =>
+                          employee.userId !=
+                              UserService.to.currentUser!.userId &&
+                          employee.role != 'Коммуникатор')
+                      .toList(),
                 ),
                 const SizedBox(height: 16),
                 _buildEmployeeSelectionTile(
@@ -93,7 +99,9 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                       });
                     }
                   },
-                  employees: employees.where((employee) => employee.role == 'Коммуникатор').toList(),
+                  employees: employees
+                      .where((employee) => employee.role == 'Коммуникатор')
+                      .toList(),
                 ),
                 const SizedBox(height: 16),
                 _buildEmployeeSelectionTile(
@@ -135,7 +143,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DeadlineScreen(widget.taskData),
+                            builder: (context) =>
+                                DeadlineScreen(widget.taskData),
                           ),
                         );
                       }
@@ -216,8 +225,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              _database.getAvatarUrl(employee.avatarUrl)),
+                          backgroundImage: NetworkImage(EmployeeService()
+                              .getAvatarUrl(employee.avatarUrl!)),
                           radius: 16,
                         ),
                         const SizedBox(width: 10),

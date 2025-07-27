@@ -810,7 +810,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   backgroundImage: (employee.avatarUrl != null &&
                           employee.avatarUrl!.isNotEmpty)
                       ? NetworkImage(
-                          ProjectService().getAvatarUrl(employee.avatarUrl!) ??
+                          EmployeeService().getAvatarUrl(employee.avatarUrl!) ??
                               '')
                       : null,
                   child: (employee.avatarUrl == null ||

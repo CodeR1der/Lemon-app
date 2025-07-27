@@ -106,7 +106,7 @@ class _TaskTeamTab extends State<TaskTeamTab> {
             // Убраны внутренние отступы ListTile
             leading: CircleAvatar(
               backgroundImage: NetworkImage(
-                  widget._database.getAvatarUrl(employee.avatarUrl)),
+                  EmployeeService().getAvatarUrl(employee.avatarUrl!)),
               radius: 20,
             ),
             title: Text(
