@@ -123,7 +123,8 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
   }
 
   Future<void> _recordVideo() async {
-    final XFile? recordedFile = await _imagePicker.pickVideo(source: ImageSource.camera);
+    final XFile? recordedFile =
+        await _imagePicker.pickVideo(source: ImageSource.camera);
     if (recordedFile != null) {
       setState(() {
         videoMessage.add(recordedFile.path);
@@ -132,7 +133,8 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
   }
 
   Future<void> pickVideo() async {
-    final XFile? pickedFile = await _imagePicker.pickVideo(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _imagePicker.pickVideo(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         videoMessage.add(pickedFile.path);
@@ -171,7 +173,8 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
     try {
       final validate = _createValidate();
       await RequestService().addTaskValidate(validate);
-      await TaskService().changeStatus(TaskStatus.completedUnderReview, widget.task.id);
+      await TaskService()
+          .changeStatus(TaskStatus.completedUnderReview, widget.task.id);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Задача отправлена на проверку')),
@@ -190,227 +193,246 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text(_getAppBarTitle(widget.task.status)),
+        title: const Text('Сдать задачу на проверку'),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text(
-            'Ссылка',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            constraints: BoxConstraints(minHeight: _textFieldHeight),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
+      body: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text(
+              'Ссылка',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
-            child: SingleChildScrollView(
-              child: TextField(
-                controller: _linkController,
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.all(12),
-                  border: InputBorder.none,
-                  hintText: 'Ссылка',
-                  hintStyle: TextStyle(color: Colors.grey),
+            const SizedBox(height: 8),
+            Container(
+              constraints: BoxConstraints(minHeight: _textFieldHeight),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                child: TextField(
+                  controller: _linkController,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.all(12),
+                    border: InputBorder.none,
+                    hintText: 'Ссылка',
+                    hintStyle: TextStyle(color: Colors.grey),
+                  ),
+                  onChanged: (text) {
+                    final textPainter = TextPainter(
+                      text: TextSpan(
+                          text: text, style: const TextStyle(fontSize: 16)),
+                      maxLines: null,
+                      textDirection: TextDirection.ltr,
+                    )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
+                    setState(() {
+                      _textFieldHeight = textPainter.size.height + 24;
+                      if (_textFieldHeight < 60) _textFieldHeight = 60;
+                    });
+                  },
                 ),
-                onChanged: (text) {
-                  final textPainter = TextPainter(
-                    text: TextSpan(text: text, style: const TextStyle(fontSize: 16)),
-                    maxLines: null,
-                    textDirection: TextDirection.ltr,
-                  )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
-                  setState(() {
-                    _textFieldHeight = textPainter.size.height + 24;
-                    if (_textFieldHeight < 60) _textFieldHeight = 60;
-                  });
-                },
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Описание',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            constraints: BoxConstraints(minHeight: _textFieldHeight),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
+            const SizedBox(height: 16),
+            const Text(
+              'Описание',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
-            child: SingleChildScrollView(
-              child: TextField(
-                controller: _descriptionController,
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.all(12),
-                  border: InputBorder.none,
-                  hintText: 'Описание',
-                  hintStyle: TextStyle(color: Colors.grey),
+            const SizedBox(height: 8),
+            Container(
+              constraints: BoxConstraints(minHeight: _textFieldHeight),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                child: TextField(
+                  controller: _descriptionController,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.all(12),
+                    border: InputBorder.none,
+                    hintText: 'Описание',
+                    hintStyle: TextStyle(color: Colors.grey),
+                  ),
+                  onChanged: (text) {
+                    final textPainter = TextPainter(
+                      text: TextSpan(
+                          text: text, style: const TextStyle(fontSize: 16)),
+                      maxLines: null,
+                      textDirection: TextDirection.ltr,
+                    )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
+                    setState(() {
+                      _textFieldHeight = textPainter.size.height + 24;
+                      if (_textFieldHeight < 60) _textFieldHeight = 60;
+                    });
+                  },
                 ),
-                onChanged: (text) {
-                  final textPainter = TextPainter(
-                    text: TextSpan(text: text, style: const TextStyle(fontSize: 16)),
-                    maxLines: null,
-                    textDirection: TextDirection.ltr,
-                  )..layout(maxWidth: MediaQuery.of(context).size.width - 56);
-                  setState(() {
-                    _textFieldHeight = textPainter.size.height + 24;
-                    if (_textFieldHeight < 60) _textFieldHeight = 60;
-                  });
-                },
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Добавить файлы по задаче (в том числе фото)',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: pickFile,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black,
-              side: const BorderSide(color: Colors.orange),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            const SizedBox(height: 16),
+            const Text(
+              'Добавить файлы по задаче (в том числе фото)',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Iconsax.add_circle_copy),
-                SizedBox(width: 8),
-                Text('Добавить файл'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Записать аудио сообщение',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: isRecording ? stopRecording : recordAudio,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black,
-              side: const BorderSide(color: Colors.orange),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(isRecording ? Icons.stop : Icons.mic, color: Colors.black),
-                const SizedBox(width: 8),
-                Text(isRecording ? 'Остановить запись' : 'Записать аудио'),
-              ],
-            ),
-          ),
-          if (audioMessage != null) ...[
             const SizedBox(height: 8),
             OutlinedButton(
-              onPressed: playAudio,
+              onPressed: pickFile,
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.black,
                 side: const BorderSide(color: Colors.orange),
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.play_arrow, color: Colors.black),
+                  Icon(Iconsax.add_circle_copy),
                   SizedBox(width: 8),
-                  Text('Прослушать запись'),
+                  Text('Добавить файл'),
                 ],
               ),
             ),
-          ],
-          const SizedBox(height: 16),
-          const Text(
-            'Прикрепить видео',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: _showMediaPicker,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black,
-              side: const BorderSide(color: Colors.orange),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.video_library, color: Colors.black),
-                SizedBox(width: 8),
-                Text('Добавить видео'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (attachments.isNotEmpty || videoMessage.isNotEmpty || audioMessage != null) ...[
+            const SizedBox(height: 16),
             const Text(
-              'Добавленные файлы:',
+              'Записать аудио сообщение',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
-            Expanded(
-              child: ListView.builder(
-                itemCount: attachments.length + videoMessage.length + (audioMessage != null ? 1 : 0),
-                itemBuilder: (context, index) {
-                  String filePath;
-                  bool isVideo = false;
-                  bool isAudio = false;
-
-                  if (index < attachments.length) {
-                    filePath = attachments[index];
-                    if (filePath.endsWith(".mp4") || filePath.endsWith(".mov")) {
-                      isVideo = true;
-                    }
-                  } else if (index < attachments.length + videoMessage.length) {
-                    filePath = videoMessage[index - attachments.length];
-                    isVideo = true;
-                  } else {
-                    filePath = audioMessage!;
-                    isAudio = true;
-                  }
-
-                  return ListTile(
-                    leading: isVideo
-                        ? const Icon(Icons.video_library, color: Colors.red)
-                        : isAudio
-                        ? const Icon(Icons.audiotrack, color: Colors.blue)
-                        : Image.file(
-                      File(filePath),
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.broken_image,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    title: Text(filePath.split('/').last),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => removeAttachment(filePath),
-                    ),
-                  );
-                },
+            OutlinedButton(
+              onPressed: isRecording ? stopRecording : recordAudio,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.orange),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(isRecording ? Icons.stop : Icons.mic,
+                      color: Colors.black),
+                  const SizedBox(width: 8),
+                  Text(isRecording ? 'Остановить запись' : 'Записать аудио'),
+                ],
               ),
             ),
-          ],
-        ]),
+            if (audioMessage != null) ...[
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: playAudio,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.orange),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.play_arrow, color: Colors.black),
+                    SizedBox(width: 8),
+                    Text('Прослушать запись'),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            const Text(
+              'Прикрепить видео',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: _showMediaPicker,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.orange),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.video_library, color: Colors.black),
+                  SizedBox(width: 8),
+                  Text('Добавить видео'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (attachments.isNotEmpty ||
+                videoMessage.isNotEmpty ||
+                audioMessage != null) ...[
+              const Text(
+                'Добавленные файлы:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: attachments.length +
+                      videoMessage.length +
+                      (audioMessage != null ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    String filePath;
+                    bool isVideo = false;
+                    bool isAudio = false;
+
+                    if (index < attachments.length) {
+                      filePath = attachments[index];
+                      if (filePath.endsWith(".mp4") ||
+                          filePath.endsWith(".mov")) {
+                        isVideo = true;
+                      }
+                    } else if (index <
+                        attachments.length + videoMessage.length) {
+                      filePath = videoMessage[index - attachments.length];
+                      isVideo = true;
+                    } else {
+                      filePath = audioMessage!;
+                      isAudio = true;
+                    }
+
+                    return ListTile(
+                      leading: isVideo
+                          ? const Icon(Icons.video_library, color: Colors.red)
+                          : isAudio
+                              ? const Icon(Icons.audiotrack, color: Colors.blue)
+                              : Image.file(
+                                  File(filePath),
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(
+                                    Icons.broken_image,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                      title: Text(filePath.split('/').last),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => removeAttachment(filePath),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ]),
+        ),
       ),
       bottomSheet: Container(
         color: Colors.white,
@@ -422,7 +444,8 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
             backgroundColor: _canSubmit ? Colors.orange : Colors.grey,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: const Text('Отправить'),
         ),

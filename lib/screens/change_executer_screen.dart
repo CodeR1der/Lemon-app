@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/models/correction.dart';
 import 'package:task_tracker/models/task_status.dart';
-import 'package:task_tracker/screens/correction_screen.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
 
 import '../models/employee.dart';
 import '../models/task.dart';
 import '../services/request_operation.dart';
+import '../services/task_provider.dart';
 import '../services/user_service.dart';
 
 class ChangeExecuterScreen extends StatefulWidget {
   final Task task;
   final Correction correction;
 
-  const ChangeExecuterScreen({super.key, required this.task, required this.correction});
+  const ChangeExecuterScreen(
+      {super.key, required this.task, required this.correction});
 
   @override
   _ChangeExecuterScreen createState() => _ChangeExecuterScreen();
@@ -38,66 +40,78 @@ class _ChangeExecuterScreen extends State<ChangeExecuterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Выбор сотрудников'),
+        backgroundColor: Colors.white,
+        title: const Text('Заменить исполнителя'),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: FutureBuilder<List<Employee>>(
-          future: employeesFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return const Center(child: Text('Ошибка загрузки сотрудников'));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('Нет доступных сотрудников'));
-            }
+      body: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: FutureBuilder<List<Employee>>(
+            future: employeesFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return const Center(child: Text('Ошибка загрузки сотрудников'));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text('Нет доступных сотрудников'));
+              }
 
-            final employees = snapshot.data!;
+              final employees = snapshot.data!;
 
-            return Column(
-              children: <Widget>[
-                _buildEmployeeSelectionTile(
-                  title: 'Исполнитель',
-                  selectedEmployee: selectedPerformer,
-                  onSelected: (Employee? employee) {
-                    if (_isEmployeeAlreadySelected(employee)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Этот сотрудник уже выбран')),
-                      );
-                    } else {
-                      setState(() {
-                        selectedPerformer = employee;
-                      });
-                    }
-                  },
-                  employees: employees,
-                ),
-                const Spacer(),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (selectedPerformer != null) {
-                        // Создаем новую команду или обновляем существующую
-                        RequestService().updateCorrection(widget.correction..isDone = true);
-                        TaskService().updateExecuter(widget.task, selectedPerformer!);
-                        widget.task.team.teamMembers.first = selectedPerformer!;
-                        widget.task.changeStatus(TaskStatus.inOrder);
-                        Navigator.pop(context);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildEmployeeSelectionTile(
+                    title: 'Исполнитель',
+                    selectedEmployee: selectedPerformer,
+                    onSelected: (Employee? employee) {
+                      if (_isEmployeeAlreadySelected(employee)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Этот сотрудник уже выбран')),
+                        );
+                      } else {
+                        setState(() {
+                          selectedPerformer = employee;
+                        });
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Заменить исполнителя'),
+                    employees: employees,
                   ),
-                ),
-              ],
-            );
-          },
+                  const Spacer(),
+                  Consumer<TaskProvider>(
+                    builder: (context, taskProvider, child) => SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (selectedPerformer != null) {
+                            // Создаем новую команду или обновляем существующую
+                            RequestService().updateCorrection(
+                                widget.correction..isDone = true);
+                            TaskService().updateExecuter(
+                                widget.task, selectedPerformer!);
+                            widget.task.team.teamMembers.first =
+                                selectedPerformer!;
+                            taskProvider.updateTaskStatus(
+                                widget.task, TaskStatus.inOrder);
+                            Navigator.pop(context);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Заменить исполнителя'),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -105,7 +119,8 @@ class _ChangeExecuterScreen extends State<ChangeExecuterScreen> {
 
   bool _isEmployeeAlreadySelected(Employee? employee) {
     if (employee == null) return false;
-    return employee == selectedPerformer || employee == UserService.to.currentUser!;
+    return employee == selectedPerformer ||
+        employee == UserService.to.currentUser!;
   }
 
   Widget _buildEmployeeSelectionTile({
@@ -162,8 +177,8 @@ class _ChangeExecuterScreen extends State<ChangeExecuterScreen> {
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              EmployeeService().getAvatarUrl(employee.avatarUrl)),
+                          backgroundImage: NetworkImage(EmployeeService()
+                              .getAvatarUrl(employee.avatarUrl)),
                           radius: 16,
                         ),
                         const SizedBox(width: 10),

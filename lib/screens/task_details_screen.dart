@@ -35,15 +35,20 @@ class TaskDetailsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            body: taskProvider.error != null
-                ? Center(child: Text('Ошибка: ${taskProvider.error}'))
-                : TabBarView(
-              children: [
-                TaskDescriptionTab(task: updatedTask),
-                ChatTab(taskId: updatedTask.id,),
-                TaskPeriodTab(task: updatedTask),
-                TaskTeamTab(task: updatedTask),
-              ],
+            body: SafeArea(
+              top: false,
+              child: taskProvider.error != null
+                  ? Center(child: Text('Ошибка: ${taskProvider.error}'))
+                  : TabBarView(
+                      children: [
+                        TaskDescriptionTab(task: updatedTask),
+                        ChatTab(
+                          taskId: updatedTask.id,
+                        ),
+                        TaskPeriodTab(task: updatedTask),
+                        TaskTeamTab(task: updatedTask),
+                      ],
+                    ),
             ),
           ),
         );

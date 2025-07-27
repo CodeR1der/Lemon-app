@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_validate.dart';
 import 'package:task_tracker/screens/correction_screen.dart';
 import 'package:task_tracker/screens/queue_screen.dart';
@@ -13,6 +14,7 @@ import '../models/task_role.dart';
 import '../models/task_status.dart';
 import '../screens/task_history.dart';
 import '../screens/task_validate_details_screen.dart';
+import '../services/task_provider.dart';
 
 class TaskLayoutBuilder extends StatelessWidget {
   final Task task;
@@ -55,6 +57,8 @@ class TaskLayoutBuilder extends StatelessWidget {
         return _buildQueueLayout(context);
       case TaskStatus.atWork:
         return _buildAtWorkLayout(context);
+      case TaskStatus.controlPoint:
+        return _buildControlPointLayout(context);
       case TaskStatus.extraTime:
         return _buildExtraTimeLayout(context);
       case TaskStatus.completedUnderReview:
@@ -152,13 +156,12 @@ class TaskLayoutBuilder extends StatelessWidget {
                     );
                   },
                 ),
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: ElevatedButton(
+                Consumer<TaskProvider>(
+                  builder: (context, taskProvider, child) => ElevatedButton(
                     onPressed: () {
-                      task.changeStatus(TaskStatus.notRead);
+                      taskProvider.updateTaskStatus(task, TaskStatus.notRead);
                     },
-                    style: OutlinedButton.styleFrom(
+                    style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       side: const BorderSide(color: Colors.grey, width: 1),
                       foregroundColor: Colors.white,
@@ -207,22 +210,23 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-  return Column(
-    children: [
-      _buildSectionItem(
-        icon: Iconsax.clock_copy,
-        title: 'История задачи',
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskHistoryScreen(revisions: revisions),
-            ),
-          );
-        },
-      ),
-    ],
-  );
+              return Column(
+                children: [
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
           }
         });
   }
@@ -377,35 +381,40 @@ class TaskLayoutBuilder extends StatelessWidget {
                   ),
                   const Divider(),
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 0, vertical: 8.0),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        task.changeStatus(TaskStatus.inOrder);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(width: 8),
-                          Text(
-                            'Прочитал и понял',
-                            style: TextStyle(
-                              color: Colors.white, // Белый текст
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 0, vertical: 8.0),
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        Consumer<TaskProvider>(
+                            builder: (context, taskProvider, child) =>
+                                ElevatedButton(
+                                  onPressed: () {
+                                    taskProvider.updateTaskStatus(
+                                        task, TaskStatus.inOrder);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.orange,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Прочитал и понял',
+                                        style: TextStyle(
+                                          color: Colors.white, // Белый текст
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ))
+                      ])),
                   const SizedBox(width: 4),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -512,22 +521,23 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-  return Column(
-    children: [
-      _buildSectionItem(
-        icon: Iconsax.clock_copy,
-        title: 'История задачи',
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskHistoryScreen(revisions: revisions),
-            ),
-          );
-        },
-      ),
-    ],
-  );
+              return Column(
+                children: [
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
           }
         });
   }
@@ -566,75 +576,75 @@ class TaskLayoutBuilder extends StatelessWidget {
                 else
                   _buildSectionItem(
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
-                Column(children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      RequestService()
-                          .updateCorrection(notDoneRevision..isDone = true);
-
-                      RequestService().addCorrection(Correction(
-                          date: DateTime.now(),
-                          taskId: task.id,
-                          status: TaskStatus.needExplanation,
-                          description: 'Прислать письмо-решение'));
-
-                      task.changeStatus(TaskStatus.needTicket);
-
-                      print('Жалоба на некорректную постановку задачи');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(width: 8),
-                        Text(
-                          'Прислать письмо-решение',
-                          style: TextStyle(
-                            color: Colors.white, // Белый текст
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      RequestService()
-                          .updateCorrection(notDoneRevision..isDone = true);
-                      task.changeStatus(TaskStatus.revision);
-                      print('Жалоба на некорректную постановку задачи');
-                    },
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.orange, width: 1),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(width: 8),
-                        Text(
-                          'Отправить на доработку',
-                          style: TextStyle(
-                            color: Colors.black, // Белый текст
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ]),
+                // Column(children: [
+                //   ElevatedButton(
+                //     onPressed: () {
+                //       RequestService()
+                //           .updateCorrection(notDoneRevision..isDone = true);
+                //
+                //       RequestService().addCorrection(Correction(
+                //           date: DateTime.now(),
+                //           taskId: task.id,
+                //           status: TaskStatus.needExplanation,
+                //           description: 'Прислать письмо-решение'));
+                //
+                //       task.changeStatus(TaskStatus.needTicket);
+                //
+                //       print('Жалоба на некорректную постановку задачи');
+                //     },
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: Colors.orange,
+                //       foregroundColor: Colors.white,
+                //       padding: const EdgeInsets.symmetric(vertical: 12),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(12),
+                //       ),
+                //     ),
+                //     child: const Row(
+                //       mainAxisAlignment: MainAxisAlignment.center,
+                //       children: [
+                //         SizedBox(width: 8),
+                //         Text(
+                //           'Прислать письмо-решение',
+                //           style: TextStyle(
+                //             color: Colors.white, // Белый текст
+                //             fontSize: 16,
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                //   const SizedBox(height: 16),
+                //   ElevatedButton(
+                //     onPressed: () {
+                //       RequestService()
+                //           .updateCorrection(notDoneRevision..isDone = true);
+                //       task.changeStatus(TaskStatus.revision);
+                //       print('Жалоба на некорректную постановку задачи');
+                //     },
+                //     style: OutlinedButton.styleFrom(
+                //       backgroundColor: Colors.white,
+                //       side: const BorderSide(color: Colors.orange, width: 1),
+                //       padding: const EdgeInsets.symmetric(vertical: 12),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(12),
+                //       ),
+                //     ),
+                //     child: const Row(
+                //       mainAxisAlignment: MainAxisAlignment.center,
+                //       children: [
+                //         SizedBox(width: 8),
+                //         Text(
+                //           'Отправить на доработку',
+                //           style: TextStyle(
+                //             color: Colors.black, // Белый текст
+                //             fontSize: 16,
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                // ]),
                 const Divider(),
                 _buildSectionItem(
                     icon: Iconsax.clock_copy, title: 'История задачи'),
@@ -664,22 +674,23 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-  return Column(
-    children: [
-      _buildSectionItem(
-        icon: Iconsax.clock_copy,
-        title: 'История задачи',
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskHistoryScreen(revisions: revisions),
-            ),
-          );
-        },
-      ),
-    ],
-  );
+              return Column(
+                children: [
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
           }
         });
   }
@@ -749,22 +760,23 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-  return Column(
-    children: [
-      _buildSectionItem(
-        icon: Iconsax.clock_copy,
-        title: 'История задачи',
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskHistoryScreen(revisions: revisions),
-            ),
-          );
-        },
-      ),
-    ],
-  );
+              return Column(
+                children: [
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
           }
         });
   }
@@ -866,22 +878,23 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-  return Column(
-    children: [
-      _buildSectionItem(
-        icon: Iconsax.clock_copy,
-        title: 'История задачи',
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskHistoryScreen(revisions: revisions),
-            ),
-          );
-        },
-      ),
-    ],
-  );
+              return Column(
+                children: [
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
           }
         });
   }
@@ -980,22 +993,23 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-  return Column(
-    children: [
-      _buildSectionItem(
-        icon: Iconsax.clock_copy,
-        title: 'История задачи',
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskHistoryScreen(revisions: revisions),
-            ),
-          );
-        },
-      ),
-    ],
-  );
+              return Column(
+                children: [
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
           }
         });
   }
@@ -1175,22 +1189,204 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-  return Column(
-    children: [
-      _buildSectionItem(
-        icon: Iconsax.clock_copy,
-        title: 'История задачи',
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskHistoryScreen(revisions: revisions),
-            ),
-          );
-        },
-      ),
-    ],
-  );
+              return Column(
+                children: [
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
+          }
+        });
+  }
+
+  Widget _buildControlPointLayout(BuildContext context) {
+    return FutureBuilder<List<Correction>>(
+        future: _loadCorrections(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          }
+
+          final revisions = snapshot.data ?? [];
+          late Correction? notDoneRevisions = null;
+          if (revisions.isNotEmpty) {
+            final unfinishedRevisions = revisions.where((r) => !r.isDone);
+            if (unfinishedRevisions.isNotEmpty) {
+              notDoneRevisions = unfinishedRevisions.first;
+            }
+          }
+
+          switch (role) {
+            case TaskRole.executor:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.communicator:
+              String _selectedDate = '06.07.2025';
+              String _selectedDate2 = '15.07.2025';
+              bool _hasRead = false;
+              bool _hasRead2 = true; // Example flag for the trailing icon
+              return Column(children: [
+                _buildSectionItem(
+                    icon: Iconsax.clock_copy, title: 'Контрольные точки'),
+                ListTile(
+                  title: Text(_selectedDate),
+                  trailing: Icon(
+                    _hasRead2
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    color: _hasRead2 ? Colors.green : Colors.grey,
+                  ),
+                ),
+                ListTile(
+                  title: Text(_selectedDate2),
+                  trailing: Icon(
+                    _hasRead
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    color: _hasRead ? Colors.green : Colors.grey,
+                  ),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {},
+                  child: Text(
+                    'Проверить ход работы',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    minimumSize: Size(double.infinity, 50),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {},
+                  child: Text(
+                    'Выполнено',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(width: 1.0, color: Colors.orange),
+                    backgroundColor: Colors.white,
+                    minimumSize: Size(double.infinity, 50),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const Divider(),
+                if (revisions.isNotEmpty &&
+                    revisions.any((revision) => !revision.isDone))
+                  RevisionsCard(
+                      revisions: revisions,
+                      task: task,
+                      role: role,
+                      title: 'Доработки и запросы')
+                else ...[
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                ],
+                const Divider(),
+                _buildSectionItem(
+                  icon: Iconsax.clock_copy,
+                  title: 'История задачи',
+                  onTap: () {
+                    // Действие при нажатии
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TaskHistoryScreen(revisions: revisions),
+                      ),
+                    );
+                  },
+                ),
+              ]);
+            case TaskRole.creator:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                      icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
+                  const Divider(),
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      // Действие при нажатии
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                ],
+              );
+            case TaskRole.none:
+              return Column(
+                children: [
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
           }
         });
   }
@@ -1298,22 +1494,23 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-  return Column(
-    children: [
-      _buildSectionItem(
-        icon: Iconsax.clock_copy,
-        title: 'История задачи',
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskHistoryScreen(revisions: revisions),
-            ),
-          );
-        },
-      ),
-    ],
-  );
+              return Column(
+                children: [
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
           }
         });
   }
@@ -1430,22 +1627,23 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ],
               );
             case TaskRole.none:
-  return Column(
-    children: [
-      _buildSectionItem(
-        icon: Iconsax.clock_copy,
-        title: 'История задачи',
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskHistoryScreen(revisions: revisions),
-            ),
-          );
-        },
-      ),
-    ],
-  );
+              return Column(
+                children: [
+                  _buildSectionItem(
+                    icon: Iconsax.clock_copy,
+                    title: 'История задачи',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskHistoryScreen(revisions: revisions),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
           }
         });
   }

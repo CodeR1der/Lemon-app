@@ -27,7 +27,7 @@ class Correction {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'date': date.toLocal().toIso8601String(),
+      'date': date.toIso8601String(),
       'task_id': taskId,
       'description': description,
       'is_done': isDone,

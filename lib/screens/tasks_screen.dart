@@ -1,8 +1,8 @@
 // tasks_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../models/employee.dart';
-import '../services/task_categories.dart';
 import '../services/task_provider.dart';
 import 'position_tasks_tab.dart';
 
@@ -36,14 +36,17 @@ class _TasksScreenState extends State<TasksScreen> {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            if (user.role == "Коммуникатор")
-              _buildTab("Коммуникатор", user.userId),
-            _buildTab("Исполнитель", user.userId),
-            _buildTab("Постановщик", user.userId),
-            _buildTab("Наблюдатель", user.userId),
-          ],
+        body: SafeArea(
+          top: false,
+          child: TabBarView(
+            children: [
+              if (user.role == "Коммуникатор")
+                _buildTab("Коммуникатор", user.userId),
+              _buildTab("Исполнитель", user.userId),
+              _buildTab("Постановщик", user.userId),
+              _buildTab("Наблюдатель", user.userId),
+            ],
+          ),
         ),
       ),
     );
@@ -52,7 +55,6 @@ class _TasksScreenState extends State<TasksScreen> {
   Widget _buildTab(String position, String employeeId) {
     return Consumer<TaskProvider>(
       builder: (context, taskProvider, child) {
-
         return PositionTasksTab(
           position: position,
           employeeId: employeeId,

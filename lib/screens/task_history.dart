@@ -7,7 +7,7 @@ import '../models/task_status.dart';
 class TaskHistoryScreen extends StatelessWidget {
   final List<Correction> revisions;
 
-  const TaskHistoryScreen({super.key, required this.revisions});
+  TaskHistoryScreen({super.key, required this.revisions});
 
   @override
   Widget build(BuildContext context) {
@@ -19,15 +19,13 @@ class TaskHistoryScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ...revisions
-                .map((revision) => _buildRevisionItem(context, revision))
-                ,
-          ],
+      body: SafeArea(
+        top: false,
+        child: ListView.builder(
+          itemCount: revisions.length,
+          itemBuilder: (context, index) {
+            return _buildRevisionItem(context, revisions[index]);
+          },
         ),
       ),
     );
@@ -54,24 +52,24 @@ class TaskHistoryScreen extends StatelessWidget {
             Text(
               DateFormat('dd.MM.yyyy HH:mm').format(correction.date),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.black,
-                  ),
+                color: Colors.black,
+              ),
             ),
             const SizedBox(height: 4),
             if (correction.status != TaskStatus.needExplanation)
               Text(
                 _getActionTitle(correction.status),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
+                  color: Colors.grey.shade600,
+                ),
               ),
             const SizedBox(height: 4),
             // Описание доработки
             Text(
               correction.description!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.black,
-                  ),
+                color: Colors.black,
+              ),
             ),
           ],
         ),

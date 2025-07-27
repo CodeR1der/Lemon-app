@@ -37,7 +37,8 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
 
   Future<void> _loadProjects() async {
     try {
-      final projects = await _employeeService.getEmployeeProjects(widget.employee.userId);
+      final projects =
+          await _employeeService.getEmployeeProjects(widget.employee.userId);
       final tasksMap = <String, List<Task>>{};
 
       // Загружаем задачи для каждого проекта
@@ -78,8 +79,9 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
           radius: 50,
           backgroundImage: widget.employee.avatarUrl!.isNotEmpty
               ? NetworkImage(
-            widget._employeeService.getAvatarUrl(widget.employee.avatarUrl),
-          ) as ImageProvider
+                  widget._employeeService
+                      .getAvatarUrl(widget.employee.avatarUrl),
+                ) as ImageProvider
               : null,
           child: widget.employee.avatarUrl!.isEmpty
               ? const Icon(Icons.person, size: 50)
@@ -156,115 +158,119 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
-        children: [
-          NestedScrollView(
-            controller: _scrollController,
-            floatHeaderSlivers: true,
-            headerSliverBuilder: (BuildContext context, bool boxIsScrolled) {
-              return [
-                SliverAppBar(
-                  pinned: true,
-                  floating: true,
-                  forceElevated: boxIsScrolled,
-                  backgroundColor: Colors.white,
-                  flexibleSpace: FlexibleSpaceBar(
-                    title: Text(shortName),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildAvatar(),
-                        _buildProfileSection('ФИО', widget.employee.name),
-                        const Divider(),
-                        _buildProfileSection(
-                            'Должность', widget.employee.position),
-                        const Divider(),
-                        _buildProfileSection(
-                            'Контактный телефон', widget.employee.phone ?? ''),
-                        const Divider(),
-                        _buildProfileSection('Имя пользователя в Теле-грам',
-                            widget.employee.telegramId ?? ''),
-                        const Divider(),
-                        _buildProfileSection(
-                            'Адрес страницы в VK', widget.employee.vkId ?? ''),
-                      ],
+      body: SafeArea(
+        top: false,
+        child: Stack(
+          children: [
+            NestedScrollView(
+              controller: _scrollController,
+              floatHeaderSlivers: true,
+              headerSliverBuilder: (BuildContext context, bool boxIsScrolled) {
+                return [
+                  SliverAppBar(
+                    pinned: true,
+                    floating: true,
+                    forceElevated: boxIsScrolled,
+                    backgroundColor: Colors.white,
+                    flexibleSpace: FlexibleSpaceBar(
+                      title: Text(shortName),
                     ),
                   ),
-                ),
-                if (_projects.isNotEmpty)
-                  SliverPersistentHeader(
-                    delegate: _SliverAppBarDelegate(
-                      TabBar(
-                        controller: _tabController,
-                        isScrollable: _projects.length > 2,
-                        labelColor: const Color(0xFF6750A4),
-                        unselectedLabelColor: Colors.grey,
-                        indicatorColor: const Color(0xFF6750A4),
-                        tabs: _projects.map((project) {
-                          final taskCount = _projectTasks[project.projectId]?.length ?? 0;
-                          return _buildProjectTab(project.name, taskCount);
-                        }).toList(),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildAvatar(),
+                          _buildProfileSection('ФИО', widget.employee.name),
+                          const Divider(),
+                          _buildProfileSection(
+                              'Должность', widget.employee.position),
+                          const Divider(),
+                          _buildProfileSection('Контактный телефон',
+                              widget.employee.phone ?? ''),
+                          const Divider(),
+                          _buildProfileSection('Имя пользователя в Теле-грам',
+                              widget.employee.telegramId ?? ''),
+                          const Divider(),
+                          _buildProfileSection('Адрес страницы в VK',
+                              widget.employee.vkId ?? ''),
+                        ],
                       ),
                     ),
-                    pinned: true,
                   ),
-              ];
-            },
-            body: _projects.isEmpty
-                ? const Center(child: Text('Сотрудник не участвует в проектах'))
-                : TabBarView(
-              controller: _tabController,
-              children: _projects.map((project) {
-                return _buildFutureTab('Исполнитель', widget.employee.userId);
-              }).toList(),
-            ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 16,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        TaskTitleScreen(employee: widget.employee),
-                  ),
-                );
+                  if (_projects.isNotEmpty)
+                    SliverPersistentHeader(
+                      delegate: _SliverAppBarDelegate(
+                        TabBar(
+                          controller: _tabController,
+                          isScrollable: _projects.length > 2,
+                          labelColor: const Color(0xFF6750A4),
+                          unselectedLabelColor: Colors.grey,
+                          indicatorColor: const Color(0xFF6750A4),
+                          tabs: _projects.map((project) {
+                            final taskCount =
+                                _projectTasks[project.projectId]?.length ?? 0;
+                            return _buildProjectTab(project.name, taskCount);
+                          }).toList(),
+                        ),
+                      ),
+                      pinned: true,
+                    ),
+                ];
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF9700),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+              body: _projects.isEmpty
+                  ? const Center(
+                      child: Text('Сотрудник не участвует в проектах'))
+                  : TabBarView(
+                      controller: _tabController,
+                      children: _projects.map((project) {
+                        return _buildFutureTab(
+                            'Исполнитель', widget.employee.userId);
+                      }).toList(),
+                    ),
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 16,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          TaskTitleScreen(employee: widget.employee),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF9700),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_circle, color: Colors.white, size: 24),
+                    SizedBox(width: 8),
+                    Text(
+                      'Поставить задачу',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_circle, color: Colors.white, size: 24),
-                  SizedBox(width: 8),
-                  Text(
-                    'Поставить задачу',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

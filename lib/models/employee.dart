@@ -10,17 +10,16 @@ class Employee {
   String? avatarUrl; // Поле для хранения имени файла аватара
 
   // Конструктор
-  Employee({
-    required this.userId,
-    required this.name,
-    required this.position,
-    required this.phone,
-    required this.telegramId,
-    required this.vkId,
-    this.avatarUrl,
-    required this.role,
-    required this.companyId
-  });
+  Employee(
+      {required this.userId,
+      required this.name,
+      required this.position,
+      required this.phone,
+      required this.telegramId,
+      required this.vkId,
+      this.avatarUrl,
+      required this.role,
+      required this.companyId});
 
   // Преобразование объекта в JSON для хранения в Supabase
   Map<String, dynamic> toJson() {
@@ -32,7 +31,8 @@ class Employee {
       'telegram_id': telegramId,
       'vk_id': vkId,
       'avatar_url': avatarUrl,
-      'role': role
+      'role': role,
+      'company_id': companyId
     };
   }
 
