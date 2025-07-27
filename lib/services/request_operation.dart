@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/models/correction.dart';
 import 'package:task_tracker/models/task_validate.dart';
+import 'package:task_tracker/services/file_service.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/task_status.dart';
@@ -13,16 +14,29 @@ class RequestService {
 
   Future<void> addTaskValidate(TaskValidate taskValidate) async {
     taskValidate.id = _uuid.v4();
+    final fileService = FileService();
 
     // Загружаем файлы в bucket
-    if (taskValidate.attachments != null) {
-      taskValidate.attachments = await _uploadFiles(taskValidate.attachments!, 'validateattachments');
+    if (taskValidate.attachments != null && taskValidate.attachments!.isNotEmpty) {
+      taskValidate.attachments = await fileService.uploadFilesFromPaths(
+        taskValidate.attachments!, 
+        'validateattachments',
+        prefix: 'validate_${taskValidate.id}'
+      );
     }
-    if (taskValidate.videoMessage != null) {
-      taskValidate.videoMessage = await _uploadFiles(taskValidate.videoMessage!, 'validateattachments');
+    if (taskValidate.videoMessage != null && taskValidate.videoMessage!.isNotEmpty) {
+      taskValidate.videoMessage = await fileService.uploadFilesFromPaths(
+        taskValidate.videoMessage!, 
+        'validateattachments',
+        prefix: 'video_${taskValidate.id}'
+      );
     }
-    if (taskValidate.audioMessage != null) {
-      taskValidate.audioMessage = await _uploadFile(taskValidate.audioMessage!, 'validateattachments');
+    if (taskValidate.audioMessage != null && taskValidate.audioMessage!.isNotEmpty) {
+      taskValidate.audioMessage = await fileService.uploadFileFromPath(
+        taskValidate.audioMessage!, 
+        'validateattachments',
+        prefix: 'audio_${taskValidate.id}'
+      );
     }
 
     try {
@@ -60,16 +74,29 @@ class RequestService {
 
   Future<void> addCorrection(Correction correction) async {
     correction.id = _uuid.v4();
+    final fileService = FileService();
 
     // Загружаем файлы в bucket
-    if (correction.attachments != null) {
-      correction.attachments = await _uploadFiles(correction.attachments!, 'correctionattachments');
+    if (correction.attachments != null && correction.attachments!.isNotEmpty) {
+      correction.attachments = await fileService.uploadFilesFromPaths(
+        correction.attachments!, 
+        'correctionattachments',
+        prefix: 'correction_${correction.id}'
+      );
     }
-    if (correction.audioMessage != null) {
-      correction.audioMessage = await _uploadFile(correction.audioMessage!, 'correctionattachments');
+    if (correction.audioMessage != null && correction.audioMessage!.isNotEmpty) {
+      correction.audioMessage = await fileService.uploadFileFromPath(
+        correction.audioMessage!, 
+        'correctionattachments',
+        prefix: 'audio_${correction.id}'
+      );
     }
-    if (correction.videoMessage != null) {
-      correction.videoMessage = await _uploadFiles(correction.videoMessage!, 'correctionattachments');
+    if (correction.videoMessage != null && correction.videoMessage!.isNotEmpty) {
+      correction.videoMessage = await fileService.uploadFilesFromPaths(
+        correction.videoMessage!, 
+        'correctionattachments',
+        prefix: 'video_${correction.id}'
+      );
     }
 
     try {
@@ -133,40 +160,15 @@ class RequestService {
     }
   }
 
-  // Вспомогательный метод для загрузки одного файла
-  Future<String> _uploadFile(String filePath, String bucketName) async {
-    final file = File(filePath);
-    final fileName = '${_uuid.v4()}_${file.uri.pathSegments.last}';
-    try {
-      await _client.storage.from(bucketName).upload(
-        fileName,
-        file,
-        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-      );
-      return fileName; // Возвращаем имя файла в bucket
-    } catch (e) {
-      print('Ошибка загрузки файла: $e');
-      rethrow;
-    }
-  }
-
-  // Вспомогательный метод для загрузки списка файлов
-  Future<List<String>> _uploadFiles(List<String> filePaths, String bucketName) async {
-    final uploadedFiles = <String>[];
-    for (final filePath in filePaths) {
-      final fileName = await _uploadFile(filePath, bucketName);
-      uploadedFiles.add(fileName);
-    }
-    return uploadedFiles;
-  }
-
   String getValidateAttachment(String? fileName) {
-    if (fileName == null) return '';
-    return _client.storage.from('validateattachments').getPublicUrl(fileName);
+    if (fileName == null || fileName.isEmpty) return '';
+    final fileService = FileService();
+    return fileService.getPublicUrl(fileName, 'validateattachments');
   }
 
   String getAttachment(String? fileName) {
-    if (fileName == null) return '';
-    return _client.storage.from('correctionattachments').getPublicUrl(fileName);
+    if (fileName == null || fileName.isEmpty) return '';
+    final fileService = FileService();
+    return fileService.getPublicUrl(fileName, 'correctionattachments');
   }
 }

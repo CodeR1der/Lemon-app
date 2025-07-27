@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:task_tracker/services/file_service.dart';
 
 import '/models/project.dart';
 import '../models/employee.dart';
@@ -196,25 +197,47 @@ class ProjectService {
 
   // Загрузка аватара проекта
   Future<String?> uploadAvatar(File imageFile, String projectId) async {
-    final String fileName =
-        'projects/${projectId}_${basename(imageFile.path)}'; // Уникальное имя файла
-    try {
-      await _client.storage.from('Avatars').upload(fileName, imageFile);
-      print("Аватар проекта успешно загружен");
-      return fileName; // Возвращаем имя файла для сохранения в БД
-    } on PostgrestException catch (error) {
-      print("Ошибка загрузки аватарки проекта: ${error.message}");
+    final fileService = FileService();
+    
+    // Валидация файла
+    if (!fileService.validateFile(
+      imageFile,
+      maxSizeInBytes: 10 * 1024 * 1024, // 10MB
+      allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+    )) {
+      print("Файл не прошел валидацию");
+      return null;
     }
-    return null;
+    
+    try {
+      final fileName = await fileService.uploadFile(
+        imageFile, 
+        'Avatars/projects',
+        prefix: 'project_$projectId'
+      );
+      
+      if (fileName != null) {
+        print("Аватар проекта успешно загружен: $fileName");
+      }
+      
+      return fileName;
+    } catch (e) {
+      print("Ошибка загрузки аватарки проекта: $e");
+      return null;
+    }
   }
 
   // Удаление аватара проекта
   Future<void> deleteAvatar(String fileName) async {
-    try {
-      await _client.storage.from('Avatars').remove([fileName]);
+    if (fileName.isEmpty) return;
+    
+    final fileService = FileService();
+    final success = await fileService.deleteFile(fileName, 'Avatars');
+    
+    if (success) {
       print('Аватар проекта успешно удален');
-    } on PostgrestException catch (error) {
-      print('Ошибка при удалении аватара проекта: ${error.message}');
+    } else {
+      print('Ошибка при удалении аватара проекта');
     }
   }
 
@@ -265,7 +288,9 @@ class ProjectService {
 
   // Получение публичного URL для аватара проекта
   String getAvatarUrl(String? fileName) {
-    return _client.storage.from('Avatars').getPublicUrl(fileName!);
+    if (fileName == null || fileName.isEmpty) return '';
+    final fileService = FileService();
+    return fileService.getPublicUrl(fileName, 'Avatars/projects');
   }
 
   Future<int> getAllWorkersCount(String projectId) async {
