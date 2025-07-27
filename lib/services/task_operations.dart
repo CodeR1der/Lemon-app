@@ -1,10 +1,10 @@
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:get/get.dart';
 import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/services/task_categories.dart';
+import 'package:task_tracker/services/file_service.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/employee.dart';
@@ -447,37 +447,44 @@ class TaskService {
 
   Future<void> addNewTask(Task task) async {
     try {
+      final fileService = FileService();
+      
       // Генерируем ID для задачи
       if (task.id.isEmpty) {
         task.id = const Uuid().v4();
       }
 
       // Загрузка вложений
-      List<String> uploadedAttachments = [];
-      for (var attachment in task.attachments) {
-        final uploadedFile = await uploadFile(File(attachment), task.id);
-        if (uploadedFile != null) {
-          uploadedAttachments.add(uploadedFile);
-        }
+      if (task.attachments.isNotEmpty) {
+        final uploadedAttachments = await fileService.uploadFilesFromPaths(
+          task.attachments, 
+          'TaskAttachments', 
+          prefix: 'task_${task.id}'
+        );
+        task.attachments = uploadedAttachments;
       }
-      task.attachments = uploadedAttachments;
 
       // Загрузка аудиофайла
-      if (task.audioMessage != null) {
-        task.audioMessage = await uploadFile(File(task.audioMessage!), task.id);
+      if (task.audioMessage != null && task.audioMessage!.isNotEmpty) {
+        final uploadedAudio = await fileService.uploadFileFromPath(
+          task.audioMessage!, 
+          'TaskAttachments', 
+          prefix: 'audio_${task.id}'
+        );
+        task.audioMessage = uploadedAudio;
       }
 
-      // Загрузка вложений
-      List<String> uploadedVideo = [];
-      for (var video in task.videoMessage!) {
-        final uploadedFile = await uploadFile(File(video), task.id);
-        if (uploadedFile != null) {
-          uploadedVideo.add(uploadedFile);
-        }
+      // Загрузка видеофайлов
+      if (task.videoMessage != null && task.videoMessage!.isNotEmpty) {
+        final uploadedVideos = await fileService.uploadFilesFromPaths(
+          task.videoMessage!, 
+          'TaskAttachments', 
+          prefix: 'video_${task.id}'
+        );
+        task.videoMessage = uploadedVideos;
       }
-      task.videoMessage = uploadedVideo;
 
-      print('Все файлы успешно загруженыs!');
+      print('Все файлы успешно загружены!');
 
       // Преобразуем задачу в JSON
       final taskJson = task.toMap();
@@ -499,14 +506,8 @@ class TaskService {
   }
 
   Future<String?> uploadFile(File file, String id) async {
-    final fileName = '${id}_${basename(file.path)}';
-    try {
-      await _client.storage.from('TaskAttachments').upload(fileName, file);
-      return fileName;
-    } on PostgrestException catch (error) {
-      log(error.message);
-    }
-    return null;
+    final fileService = FileService();
+    return await fileService.uploadFile(file, 'TaskAttachments', prefix: id);
   }
 
   Future<List<Employee>> getAllEmployees() async {
@@ -766,11 +767,15 @@ class TaskService {
   }
 
   String getTaskAttachment(String? fileName) {
-    return _client.storage.from('TaskAttachments').getPublicUrl(fileName!);
+    if (fileName == null || fileName.isEmpty) return '';
+    final fileService = FileService();
+    return fileService.getPublicUrl(fileName, 'TaskAttachments');
   }
 
   // Получение публичного URL для аватара
   String getAvatarUrl(String? fileName) {
-    return _client.storage.from('Avatars').getPublicUrl(fileName!);
+    if (fileName == null || fileName.isEmpty) return '';
+    final fileService = FileService();
+    return fileService.getPublicUrl(fileName, 'Avatars');
   }
 }

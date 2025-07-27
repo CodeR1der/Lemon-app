@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:task_tracker/services/file_service.dart';
 
 import '/models/employee.dart';
 import '/models/project.dart';
@@ -86,34 +87,55 @@ class EmployeeService {
   }
 
   Future<String?> uploadAvatar(File imageFile, String userId) async {
-    final String fileName =
-        'users/${userId}_${basename(imageFile.path)}'; // Уникальное имя файла
-    try {
-      await Supabase.instance.client.storage
-          .from('Avatars')
-          .upload(fileName, imageFile);
-      print("Аватарка успешно загружена");
-      return fileName; // Возвращаем имя файла для сохранения в базе данных
-    } on PostgrestException catch (error) {
-      print("Ошибка загрузки аватарки: ${error.message}");
+    final fileService = FileService();
+    
+    // Валидация файла
+    if (!fileService.validateFile(
+      imageFile,
+      maxSizeInBytes: 10 * 1024 * 1024, // 10MB
+      allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp'],
+    )) {
+      print("Файл не прошел валидацию");
+      return null;
     }
-    print("Аватарка успешно загружена");
-    return null;
+    
+    try {
+      final fileName = await fileService.uploadFile(
+        imageFile,
+        'Avatars/users',
+        prefix: 'user_$userId'
+      );
+      
+      if (fileName != null) {
+        print("Аватарка успешно загружена: $fileName");
+      }
+      
+      return fileName;
+    } catch (e) {
+      print("Ошибка загрузки аватарки: $e");
+      return null;
+    }
   }
 
   // Удаление аватара сотрудника
   Future<void> deleteAvatar(String fileName) async {
-    try {
-      await _client.storage.from('Avatars').remove([fileName]);
+    if (fileName.isEmpty) return;
+    
+    final fileService = FileService();
+    final success = await fileService.deleteFile(fileName, 'Avatars');
+    
+    if (success) {
       print('Аватар успешно удален');
-    } on PostgrestException catch (error) {
-      print('Ошибка при удалении аватара: ${error.message}');
+    } else {
+      print('Ошибка при удалении аватара');
     }
   }
 
   // Получение публичного URL для аватара
   String getAvatarUrl(String? fileName) {
-    return _client.storage.from('Avatars').getPublicUrl(fileName!);
+    if (fileName == null || fileName.isEmpty) return '';
+    final fileService = FileService();
+    return fileService.getPublicUrl(fileName, 'Avatars/users');
   }
 
   Future<List<Project>> getEmployeeProjects(String employeeId) async {

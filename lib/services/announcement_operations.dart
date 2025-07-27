@@ -93,12 +93,12 @@ class AnnouncementService {
       if (currentUser != null) {
         // Добавляем лог
         await _addLogEntry(
-          announcement.id,
-          'read',
-          userId,
-          currentUser.name,
-          currentUser.role,
-          announcement.companyId
+            announcement.id,
+            'read',
+            userId,
+            currentUser.name,
+            currentUser.role,
+            announcement.companyId
         );
       }
     } catch (e) {
@@ -108,13 +108,13 @@ class AnnouncementService {
 
   // Пометка объявления как прочитанного для другого сотрудника (для коммуникаторов)
   static Future<void> markAsReadForEmployee(
-    String targetUserId,
-    String targetUserName,
-    Announcement announcement,
-    String currentUserId,
-    String currentUserName,
-    String currentUserRole,
-  ) async {
+      String targetUserId,
+      String targetUserName,
+      Announcement announcement,
+      String currentUserId,
+      String currentUserName,
+      String currentUserRole,
+      ) async {
     try {
       if (announcement.readBy.contains(targetUserId)) {
         return; // Уже прочитано
@@ -152,11 +152,11 @@ class AnnouncementService {
 
   // Закрытие объявления
   static Future<void> closeAnnouncement(
-    Announcement announcement,
-    String currentUserId,
-    String currentUserName,
-    String currentUserRole,
-  ) async {
+      Announcement announcement,
+      String currentUserId,
+      String currentUserName,
+      String currentUserRole,
+      ) async {
     try {
       final supabase = Supabase.instance.client;
       await supabase
@@ -176,15 +176,15 @@ class AnnouncementService {
 
   // Добавление лога действия в отдельную таблицу
   static Future<void> _addLogEntry(
-    String announcementId,
-    String action,
-    String userId,
-    String userName,
-    String userRole,
-    String companyId, {
-    String? targetUserId,
-    String? targetUserName,
-  }) async {
+      String announcementId,
+      String action,
+      String userId,
+      String userName,
+      String userRole,
+      String companyId, {
+        String? targetUserId,
+        String? targetUserName,
+      }) async {
     try {
       final newLog = AnnouncementLog(
         id: const Uuid().v4(),
@@ -210,15 +210,15 @@ class AnnouncementService {
 
   // Добавление лога действия (публичный метод)
   static Future<void> addLog(
-    String announcementId,
-    String action,
-    String currentUserId,
-    String currentUserName,
-    String currentUserRole,
-    String companyId, {
-    String? targetUserId,
-    String? targetUserName,
-  }) async {
+      String announcementId,
+      String action,
+      String currentUserId,
+      String currentUserName,
+      String currentUserRole,
+      String companyId, {
+        String? targetUserId,
+        String? targetUserName,
+      }) async {
     await _addLogEntry(
       announcementId,
       action,

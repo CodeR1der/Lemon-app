@@ -8,6 +8,8 @@ import 'package:task_tracker/models/chat_message.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:uuid/uuid.dart';
 
+import '../services/employee_operations.dart';
+
 class ChatTab extends StatefulWidget {
   final String taskId;
 
@@ -215,7 +217,7 @@ class _ChatTabState extends State<ChatTab> {
                                 return CircleAvatar(
                                   radius: 16,
                                   backgroundImage:
-                                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                                  avatarUrl != null ? NetworkImage(EmployeeService().getAvatarUrl(avatarUrl)) : null,
                                   child: avatarUrl == null
                                       ? const Icon(Icons.person, size: 16)
                                       : null,
@@ -286,7 +288,7 @@ class _ChatTabState extends State<ChatTab> {
                                 return CircleAvatar(
                                   radius: 16,
                                   backgroundImage:
-                                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                                  avatarUrl != null ? NetworkImage(EmployeeService().getAvatarUrl(avatarUrl)) : null,
                                   child: avatarUrl == null
                                       ? const Icon(Icons.person, size: 16)
                                       : null,
