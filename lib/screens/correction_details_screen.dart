@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_role.dart';
 import 'package:task_tracker/screens/add_extra_time_screen.dart';
 import 'package:task_tracker/screens/change_executer_screen.dart';
-import 'package:task_tracker/services/task_operations.dart';
 
 import '../models/correction.dart';
 import '../models/task.dart';
@@ -15,6 +14,7 @@ import '../models/task_status.dart';
 import '../services/request_operation.dart';
 import '../services/task_provider.dart';
 import '../task_screens/TaskDescriptionTab.dart';
+import 'edit_task_details_screen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {
   final Correction correction;
@@ -47,71 +47,19 @@ class CorrectionDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _showEditDescriptionDialog(BuildContext context) {
-    final TextEditingController _descriptionController =
-    TextEditingController(text: task.description);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(task.taskName),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _descriptionController,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  labelText: 'Описание задачи',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Отмена'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final newDescription = _descriptionController.text.trim();
-                if (newDescription.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Описание не может быть пустым')),
-                  );
-                  return;
-                }
-
-                try {
-                  final taskProvider =
-                  Provider.of<TaskProvider>(context, listen: false);
-                  final updatedTask =
-                  task.copyWith(description: newDescription);
-                  await taskProvider.updateTask(updatedTask);
-                  await TaskService().updateTask(updatedTask);
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Описание обновлено')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Ошибка обновления: $e')),
-                  );
-                }
-              },
-              child: const Text('Сохранить'),
-            ),
-          ],
-        );
-      },
-    );
+  void _navigateToEditDescriptionScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTaskDetailsScreen(task: task),
+      ),
+    ).then((updatedTask) {
+      if (updatedTask != null && updatedTask is Task) {
+        // Обновляем задачу, если были изменения
+        Provider.of<TaskProvider>(context, listen: false)
+            .updateTask(updatedTask);
+      }
+    });
   }
 
   @override
@@ -189,7 +137,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   Container(
                     padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF9F9F9),
                       borderRadius: BorderRadius.circular(10),
@@ -206,8 +154,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               if (correction.attachments
-                  ?.where((file) => _isImage(file))
-                  .isEmpty ??
+                      ?.where((file) => _isImage(file))
+                      .isEmpty ??
                   true)
                 const Text('Нет фотографий')
               else
@@ -245,9 +193,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
-                                    color: Colors.grey.shade200,
-                                    child: const Icon(Icons.broken_image, size: 32),
-                                  ),
+                                color: Colors.grey.shade200,
+                                child: const Icon(Icons.broken_image, size: 32),
+                              ),
                             ),
                           ),
                         ),
@@ -291,7 +239,12 @@ class CorrectionDetailsScreen extends StatelessWidget {
 
   Widget? _buildCreatorActions(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.only(
+        top: 16,
+        left: 16,
+        right: 16,
+        bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+      ),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -325,12 +278,12 @@ class CorrectionDetailsScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () async {
                   final taskProvider =
-                  Provider.of<TaskProvider>(context, listen: false);
+                      Provider.of<TaskProvider>(context, listen: false);
 
                   if (correction.status == TaskStatus.needTicket) {
                     await taskProvider.updateTaskStatus(
                         task, TaskStatus.notRead);
-                    RequestService()
+                    await RequestService()
                         .updateCorrection(correction..isDone = true);
                   } else {
                     await taskProvider.updateTaskStatus(
@@ -356,20 +309,19 @@ class CorrectionDetailsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (correction.status == TaskStatus.needTicket) {
                     final taskProvider =
-                    Provider.of<TaskProvider>(context, listen: false);
-                    taskProvider.updateTaskStatus(
+                        Provider.of<TaskProvider>(context, listen: false);
+                    await taskProvider.updateTaskStatus(
                         task, TaskStatus.needExplanation);
-                    RequestService()
+                    await RequestService()
                         .updateCorrection(correction..isDone = true);
-                    RequestService()
+                    await RequestService()
                         .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                   } else {
-                    _showEditDescriptionDialog(context);
+                    _navigateToEditDescriptionScreen(context);
                   }
-                  Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -396,7 +348,12 @@ class CorrectionDetailsScreen extends StatelessWidget {
 
   Widget? _buildCommunicatorActions(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.only(
+        top: 16,
+        left: 16,
+        right: 16,
+        bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+      ),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -478,11 +435,13 @@ class CorrectionDetailsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final taskProvider =
-                  Provider.of<TaskProvider>(context, listen: false);
-                  taskProvider.updateTaskStatus(task, TaskStatus.completed);
-                  RequestService().updateCorrection(correction..isDone = true);
+                      Provider.of<TaskProvider>(context, listen: false);
+                  await taskProvider.updateTaskStatus(
+                      task, TaskStatus.completed);
+                  await RequestService()
+                      .updateCorrection(correction..isDone = true);
                   Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
@@ -505,11 +464,12 @@ class CorrectionDetailsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final taskProvider =
-                  Provider.of<TaskProvider>(context, listen: false);
-                  taskProvider.updateTaskStatus(task, TaskStatus.notRead);
-                  RequestService().updateCorrection(correction..isDone = true);
+                      Provider.of<TaskProvider>(context, listen: false);
+                  await taskProvider.updateTaskStatus(task, TaskStatus.notRead);
+                  await RequestService()
+                      .updateCorrection(correction..isDone = true);
                   Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
@@ -529,18 +489,19 @@ class CorrectionDetailsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final taskProvider =
-                  Provider.of<TaskProvider>(context, listen: false);
+                      Provider.of<TaskProvider>(context, listen: false);
                   if (correction.status == TaskStatus.needTicket) {
-                    taskProvider.updateTaskStatus(
+                    await taskProvider.updateTaskStatus(
                         task, TaskStatus.needExplanation);
-                    RequestService()
+                    await RequestService()
                         .updateCorrection(correction..isDone = true);
-                    RequestService()
+                    await RequestService()
                         .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                   } else {
-                    taskProvider.updateTaskStatus(task, TaskStatus.revision);
+                    await taskProvider.updateTaskStatus(
+                        task, TaskStatus.revision);
                   }
                   Navigator.pop(context, task);
                 },

@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:task_tracker/services/task_operations.dart';
+import 'package:task_tracker/services/task_provider.dart';
 
 import '../models/task.dart';
+import 'queue_screen.dart';
 
 class TaskCompletionPage extends StatefulWidget {
   final Task task;
@@ -28,6 +30,13 @@ class _TaskCompletionPageState extends State<TaskCompletionPage> {
         backgroundColor: Colors.white,
         title: const Text('Выберите дедлайн'),
         iconTheme: const IconThemeData(color: Colors.black),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Возвращаемся без изменений
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: SafeArea(
         top: false,
@@ -134,7 +143,7 @@ class _TaskCompletionPageState extends State<TaskCompletionPage> {
                     child: const Text('Отмена', style: TextStyle(fontSize: 18)),
                   ),
                   TextButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_selectedTime != null) {
                         setState(() {
                           _selectedDay = DateTime(
@@ -145,9 +154,21 @@ class _TaskCompletionPageState extends State<TaskCompletionPage> {
                               _selectedTime!.minute);
                         });
                       }
-                      TaskService()
-                          .updateDeadline(_selectedDay, widget.task.id);
-                      Navigator.pop(context, _selectedDay);
+
+                      final taskProvider =
+                          Provider.of<TaskProvider>(context, listen: false);
+                      final updatedTask =
+                          widget.task.copyWith(deadline: _selectedDay);
+                      await taskProvider.updateTask(updatedTask);
+
+                      // Закрываем текущий экран и переходим на queue_screen
+                      Navigator.pop(context); // Закрываем bottom sheet
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QueueScreen(task: updatedTask),
+                        ),
+                      );
                     },
                     child: const Text('Готово', style: TextStyle(fontSize: 18)),
                   ),

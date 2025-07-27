@@ -376,7 +376,12 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
       ),
       bottomSheet: Container(
         color: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
+        padding: EdgeInsets.only(
+          top: 30,
+          left: 16,
+          right: 16,
+          bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+        ),
         width: double.infinity,
         child: ElevatedButton(
           onPressed: _canSubmit ? _submitCorrection : null,

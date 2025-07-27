@@ -30,17 +30,40 @@ class _QueueScreenState extends State<QueueScreen> {
     super.initState();
     _currentTask = widget.task; // Инициализируем текущую задачу
     _loadQueuedTasks();
+
+    // Если у задачи есть дедлайн, показываем уведомление
+    if (_currentTask.deadline != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'Дедлайн установлен. Теперь можно добавить задачу в очередь')),
+        );
+      });
+    }
   }
 
   void _loadQueuedTasks() {
     setState(() {
-      _queuedTasks = _taskService.getTasksByStatus(
+      // Используем TaskProvider для получения задач
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      final tasks = taskProvider.getTasksByStatus(
+        TaskStatus.queue,
         position: RoleHelper.convertToString(RoleHelper.determineUserRoleInTask(
             task: _currentTask,
             currentUserId: _currentTask.team.teamMembers.first.userId)),
-        status: TaskStatus.queue,
-        employeeId: _currentTask.team.teamMembers.first.userId,
+        userId: _currentTask.team.teamMembers.first.userId,
       );
+      _queuedTasks = Future.value(tasks);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Перезагружаем задачи при изменении зависимостей (например, при обновлении TaskProvider)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadQueuedTasks();
     });
   }
 
@@ -53,18 +76,37 @@ class _QueueScreenState extends State<QueueScreen> {
 
   Future<void> _addToQueue(int selectedPosition) async {
     try {
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
       final tasks = await _queuedTasks ?? [];
+
+      // Обновляем позиции существующих задач
       for (var task in tasks) {
         if (int.parse(task.queuePosition!) >= selectedPosition) {
-          task.queuePosition = (int.parse(task.queuePosition!) + 1).toString();
-          await _taskService.updateQueuePosTask(task);
+          final updatedTask = task.copyWith(
+            queuePosition: (int.parse(task.queuePosition!) + 1).toString(),
+          );
+          await taskProvider.updateTask(updatedTask);
         }
       }
 
-      _currentTask.queuePosition = selectedPosition.toString();
-      _currentTask.status = TaskStatus.queue;
-      await _taskService.updateQueuePosTask(_currentTask);
+      // Обновляем текущую задачу
+      final updatedCurrentTask = _currentTask.copyWith(
+        queuePosition: selectedPosition.toString(),
+        status: TaskStatus.queue,
+      );
+
+      await taskProvider.updateTask(updatedCurrentTask);
+      setState(() {
+        _currentTask = updatedCurrentTask;
+      });
+
+      // Перезагружаем список задач
       _loadQueuedTasks();
+
+      // Показываем уведомление об успехе
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Задача добавлена в очередь')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Ошибка при добавлении в очередь: $e')),
@@ -114,12 +156,10 @@ class _QueueScreenState extends State<QueueScreen> {
                         title: Text('$position'),
                         value: position,
                         groupValue: _selectedPosition,
-                        onChanged: (value) {
+                        onChanged: (value) async {
                           if (value != null) {
-                            _addToQueue(value);
+                            await _addToQueue(value);
                             Navigator.pop(context);
-                            taskProvider.updateTaskStatus(
-                                _currentTask, TaskStatus.queue);
                           }
                         },
                       ),
@@ -140,6 +180,19 @@ class _QueueScreenState extends State<QueueScreen> {
       appBar: AppBar(
         title: const Text('Очередь задач'),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Возвращаемся к предыдущему экрану с обновленной задачей
+            if (widget.task.deadline == null && _currentTask.deadline != null) {
+              // Если дедлайн был установлен на этом экране, возвращаем обновленную задачу
+              Navigator.pop(context, _currentTask);
+            } else {
+              // Иначе просто возвращаемся назад
+              Navigator.pop(context);
+            }
+          },
+        ),
       ),
       body: SafeArea(
         top: false,
@@ -292,15 +345,25 @@ class _QueueScreenState extends State<QueueScreen> {
                 final deadline = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TaskCompletionPage(task: task),
+                    builder: (context) =>
+                        TaskCompletionPage(task: _currentTask),
                   ),
                 );
                 if (deadline != null) {
+                  final taskProvider =
+                      Provider.of<TaskProvider>(context, listen: false);
+                  final updatedTask = _currentTask.copyWith(deadline: deadline);
+                  await taskProvider.updateTask(updatedTask);
                   setState(() {
-                    _currentTask = _currentTask.copyWith(
-                      deadline: deadline,
-                    );
+                    _currentTask = updatedTask;
                   });
+
+                  // Показываем уведомление об успехе
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                            'Дедлайн установлен. Теперь можно добавить задачу в очередь')),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(

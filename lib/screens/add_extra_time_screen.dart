@@ -28,8 +28,8 @@ class _AddExtraTimeScreen extends State<AddExtraTimeScreen> {
   void initState() {
     super.initState();
     // Устанавливаем текущий дедлайн как начальную дату, если он есть
-    _selectedDay = widget.task.endDate;
-    _focusedDay = widget.task.endDate;
+    _selectedDay = widget.task.deadline!.day as DateTime;
+    _focusedDay = widget.task.deadline!.day as DateTime;
   }
 
   String _formatDeadline(DateTime? dateTime) {
@@ -80,7 +80,7 @@ class _AddExtraTimeScreen extends State<AddExtraTimeScreen> {
 
               // Текущий дедлайн
               Text(
-                'Сдлеать до',
+                'Сдeлать до',
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const SizedBox(height: 4),

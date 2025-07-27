@@ -158,8 +158,9 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ),
                 Consumer<TaskProvider>(
                   builder: (context, taskProvider, child) => ElevatedButton(
-                    onPressed: () {
-                      taskProvider.updateTaskStatus(task, TaskStatus.notRead);
+                    onPressed: () async {
+                      await taskProvider.updateTaskStatus(
+                          task, TaskStatus.notRead);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -387,8 +388,8 @@ class TaskLayoutBuilder extends StatelessWidget {
                         Consumer<TaskProvider>(
                             builder: (context, taskProvider, child) =>
                                 ElevatedButton(
-                                  onPressed: () {
-                                    taskProvider.updateTaskStatus(
+                                  onPressed: () async {
+                                    await taskProvider.updateTaskStatus(
                                         task, TaskStatus.inOrder);
                                   },
                                   style: ElevatedButton.styleFrom(
@@ -576,75 +577,82 @@ class TaskLayoutBuilder extends StatelessWidget {
                 else
                   _buildSectionItem(
                       icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
-                // Column(children: [
-                //   ElevatedButton(
-                //     onPressed: () {
-                //       RequestService()
-                //           .updateCorrection(notDoneRevision..isDone = true);
-                //
-                //       RequestService().addCorrection(Correction(
-                //           date: DateTime.now(),
-                //           taskId: task.id,
-                //           status: TaskStatus.needExplanation,
-                //           description: 'Прислать письмо-решение'));
-                //
-                //       task.changeStatus(TaskStatus.needTicket);
-                //
-                //       print('Жалоба на некорректную постановку задачи');
-                //     },
-                //     style: ElevatedButton.styleFrom(
-                //       backgroundColor: Colors.orange,
-                //       foregroundColor: Colors.white,
-                //       padding: const EdgeInsets.symmetric(vertical: 12),
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(12),
-                //       ),
-                //     ),
-                //     child: const Row(
-                //       mainAxisAlignment: MainAxisAlignment.center,
-                //       children: [
-                //         SizedBox(width: 8),
-                //         Text(
-                //           'Прислать письмо-решение',
-                //           style: TextStyle(
-                //             color: Colors.white, // Белый текст
-                //             fontSize: 16,
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ),
-                //   const SizedBox(height: 16),
-                //   ElevatedButton(
-                //     onPressed: () {
-                //       RequestService()
-                //           .updateCorrection(notDoneRevision..isDone = true);
-                //       task.changeStatus(TaskStatus.revision);
-                //       print('Жалоба на некорректную постановку задачи');
-                //     },
-                //     style: OutlinedButton.styleFrom(
-                //       backgroundColor: Colors.white,
-                //       side: const BorderSide(color: Colors.orange, width: 1),
-                //       padding: const EdgeInsets.symmetric(vertical: 12),
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(12),
-                //       ),
-                //     ),
-                //     child: const Row(
-                //       mainAxisAlignment: MainAxisAlignment.center,
-                //       children: [
-                //         SizedBox(width: 8),
-                //         Text(
-                //           'Отправить на доработку',
-                //           style: TextStyle(
-                //             color: Colors.black, // Белый текст
-                //             fontSize: 16,
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ),
-                // ]),
+                Column(children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      final taskProvider =
+                          Provider.of<TaskProvider>(context, listen: false);
+
+                      await RequestService()
+                          .updateCorrection(notDoneRevision..isDone = true);
+
+                      await RequestService().addCorrection(Correction(
+                          date: DateTime.now(),
+                          taskId: task.id,
+                          status: TaskStatus.needExplanation,
+                          description: 'Прислать письмо-решение'));
+
+                      await taskProvider.updateTaskStatus(
+                          task, TaskStatus.needTicket);
+
+                      print('Жалоба на некорректную постановку задачи');
+                    }, //
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Прислать письмо-решение',
+                          style: TextStyle(
+                            color: Colors.white, // Белый текст
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final taskProvider =
+                          Provider.of<TaskProvider>(context, listen: false);
+                      await RequestService()
+                          .updateCorrection(notDoneRevision..isDone = true);
+                      await taskProvider.updateTaskStatus(
+                          task, TaskStatus.revision);
+                      print('Жалоба на некорректную постановку задачи');
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.orange, width: 1),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 8),
+                        Text(
+                          'Отправить на доработку',
+                          style: TextStyle(
+                            color: Colors.black, // Белый текст
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ]),
                 const Divider(),
                 _buildSectionItem(
                     icon: Iconsax.clock_copy, title: 'История задачи'),
@@ -822,14 +830,19 @@ class TaskLayoutBuilder extends StatelessWidget {
                 ),
                 const Divider(),
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => QueueScreen(task: task),
                       ),
                     );
-                    print('Жалоба на некорректную постановку задачи');
+                    if (result != null && result is Task) {
+                      // Обновляем задачу в TaskProvider
+                      final taskProvider =
+                          Provider.of<TaskProvider>(context, listen: false);
+                      await taskProvider.updateTask(result);
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task.dart';
-import 'package:task_tracker/services/task_operations.dart';
+import 'package:task_tracker/services/task_provider.dart';
 
 class EditTaskDetailsScreen extends StatefulWidget {
   final Task task;
@@ -15,7 +16,6 @@ class _EditTaskDetailsScreenState extends State<EditTaskDetailsScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
-  final TaskService _taskService = TaskService();
 
   @override
   void initState() {
@@ -39,7 +39,10 @@ class _EditTaskDetailsScreenState extends State<EditTaskDetailsScreen> {
           taskName: _nameController.text.trim(),
           description: _descriptionController.text.trim(),
         );
-        await _taskService.updateTask(updatedTask);
+
+        final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+        await taskProvider.updateTask(updatedTask);
+
         if (mounted) {
           Navigator.pop(context, updatedTask);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +119,12 @@ class _EditTaskDetailsScreenState extends State<EditTaskDetailsScreen> {
         ),
       ),
       bottomSheet: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(
+          top: 16,
+          left: 16,
+          right: 16,
+          bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+        ),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -136,7 +144,10 @@ class _EditTaskDetailsScreenState extends State<EditTaskDetailsScreen> {
                 onPressed: () => Navigator.pop(context),
                 child: const Text(
                   'Отмена',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black),
                 ),
               ),
             ),

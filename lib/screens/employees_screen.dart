@@ -402,7 +402,8 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const bottomSheetHeight = 120.0;
+    const bottomSheetHeight = 0.0;
+    if (_userService.currentUser!.role == 'Директор') const bottomSheetHeight = 120.0;
     return Scaffold(
       backgroundColor: Colors.white,
       body: _isLoading

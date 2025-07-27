@@ -328,12 +328,12 @@ class RevisionsCard extends StatelessWidget {
               ),
             ],
 
-        // Разделитель (кроме последнего элемента)
-        if (correction != revisions.last) ...[
-          const SizedBox(height: 12),
-          const Divider(height: 1, color: Colors.grey),
-          const SizedBox(height: 12),
-        ],
+        // // Разделитель (кроме последнего элемента)
+        // if (correction != revisions.last) ...[
+        //   const SizedBox(height: 12),
+        //   const Divider(height: 1, color: Colors.grey),
+        //   const SizedBox(height: 12),
+        // ],
       ],
     );
   }

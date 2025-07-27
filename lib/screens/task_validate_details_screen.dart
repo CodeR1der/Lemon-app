@@ -277,7 +277,12 @@ class TaskValidateDetailsScreen extends StatelessWidget {
         ),
       ),
       bottomSheet: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(
+          top: 16,
+          left: 16,
+          right: 16,
+          bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+        ),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -285,9 +290,10 @@ class TaskValidateDetailsScreen extends StatelessWidget {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Consumer<TaskProvider>(
             builder: (context, taskProvider, child) => ElevatedButton(
-              onPressed: () {
-                RequestService().updateValidate(validate..isDone = true);
-                taskProvider.updateTaskStatus(task, TaskStatus.completed);
+              onPressed: () async {
+                await RequestService().updateValidate(validate..isDone = true);
+                await taskProvider.updateTaskStatus(task, TaskStatus.completed);
+                Navigator.pop(context, task);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
@@ -311,12 +317,15 @@ class TaskValidateDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           ElevatedButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
                           CorrectionScreen(task: task, validate: validate)));
+              if (result != null && result is Task) {
+                Navigator.pop(context, result);
+              }
             },
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.white,

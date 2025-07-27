@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:record/record.dart';
 import 'package:task_tracker/models/task_validate.dart';
 import 'package:task_tracker/services/request_operation.dart';
-import 'package:task_tracker/services/task_operations.dart';
+import 'package:task_tracker/services/task_provider.dart';
 
 import '../models/task.dart';
 import '../models/task_status.dart';
@@ -61,8 +63,15 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
 
   Future<void> recordAudio() async {
     if (await _checkPermission()) {
-      final path = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-      await _audioRecorder.start(const RecordConfig(), path: path);
+      final dir = await getTemporaryDirectory(); // путь к временной папке
+      final filePath =
+          '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.m4a'; // имя файла
+
+      await _audioRecorder.start(
+        const RecordConfig(),
+        path: filePath,
+      );
+
       setState(() {
         isRecording = true;
         audioMessage = 'Запись...';
@@ -172,9 +181,11 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
 
     try {
       final validate = _createValidate();
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+
       await RequestService().addTaskValidate(validate);
-      await TaskService()
-          .changeStatus(TaskStatus.completedUnderReview, widget.task.id);
+      await taskProvider.updateTaskStatus(
+          widget.task, TaskStatus.completedUnderReview);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Задача отправлена на проверку')),
@@ -436,7 +447,12 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
       ),
       bottomSheet: Container(
         color: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
+        padding: EdgeInsets.only(
+          top: 30,
+          left: 16,
+          right: 16,
+          bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+        ),
         width: double.infinity,
         child: ElevatedButton(
           onPressed: _canSubmit ? _submitCorrection : null,
