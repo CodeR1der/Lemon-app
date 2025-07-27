@@ -19,7 +19,8 @@ import '../models/task_role.dart';
 import '../models/task_status.dart';
 import '../services/task_categories.dart';
 import '../services/task_provider.dart';
-import '../task_screens/taskTitleScreen.dart';
+import '../task_screens/task_title_screen.dart';
+import '../widgets/common/app_common.dart';
 import 'employee_details_screen.dart';
 import 'employee_queue_screen.dart';
 
@@ -350,25 +351,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 20),
+                      AppSpacing.height20,
                       _buildUserInfo(),
-                      const SizedBox(height: 20),
+                      AppSpacing.height20,
                       _buildSearchBox(),
-                      const SizedBox(height: 20),
+                      AppSpacing.height20,
                       _buildAddTaskButton(),
-                      const SizedBox(height: 20),
+                      AppSpacing.height20,
                       if (UserService.to.currentUser!.role == 'Директор') ...[
                         _buildAddAnnouncementButton(),
-                        const SizedBox(height: 20),
+                        AppSpacing.height20,
                       ],
                       if (_announcement.isNotEmpty) ...[
                         _buildAnnouncementCard(),
-                        const SizedBox(height: 20),
+                        AppSpacing.height20,
                       ],
                       _buildTasksSection(),
-                      const SizedBox(height: 20),
+                      AppSpacing.height20,
                       _buildEmployeesSection(),
-                      const SizedBox(height: 20),
+                      AppSpacing.height20,
                       _buildProjectsSection(),
                     ],
                   ),
@@ -436,89 +437,33 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSearchBox() {
-    return GestureDetector(
+    return AppCommonWidgets.filledInputField(
+      controller: TextEditingController(),
+      hintText: 'Поиск по задачам и исполнителям',
+      prefixIcon: const Icon(Icons.search, color: Colors.grey),
+      enabled: false,
       onTap: () {
         Get.toNamed('/search');
       },
-      child: TextField(
-        enabled: false,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[200],
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          hintText: 'Поиск по задачам и исполнителям',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        ),
-      ),
     );
   }
 
   Widget _buildAddTaskButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          Get.toNamed(TaskTitleScreen.routeName);
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.orange,
-          foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          elevation: 4,
-          shadowColor: Colors.blue.withOpacity(0.3),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Поставить задачу',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
+    return AppButtons.primaryButton(
+      text: 'Поставить задачу',
+      onPressed: () {
+        Get.toNamed(TaskTitleScreen.routeName);
+      },
+      icon: Icons.add,
     );
   }
 
   Widget _buildAddAnnouncementButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          Get.toNamed('/create_announcement');
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          side: const BorderSide(color: Colors.orange, width: 1),
-          foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          elevation: 4,
-          shadowColor: Colors.blue.withOpacity(0.3),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Написать объявление',
-              style: TextStyle(
-                  fontSize: 16, color: Colors.black, fontFamily: 'Roboto'),
-            ),
-          ],
-        ),
-      ),
+    return AppButtons.secondaryButton(
+      text: 'Написать объявление',
+      onPressed: () {
+        Get.toNamed('/create_announcement');
+      },
     );
   }
 
@@ -531,18 +476,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () {
         Get.toNamed('/announcement_detail', arguments: announcement);
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 10,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
+      child: AppCommonWidgets.card(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -592,9 +526,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Icon(Iconsax.eye, size: 18, color: Colors.black),
                         const SizedBox(width: 8),
-                        Text(
-                          'Прочитали ${announcement.readBy.length} из ${announcement.selectedEmployees.length}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                        FutureBuilder<List<String>>(
+                          future: AnnouncementService()
+                              .getSelectedEmployees(announcement.id),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              return Text(
+                                'Прочитали ${announcement.readBy.length} из ${snapshot.data!.length}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              );
+                            }
+                            return Text(
+                              'Прочитали ${announcement.readBy.length} из ...',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -750,37 +696,19 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Сотрудники',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                _employees.length.toString(),
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
+        AppCommonWidgets.sectionHeader(
+          title: 'Сотрудники',
+          counter: _employees.length.toString(),
         ),
-        const SizedBox(height: 8),
+        AppSpacing.height8,
         _employees.isEmpty
-            ? const Center(child: Text('Нет сотрудников'))
+            ? AppCommonWidgets.emptyState('Нет сотрудников')
             : SizedBox(
                 height: 180,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _employees.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(width: 10),
+                  separatorBuilder: (context, index) => AppSpacing.width10,
                   itemBuilder: (context, index) =>
                       _buildEmployeeCell(_employees[index]),
                 ),
@@ -797,29 +725,22 @@ class _HomeScreenState extends State<HomeScreen> {
       child: SizedBox(
         width: 120,
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: AppSpacing.paddingAll12,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 12),
+              AppSpacing.height12,
               SizedBox(
                 height: 68,
-                child: CircleAvatar(
+                child: AppCommonWidgets.avatar(
                   radius: 34,
-                  backgroundImage: (employee.avatarUrl != null &&
-                          employee.avatarUrl!.isNotEmpty)
-                      ? NetworkImage(
-                          ProjectService().getAvatarUrl(employee.avatarUrl!) ??
-                              '')
-                      : null,
-                  child: (employee.avatarUrl == null ||
-                          employee.avatarUrl!.isEmpty)
-                      ? const Icon(Icons.account_box, size: 34)
-                      : null,
+                  imageUrl:
+                      ProjectService().getAvatarUrl(employee.avatarUrl ?? ''),
+                  fallbackIcon: Icons.account_box,
                 ),
               ),
-              const SizedBox(height: 12),
+              AppSpacing.height12,
               SizedBox(
                 height: 32,
                 child: Text(
@@ -833,12 +754,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(height: 8),
+              AppSpacing.height8,
               SizedBox(
                 height: 20,
                 child: Text(
                   employee.position,
-                  style: const TextStyle(fontSize: 10),
+                  style: AppTextStyles.caption,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -854,37 +775,19 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Проекты',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                _projects.length.toString(),
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
+        AppCommonWidgets.sectionHeader(
+          title: 'Проекты',
+          counter: _projects.length.toString(),
         ),
-        const SizedBox(height: 8),
+        AppSpacing.height8,
         _projects.isEmpty
-            ? const Center(child: Text('Нет проектов'))
+            ? AppCommonWidgets.emptyState('Нет проектов')
             : SizedBox(
                 height: 140,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _projects.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(width: 10),
+                  separatorBuilder: (context, index) => AppSpacing.width10,
                   itemBuilder: (context, index) =>
                       _buildProjectCell(_projects[index]),
                 ),
@@ -900,35 +803,18 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: SizedBox(
         width: 150,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(12),
+        child: AppCommonWidgets.card(
+          padding: AppSpacing.paddingAll12,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 12),
-              CircleAvatar(
+              AppSpacing.height12,
+              AppCommonWidgets.avatar(
                 radius: 17,
-                backgroundImage: (project.project.avatarUrl != null &&
-                        project.project.avatarUrl!.isNotEmpty)
-                    ? NetworkImage(project.project.avatarUrl!)
-                    : null,
-                child: (project.project.avatarUrl == null ||
-                        project.project.avatarUrl!.isEmpty)
-                    ? const Icon(Icons.account_box, size: 17)
-                    : null,
+                imageUrl: project.project.avatarUrl,
+                fallbackIcon: Icons.account_box,
               ),
-              const SizedBox(height: 12),
+              AppSpacing.height12,
               Text(
                 project.project.name,
                 style: const TextStyle(
@@ -938,14 +824,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              AppSpacing.height8,
               Row(
                 children: [
                   const Icon(Icons.account_circle_sharp, size: 16),
-                  const SizedBox(width: 4),
+                  AppSpacing.width6,
                   Text(
                     project.employees.toString(),
-                    style: const TextStyle(fontSize: 14),
+                    style: AppTextStyles.bodySmall,
                   ),
                 ],
               ),

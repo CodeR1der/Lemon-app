@@ -6,7 +6,7 @@ import 'package:task_tracker/services/user_service.dart';
 
 import '../models/announcement.dart';
 import '../services/announcement_operations.dart';
-import '../task_screens/TaskDescriptionTab.dart';
+import '../task_screens/task_description_tab.dart';
 
 class AnnouncementDetailScreen extends StatefulWidget {
   final Announcement announcement;
@@ -47,10 +47,23 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
 
   Future<void> _loadEmployees() async {
     try {
+      // Получаем выбранных сотрудников из новой таблицы
+      final selectedEmployeeIds = await AnnouncementService()
+          .getSelectedEmployees(widget.announcement.id);
+
+      if (selectedEmployeeIds.isEmpty) {
+        setState(() {
+          _employees = [];
+          _isLoadingEmployees = false;
+        });
+        return;
+      }
+
+      // Получаем информацию о сотрудниках
       final employees = await EmployeeService().getAllEmployees();
       setState(() {
         _employees = employees
-            .where((e) => e.userId != UserService.to.currentUser!.userId)
+            .where((e) => selectedEmployeeIds.contains(e.userId))
             .toList();
         _isLoadingEmployees = false;
       });
@@ -312,8 +325,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
       itemBuilder: (context, index) {
         final employee = _employees[index];
         final hasRead = widget.announcement.readBy.contains(employee.userId);
-        final isSelected =
-            widget.announcement.selectedEmployees.contains(employee.userId);
+        // Все сотрудники в _employees уже являются выбранными для этого объявления
+        final isSelected = true;
 
         return ListTile(
           leading: CircleAvatar(

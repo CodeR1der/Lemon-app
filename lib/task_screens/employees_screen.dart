@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:task_tracker/models/task_role.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
-import 'package:task_tracker/task_screens/DeadlineScreen.dart';
+import 'package:task_tracker/task_screens/deadline_screen.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/employee.dart';

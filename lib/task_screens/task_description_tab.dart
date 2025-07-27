@@ -14,15 +14,14 @@ import 'package:video_player/video_player.dart';
 import '../models/task.dart';
 import '../models/task_role.dart';
 import '../models/task_status.dart';
-import '../widgets/TaskLayout.dart';
-import '../widgets/customPlayer.dart';
+import '../widgets/custom_player.dart';
+import '../widgets/task_layout/task_layout_builder.dart';
 
 class TaskDescriptionTab extends StatelessWidget {
   final Task task;
   final TaskService _database = TaskService();
 
   TaskDescriptionTab({super.key, required this.task});
-
 
   bool _isImage(String fileName) {
     return fileName.endsWith('.jpg') ||
@@ -78,7 +77,7 @@ class TaskDescriptionTab extends StatelessWidget {
                 children: [
                   Icon(
                     task.status == TaskStatus.controlPoint &&
-                        _getPosition() != "Коммуникатор"
+                            _getPosition() != "Коммуникатор"
                         ? StatusHelper.getStatusIcon(TaskStatus.atWork)
                         : StatusHelper.getStatusIcon(task.status),
                     size: 16,
@@ -86,7 +85,7 @@ class TaskDescriptionTab extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     task.status == TaskStatus.controlPoint &&
-                        _getPosition() != "Коммуникатор"
+                            _getPosition() != "Коммуникатор"
                         ? StatusHelper.displayName(TaskStatus.atWork)
                         : StatusHelper.displayName(task.status),
                     style: Theme.of(context).textTheme.bodySmall,
@@ -149,50 +148,50 @@ class TaskDescriptionTab extends StatelessWidget {
 
             task.attachments.where((file) => _isImage(file)).isNotEmpty
                 ? GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
-              ),
-              itemCount:
-              task.attachments.where((file) => _isImage(file)).length,
-              itemBuilder: (context, index) {
-                final photo = task.attachments
-                    .where((file) => _isImage(file))
-                    .toList()[index];
-                return GestureDetector(
-                  onTap: () => _openPhotoGallery(
-                    context,
-                    index,
-                    task.attachments
-                        .where((file) => _isImage(file))
-                        .toList(),
-                  ),
-                  child: Hero(
-                    tag: 'photo_$index',
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: Container(
-                        color: Colors.white, // Белый фон для изображения
-                        child: Image.network(
-                          _database.getTaskAttachment(photo),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                color: Colors.grey.shade200,
-                                child:
-                                const Icon(Icons.broken_image, size: 32),
-                              ),
-                        ),
-                      ),
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8.0,
+                      mainAxisSpacing: 8.0,
                     ),
-                  ),
-                );
-              },
-            )
+                    itemCount:
+                        task.attachments.where((file) => _isImage(file)).length,
+                    itemBuilder: (context, index) {
+                      final photo = task.attachments
+                          .where((file) => _isImage(file))
+                          .toList()[index];
+                      return GestureDetector(
+                        onTap: () => _openPhotoGallery(
+                          context,
+                          index,
+                          task.attachments
+                              .where((file) => _isImage(file))
+                              .toList(),
+                        ),
+                        child: Hero(
+                          tag: 'photo_$index',
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child: Container(
+                              color: Colors.white, // Белый фон для изображения
+                              child: Image.network(
+                                _database.getTaskAttachment(photo),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                  color: Colors.grey.shade200,
+                                  child:
+                                      const Icon(Icons.broken_image, size: 32),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  )
                 : const Text('Нет фотографий'),
             const SizedBox(height: 16),
 
@@ -240,75 +239,75 @@ class TaskDescriptionTab extends StatelessWidget {
             const SizedBox(height: 8),
             task.videoMessage!.where((file) => _isVideo(file)).isNotEmpty
                 ? GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
-              ),
-              itemCount: task.videoMessage!
-                  .where((file) => _isVideo(file))
-                  .length,
-              itemBuilder: (context, index) {
-                final video = task.videoMessage!
-                    .where((file) => _isVideo(file))
-                    .toList()[index];
-                final videoUrl = _database.getTaskAttachment(video);
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 8.0,
+                      mainAxisSpacing: 8.0,
+                    ),
+                    itemCount: task.videoMessage!
+                        .where((file) => _isVideo(file))
+                        .length,
+                    itemBuilder: (context, index) {
+                      final video = task.videoMessage!
+                          .where((file) => _isVideo(file))
+                          .toList()[index];
+                      final videoUrl = _database.getTaskAttachment(video);
 
-                return FutureBuilder<Uint8List?>(
-                  future: _generateThumbnail(videoUrl),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return Container(
-                        color: Colors.white,
-                        child: const Center(
-                            child: CircularProgressIndicator()),
-                      );
-                    }
-                    if (snapshot.hasError || snapshot.data == null) {
-                      return Container(
-                        color: Colors.grey.shade200,
-                        child: const Icon(Icons.broken_image, size: 32),
-                      );
-                    }
-                    return GestureDetector(
-                      onTap: () => _openVideoGallery(
-                        context,
-                        index,
-                        task.videoMessage!
-                            .where((file) => _isVideo(file))
-                            .toList(),
-                      ),
-                      child: Container(
-                        color: Colors.white, // Белый фон для видео
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8.0),
-                              child: Image.memory(
-                                snapshot.data!,
-                                fit: BoxFit.contain,
-                                width: double.infinity,
-                                height: double.infinity,
+                      return FutureBuilder<Uint8List?>(
+                        future: _generateThumbnail(videoUrl),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Container(
+                              color: Colors.white,
+                              child: const Center(
+                                  child: CircularProgressIndicator()),
+                            );
+                          }
+                          if (snapshot.hasError || snapshot.data == null) {
+                            return Container(
+                              color: Colors.grey.shade200,
+                              child: const Icon(Icons.broken_image, size: 32),
+                            );
+                          }
+                          return GestureDetector(
+                            onTap: () => _openVideoGallery(
+                              context,
+                              index,
+                              task.videoMessage!
+                                  .where((file) => _isVideo(file))
+                                  .toList(),
+                            ),
+                            child: Container(
+                              color: Colors.white, // Белый фон для видео
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    child: Image.memory(
+                                      snapshot.data!,
+                                      fit: BoxFit.contain,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Iconsax.play_circle,
+                                    color: const Color(0xFF049FFF),
+                                    size: 48.0,
+                                  ),
+                                ],
                               ),
                             ),
-                            Icon(
-                              Iconsax.play_circle,
-                              color: const Color(0xFF049FFF),
-                              size: 48.0,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            )
+                          );
+                        },
+                      );
+                    },
+                  )
                 : const Text('Нет видео'),
 
             const SizedBox(height: 16),
@@ -388,7 +387,7 @@ class PhotoGalleryScreen extends StatelessWidget {
               value: event == null
                   ? null
                   : event.cumulativeBytesLoaded /
-                  (event.expectedTotalBytes ?? 1),
+                      (event.expectedTotalBytes ?? 1),
             ),
           ),
         ),
@@ -471,8 +470,8 @@ class _VideoGalleryScreenState extends State<VideoGalleryScreen> {
             color: Colors.white,
             child: Center(
               child: _chewieController != null &&
-                  _chewieController!
-                      .videoPlayerController.value.isInitialized
+                      _chewieController!
+                          .videoPlayerController.value.isInitialized
                   ? Chewie(controller: _chewieController!)
                   : const CircularProgressIndicator(),
             ),

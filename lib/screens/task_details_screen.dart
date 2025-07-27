@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../models/task.dart';
 import '../services/task_provider.dart';
-import '../task_screens/TaskChatTab.dart';
-import '../task_screens/TaskDescriptionTab.dart';
-import '../task_screens/TaskPeriodTab.dart';
-import '../task_screens/TaskTeamTab.dart';
+import '../task_screens/task_chat_tab.dart';
+import '../task_screens/task_description_tab.dart';
+import '../task_screens/task_period_tab.dart';
+import '../task_screens/task_team_tab.dart';
 
 class TaskDetailsScreen extends StatelessWidget {
   final Task task;

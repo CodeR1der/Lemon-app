@@ -63,6 +63,20 @@ class Announcement {
     };
   }
 
+  // Преобразование объекта в JSON без selected_employees (для основной таблицы)
+  Map<String, dynamic> toJsonWithoutEmployees() {
+    return {
+      'id': id,
+      'title': title,
+      'full_text': fullText,
+      'created_at': date.toIso8601String(),
+      'attachments': attachments,
+      'read_by': readBy,
+      'company_id': companyId,
+      'status': status,
+    };
+  }
+
   // Создание объекта из JSON
   factory Announcement.fromJson(Map<String, dynamic> json) {
     return Announcement(
@@ -93,8 +107,7 @@ class AnnouncementLog {
   final String? announcementId; // ID объявления
   final String companyId;
 
-
-  AnnouncementLog( {
+  AnnouncementLog({
     required this.id,
     required this.action,
     required this.userId,
@@ -133,7 +146,7 @@ class AnnouncementLog {
       targetUserId: json['targetUserId'] as String?,
       targetUserName: json['targetUserName'] as String?,
       announcementId: json['announcement_id'] as String?,
-      companyId: json['company_id']as String,
+      companyId: json['company_id'] as String,
     );
   }
 }

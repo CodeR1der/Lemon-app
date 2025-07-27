@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:task_tracker/models/priority.dart';
 import 'package:task_tracker/screens/task_details_screen.dart';
 import 'package:task_tracker/services/task_operations.dart';
-import 'package:task_tracker/task_screens/taskTitleScreen.dart';
+import 'package:task_tracker/task_screens/task_title_screen.dart';
 
 import '../models/task.dart';
-import 'SelectPeriodScreen.dart';
+import 'select_period_screen.dart';
 
 class DeadlineScreen extends StatefulWidget {
   final Task taskData;

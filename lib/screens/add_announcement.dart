@@ -132,12 +132,12 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
 
       // Создаем лог создания объявления в отдельной таблице
       await AnnouncementService.addLog(
-        newAnnouncement.id,
-        'created',
-        currentUser.userId,
-        currentUser.name,
-        currentUser.role, newAnnouncement.companyId
-      );
+          newAnnouncement.id,
+          'created',
+          currentUser.userId,
+          currentUser.name,
+          currentUser.role,
+          newAnnouncement.companyId);
       Get.snackbar('Успех', 'Объявление успешно создано');
       Navigator.pop(context);
       Get.back(result: true);
@@ -153,6 +153,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset:
+          false, // Предотвращаем поднятие контента при появлении клавиатуры
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -336,6 +338,20 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                 ],
                               ),
                             ),
+                            ElevatedButton(
+                              onPressed: _isLoading ? null : _submitForm,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    _canSubmit ? Colors.orange : Colors.grey,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Опубликовать'),
+                            ),
                           ],
                         ),
                       ),
@@ -344,7 +360,13 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       ),
       bottomSheet: Container(
         color: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
+        padding: EdgeInsets.only(
+          top: 30,
+          left: 16,
+          right: 16,//
+          bottom: MediaQuery.of(context).viewPadding.bottom +
+              16, // Используем viewPadding для учета системной навигации
+        ),
         width: double.infinity,
         child: ElevatedButton(
           onPressed: _isLoading ? null : _submitForm,

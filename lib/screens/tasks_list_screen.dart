@@ -6,6 +6,7 @@ import '../models/task.dart';
 import '../models/task_role.dart';
 import '../models/task_status.dart';
 import '../services/task_provider.dart';
+import '../widgets/common/app_common.dart';
 
 class TaskListByStatusScreen extends StatelessWidget {
   final String? position;
@@ -31,113 +32,44 @@ class TaskListByStatusScreen extends StatelessWidget {
           ),
         );
       },
-      child: Card(
-        color: Colors.white,
-        elevation: 1,
-        margin: const EdgeInsets.only(bottom: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: Colors.grey.shade200, width: 1),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Статус',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(color: Colors.grey.shade600),
+      child: AppCommonWidgets.card(
+        margin: AppSpacing.marginBottom16,
+        padding: AppSpacing.paddingAll16,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppCommonWidgets.labeledField(
+              label: 'Статус',
+              child: AppCommonWidgets.statusChip(
+                icon: StatusHelper.getStatusIcon(task.status),
+                text: StatusHelper.displayName(task.status),
               ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  //const CircleAvatar(radius: 16, backgroundColor: Colors.blue),
-                  //const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEBEDF0),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(StatusHelper.getStatusIcon(task.status), size: 16),
-                        const SizedBox(width: 6),
-                        Text(StatusHelper.displayName(task.status),
-                            style: Theme.of(context).textTheme.bodySmall),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (position ==
-                      RoleHelper.convertToString(TaskRole.communicator) &&
-                  status == TaskStatus.queue) ...[
-                Text(
-                  'Очередность задачи',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
-                      ?.copyWith(color: Colors.grey.shade600),
+            ),
+            if (position == RoleHelper.convertToString(TaskRole.communicator) &&
+                status == TaskStatus.queue) ...[
+              AppCommonWidgets.labeledField(
+                label: 'Очередность задачи',
+                child: AppCommonWidgets.counterChip(
+                  count: task.queuePosition.toString(),
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEBEDF0),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    task.queuePosition.toString(),
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: Colors.black),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Text(
-                'Название задачи',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                task.taskName,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: Colors.black),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Проект',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                task.project?.name ?? 'Не указан',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: Colors.black),
               ),
             ],
-          ),
+            AppCommonWidgets.labeledField(
+              label: 'Название задачи',
+              child: Text(
+                task.taskName,
+                style: AppTextStyles.bodyMedium,
+              ),
+            ),
+            AppCommonWidgets.labeledField(
+              label: 'Проект',
+              child: Text(
+                task.project?.name ?? 'Не указан',
+                style: AppTextStyles.bodyMedium,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -158,10 +90,11 @@ class TaskListByStatusScreen extends StatelessWidget {
             var tasks = [];
 
             if (taskProvider.isLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return AppCommonWidgets.loadingIndicator();
             }
             if (taskProvider.error != null) {
-              return Center(child: Text('Ошибка: ${taskProvider.error}'));
+              return AppCommonWidgets.errorWidget(
+                  'Ошибка: ${taskProvider.error}');
             }
             if (status == TaskStatus.controlPoint &&
                 (position == TaskRole.executor ||
@@ -189,7 +122,7 @@ class TaskListByStatusScreen extends StatelessWidget {
             print(
                 'Найдено задач: ${tasks.length} для статуса: $status, position: $position, userId: $userId');
             if (tasks.isEmpty) {
-              return const Center(child: Text('Нет задач с таким статусом'));
+              return AppCommonWidgets.emptyState('Нет задач с таким статусом');
             }
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),

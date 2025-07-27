@@ -15,7 +15,7 @@ import 'package:task_tracker/screens/tasks_screen.dart';
 import 'package:task_tracker/services/project_provider.dart';
 import 'package:task_tracker/services/task_provider.dart';
 import 'package:task_tracker/services/user_service.dart';
-import 'package:task_tracker/task_screens/taskTitleScreen.dart';
+import 'package:task_tracker/task_screens/task_title_screen.dart';
 import 'package:task_tracker/widgets/navigation_panel.dart';
 
 import 'auth/auth.dart';
@@ -98,16 +98,23 @@ class MyApp extends StatelessWidget {
           scaffoldBackgroundColor: Colors.white,
           fontFamily: 'Roboto',
           textTheme: const TextTheme(
-            bodyMedium: TextStyle(fontSize: 15, color: Colors.black),
-            bodySmall: TextStyle(fontSize: 14, color: Colors.black),
-            bodyLarge: TextStyle(fontSize: 16, color: Colors.black),
+            bodyMedium: TextStyle(
+                fontSize: 15, color: Colors.black, fontFamily: 'Roboto'),
+            bodySmall: TextStyle(
+                fontSize: 14, color: Colors.black, fontFamily: 'Roboto'),
+            bodyLarge: TextStyle(
+                fontSize: 16, color: Colors.black, fontFamily: 'Roboto'),
             titleMedium: TextStyle(
                 fontSize: 14,
                 color: Color(0xff6D7885),
-                fontWeight: FontWeight.bold),
-            titleSmall: TextStyle(fontSize: 14, color: Color(0xff6D7885)),
-            displayMedium: TextStyle(fontSize: 13, color: Color(0xff6D7885)),
-            displaySmall: TextStyle(fontSize: 12, color: Color(0xff6D7885)),
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Roboto'),
+            titleSmall: TextStyle(
+                fontSize: 14, color: Color(0xff6D7885), fontFamily: 'Roboto'),
+            displayMedium: TextStyle(
+                fontSize: 13, color: Color(0xff6D7885), fontFamily: 'Roboto'),
+            displaySmall: TextStyle(
+                fontSize: 12, color: Color(0xff6D7885), fontFamily: 'Roboto'),
           ),
         ),
         debugShowCheckedModeBanner: false,

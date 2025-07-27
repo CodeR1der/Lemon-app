@@ -4,11 +4,11 @@ import 'package:file_picker/file_picker.dart'; // Для выбора файло
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; // Для выбора видео
 import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart'; // Для записи аудио
-import 'package:task_tracker/task_screens/EmployeesScreen.dart';
+import 'package:task_tracker/task_screens/employees_screen.dart';
 
 import '../models/task.dart'; // Импортируйте ваш класс Task
-import 'package:path_provider/path_provider.dart';
 
 
 class AddedFilesScreen extends StatefulWidget {
