@@ -12,6 +12,7 @@ class AppSpacing {
   static const SizedBox height24 = SizedBox(height: 24);
 
   // Горизонтальные отступы
+  static const SizedBox width4 = SizedBox(width: 4);
   static const SizedBox width6 = SizedBox(width: 6);
   static const SizedBox width8 = SizedBox(width: 8);
   static const SizedBox width10 = SizedBox(width: 10);

@@ -806,7 +806,7 @@ class _HomeScreenState extends State<HomeScreen> {
         //padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
         width: 150,
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
-        decoration: AppContainerStyles.,
+        decoration: AppContainerStyles.smallCardDecoration,
         child: AppCommonWidgets.card(
           padding: AppSpacing.paddingAll16,
           child: Column(
