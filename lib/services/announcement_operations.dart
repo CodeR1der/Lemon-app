@@ -8,18 +8,36 @@ class AnnouncementService {
   final SupabaseClient _supabase = Supabase.instance.client;
   static const String _tableName = 'announcement';
   static const String _logTableName = 'announcement_log';
+  static const String _employeesTableName = 'announcement_employees';
   final _uuid = Uuid();
 
   // Создание нового объявления
   Future<void> createAnnouncement(Announcement announcement) async {
-    if (announcement.id.isEmpty) {
+    if (announcement.id.isEmpty) {//
       announcement.id = _uuid.v4();
     }
     try {
-      await _supabase.from(_tableName).insert(announcement.toJson());
+      // Создаем объявление без selected_employees
+      final announcementData = announcement.toJsonWithoutEmployees();
+
+      await _supabase.from(_tableName).insert(announcementData);
+
+      // Добавляем связи с сотрудниками в отдельную таблицу
+      if (announcement.selectedEmployees.isNotEmpty) {
+        final employeeRelations = announcement.selectedEmployees
+            .map((employeeId) => {
+          'announcement_id': announcement.id,
+          'employee_id': employeeId,
+        })
+            .toList();
+
+        await _supabase.from(_employeesTableName).insert(employeeRelations);
+      }
+
       print('Объявление успешно добавлено');
     } on PostgrestException catch (error) {
       print('Ошибка при добавлении объявления: ${error.message}');
+      throw Exception('Ошибка при добавлении объявления: ${error.message}');
     }
   }
 
@@ -30,15 +48,38 @@ class AnnouncementService {
           .from(_tableName)
           .select()
           .eq('company_id', companyId)
+          .eq('status', 'active')
           .order('created_at', ascending: false);
 
       if (response.isEmpty) {
         return [];
       }
 
-      return (response as List<dynamic>)
-          .map((json) => Announcement.fromJson(json as Map<String, dynamic>))
-          .toList();
+      final announcements = <Announcement>[];
+
+      for (final announcementData in response) {
+        final announcement =
+        Announcement.fromJson(announcementData as Map<String, dynamic>);
+
+        // Загружаем selected_employees из отдельной таблицы
+        final employeesResponse = await _supabase
+            .from(_employeesTableName)
+            .select('employee_id')
+            .eq('announcement_id', announcement.id);
+
+        final selectedEmployees = (employeesResponse as List<dynamic>)
+            .map((item) => item['employee_id'] as String)
+            .toList();
+
+        // Обновляем объект объявления
+        final updatedAnnouncement = announcement.copyWith(
+          selectedEmployees: selectedEmployees,
+        );
+
+        announcements.add(updatedAnnouncement);
+      }
+
+      return announcements;
     } catch (e) {
       throw Exception('Не удалось получить объявления: $e');
     }
@@ -92,14 +133,8 @@ class AnnouncementService {
       final currentUser = UserService.to.currentUser;
       if (currentUser != null) {
         // Добавляем лог
-        await _addLogEntry(
-            announcement.id,
-            'read',
-            userId,
-            currentUser.name,
-            currentUser.role,
-            announcement.companyId
-        );
+        await _addLogEntry(announcement.id, 'read', userId, currentUser.name,
+            currentUser.role, announcement.companyId);
       }
     } catch (e) {
       throw Exception('Не удалось пометить объявление как прочитанное: $e');
@@ -108,13 +143,13 @@ class AnnouncementService {
 
   // Пометка объявления как прочитанного для другого сотрудника (для коммуникаторов)
   static Future<void> markAsReadForEmployee(
-      String targetUserId,
-      String targetUserName,
-      Announcement announcement,
-      String currentUserId,
-      String currentUserName,
-      String currentUserRole,
-      ) async {
+    String targetUserId,
+    String targetUserName,
+    Announcement announcement,
+    String currentUserId,
+    String currentUserName,
+    String currentUserRole,
+  ) async {
     try {
       if (announcement.readBy.contains(targetUserId)) {
         return; // Уже прочитано
@@ -123,13 +158,10 @@ class AnnouncementService {
       final updatedReadBy = [...announcement.readBy, targetUserId];
       final supabase = Supabase.instance.client;
 
-      final response = await supabase
+       await supabase
           .from('announcement')
           .update({'read_by': updatedReadBy}).eq('id', announcement.id);
 
-      if (response.error != null) {
-        throw Exception('Ошибка обновления: ${response.error!.message}');
-      }
 
       // Обновляем локальный объект
       announcement.readBy.add(targetUserId);
@@ -152,11 +184,11 @@ class AnnouncementService {
 
   // Закрытие объявления
   static Future<void> closeAnnouncement(
-      Announcement announcement,
-      String currentUserId,
-      String currentUserName,
-      String currentUserRole,
-      ) async {
+    Announcement announcement,
+    String currentUserId,
+    String currentUserName,
+    String currentUserRole,
+  ) async {
     try {
       final supabase = Supabase.instance.client;
       await supabase
@@ -176,15 +208,15 @@ class AnnouncementService {
 
   // Добавление лога действия в отдельную таблицу
   static Future<void> _addLogEntry(
-      String announcementId,
-      String action,
-      String userId,
-      String userName,
-      String userRole,
-      String companyId, {
-        String? targetUserId,
-        String? targetUserName,
-      }) async {
+    String announcementId,
+    String action,
+    String userId,
+    String userName,
+    String userRole,
+    String companyId, {
+    String? targetUserId,
+    String? targetUserName,
+  }) async {
     try {
       final newLog = AnnouncementLog(
         id: const Uuid().v4(),
@@ -210,15 +242,15 @@ class AnnouncementService {
 
   // Добавление лога действия (публичный метод)
   static Future<void> addLog(
-      String announcementId,
-      String action,
-      String currentUserId,
-      String currentUserName,
-      String currentUserRole,
-      String companyId, {
-        String? targetUserId,
-        String? targetUserName,
-      }) async {
+    String announcementId,
+    String action,
+    String currentUserId,
+    String currentUserName,
+    String currentUserRole,
+    String companyId, {
+    String? targetUserId,
+    String? targetUserName,
+  }) async {
     await _addLogEntry(
       announcementId,
       action,
@@ -231,6 +263,48 @@ class AnnouncementService {
     );
   }
 
+  // Получение выбранных сотрудников для объявления
+  Future<List<String>> getSelectedEmployees(String announcementId) async {
+    try {
+      final response = await _supabase
+          .from(_employeesTableName)
+          .select('employee_id')
+          .eq('announcement_id', announcementId);
+
+      return (response as List<dynamic>)
+          .map((item) => item['employee_id'] as String)
+          .toList();
+    } catch (e) {
+      throw Exception('Не удалось получить выбранных сотрудников: $e');
+    }
+  }
+
+  // Получение объявления с выбранными сотрудниками
+  Future<Announcement?> getAnnouncementWithEmployees(
+      String announcementId) async {
+    try {
+      final response = await _supabase
+          .from(_tableName)
+          .select()
+          .eq('id', announcementId)
+          .single();
+
+      if (response == null) {
+        return null;
+      }
+
+      final announcement =
+      Announcement.fromJson(response as Map<String, dynamic>);
+
+      // Загружаем selected_employees из отдельной таблицы
+      final selectedEmployees = await getSelectedEmployees(announcementId);
+
+      return announcement.copyWith(selectedEmployees: selectedEmployees);
+    } catch (e) {
+      throw Exception('Не удалось получить объявление: $e');
+    }
+  }
+
   String getTaskAttachment(String? fileName) {
     return _supabase.storage
         .from('annoucementattachments')
@@ -240,17 +314,50 @@ class AnnouncementService {
   // Обновление объявления
   Future<void> updateAnnouncement(Announcement announcement) async {
     try {
+      // Обновляем основную информацию объявления
+      final announcementData = announcement.toJsonWithoutEmployees();
+
       final response = await _supabase
           .from(_tableName)
-          .update(announcement.toJson())
+          .update(announcementData)
           .eq('id', announcement.id);
 
       if (response.error != null) {
         throw Exception(
             'Ошибка обновления объявления: ${response.error!.message}');
       }
+
+      // Обновляем связи с сотрудниками
+      await updateSelectedEmployees(
+          announcement.id, announcement.selectedEmployees);
     } catch (e) {
       throw Exception('Не удалось обновить объявление: $e');
+    }
+  }
+
+  // Обновление выбранных сотрудников для объявления
+  Future<void> updateSelectedEmployees(
+      String announcementId, List<String> employeeIds) async {
+    try {
+      // Удаляем старые связи
+      await _supabase
+          .from(_employeesTableName)
+          .delete()
+          .eq('announcement_id', announcementId);
+
+      // Добавляем новые связи
+      if (employeeIds.isNotEmpty) {
+        final employeeRelations = employeeIds
+            .map((employeeId) => {
+          'announcement_id': announcementId,
+          'employee_id': employeeId,
+        })
+            .toList();
+
+        await _supabase.from(_employeesTableName).insert(employeeRelations);
+      }
+    } catch (e) {
+      throw Exception('Не удалось обновить выбранных сотрудников: $e');
     }
   }
 }

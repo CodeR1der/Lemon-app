@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:task_tracker/screens/task_details_screen.dart';
+import 'package:task_tracker/screens/task/task_details_screen.dart';
 
 import '../models/task.dart';
 import '../models/task_status.dart';

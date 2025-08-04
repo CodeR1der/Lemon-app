@@ -5,16 +5,16 @@ import 'package:get_thumbnail_video/index.dart';
 import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_role.dart';
-import 'package:task_tracker/screens/add_extra_time_screen.dart';
-import 'package:task_tracker/screens/change_executer_screen.dart';
+import 'package:task_tracker/screens/task/add_extra_time_screen.dart';
+import 'package:task_tracker/screens/task/change_executer_screen.dart';
 
 import '../models/correction.dart';
 import '../models/task.dart';
 import '../models/task_status.dart';
 import '../services/request_operation.dart';
 import '../services/task_provider.dart';
-import '../task_screens/TaskDescriptionTab.dart';
-import 'edit_task_details_screen.dart';
+import '../task_screens/task_description_tab.dart';
+import 'task/edit_task_details_screen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {
   final Correction correction;
@@ -137,7 +137,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF9F9F9),
                       borderRadius: BorderRadius.circular(10),
@@ -154,8 +154,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               if (correction.attachments
-                      ?.where((file) => _isImage(file))
-                      .isEmpty ??
+                  ?.where((file) => _isImage(file))
+                  .isEmpty ??
                   true)
                 const Text('Нет фотографий')
               else
@@ -193,9 +193,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
-                                color: Colors.grey.shade200,
-                                child: const Icon(Icons.broken_image, size: 32),
-                              ),
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(Icons.broken_image, size: 32),
+                                  ),
                             ),
                           ),
                         ),
@@ -239,12 +239,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
 
   Widget? _buildCreatorActions(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(
-        top: 16,
-        left: 16,
-        right: 16,
-        bottom: MediaQuery.of(context).viewPadding.bottom + 16,
-      ),
+      padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -278,12 +273,12 @@ class CorrectionDetailsScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () async {
                   final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
+                  Provider.of<TaskProvider>(context, listen: false);
 
                   if (correction.status == TaskStatus.needTicket) {
                     await taskProvider.updateTaskStatus(
                         task, TaskStatus.notRead);
-                    await RequestService()
+                    RequestService()
                         .updateCorrection(correction..isDone = true);
                   } else {
                     await taskProvider.updateTaskStatus(
@@ -309,19 +304,20 @@ class CorrectionDetailsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async {
+                onPressed: () {
                   if (correction.status == TaskStatus.needTicket) {
                     final taskProvider =
-                        Provider.of<TaskProvider>(context, listen: false);
-                    await taskProvider.updateTaskStatus(
+                    Provider.of<TaskProvider>(context, listen: false);
+                    taskProvider.updateTaskStatus(
                         task, TaskStatus.needExplanation);
-                    await RequestService()
+                    RequestService()
                         .updateCorrection(correction..isDone = true);
-                    await RequestService()
+                    RequestService()
                         .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                   } else {
                     _navigateToEditDescriptionScreen(context);
                   }
+                  Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -348,12 +344,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
 
   Widget? _buildCommunicatorActions(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(
-        top: 16,
-        left: 16,
-        right: 16,
-        bottom: MediaQuery.of(context).viewPadding.bottom + 16,
-      ),
+      padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -435,13 +426,11 @@ class CorrectionDetailsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async {
+                onPressed: () {
                   final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
-                  await taskProvider.updateTaskStatus(
-                      task, TaskStatus.completed);
-                  await RequestService()
-                      .updateCorrection(correction..isDone = true);
+                  Provider.of<TaskProvider>(context, listen: false);
+                  taskProvider.updateTaskStatus(task, TaskStatus.completed);
+                  RequestService().updateCorrection(correction..isDone = true);
                   Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
@@ -464,12 +453,11 @@ class CorrectionDetailsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async {
+                onPressed: () {
                   final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
-                  await taskProvider.updateTaskStatus(task, TaskStatus.notRead);
-                  await RequestService()
-                      .updateCorrection(correction..isDone = true);
+                  Provider.of<TaskProvider>(context, listen: false);
+                  taskProvider.updateTaskStatus(task, TaskStatus.notRead);
+                  RequestService().updateCorrection(correction..isDone = true);
                   Navigator.pop(context, task);
                 },
                 style: ElevatedButton.styleFrom(
@@ -489,19 +477,18 @@ class CorrectionDetailsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async {
+                onPressed: () {
                   final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
+                  Provider.of<TaskProvider>(context, listen: false);
                   if (correction.status == TaskStatus.needTicket) {
-                    await taskProvider.updateTaskStatus(
+                    taskProvider.updateTaskStatus(
                         task, TaskStatus.needExplanation);
-                    await RequestService()
+                    RequestService()
                         .updateCorrection(correction..isDone = true);
-                    await RequestService()
+                    RequestService()
                         .updateCorrectionByStatus(task.id, TaskStatus.notRead);
                   } else {
-                    await taskProvider.updateTaskStatus(
-                        task, TaskStatus.revision);
+                    taskProvider.updateTaskStatus(task, TaskStatus.revision);
                   }
                   Navigator.pop(context, task);
                 },

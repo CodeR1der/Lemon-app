@@ -5,6 +5,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/user_service.dart';
+import '../widgets/common/app_common.dart';
 import '../widgets/navigation_panel.dart';
 
 class AuthWrapper extends StatefulWidget {
@@ -88,15 +89,9 @@ class _AuthScreenState extends State<AuthScreen> {
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 74),
+        AppSpacing.height24,
         Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.orange,
-              width: 2,
-            ),
-          ),
+          decoration: AppContainerStyles.roleSelectionDecoration,
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -156,7 +151,7 @@ class _AuthScreenState extends State<AuthScreen> {
             },
           ),
         ),
-        const SizedBox(height: 24),
+        AppSpacing.height24,
       ],
     );
   }
@@ -221,9 +216,12 @@ class _AuthScreenState extends State<AuthScreen> {
         email: _emailController.text,
         password: _passwordController.text,
         name: _nameController.text,
-        position: _selectedRole == 'Директор'  ? 'Директор' : _positionController.text,
+        position:
+            _selectedRole == 'Директор' ? 'Директор' : _positionController.text,
         role: _selectedRole,
-        code: _selectedRole == 'Исполнитель / Постановщик' ? _companyCodeController.text : null,
+        code: _selectedRole == 'Исполнитель / Постановщик'
+            ? _companyCodeController.text
+            : null,
         phone: _phoneController.text.isEmpty ? null : _phoneController.text,
       );
       if (success) {
@@ -290,31 +288,15 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 20),
                 _isLoading
                     ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                  onPressed: _isButtonEnabled ? _handleAuth : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(width: 8),
-                      Text(
-                        _isSignUp ? 'Зарегистрироваться' : 'Войти',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
+                    : AppButtons.authButton(
+                        text: _isSignUp ? 'Зарегистрироваться' : 'Войти',
+                        onPressed: _isButtonEnabled ? _handleAuth : () {},
+                        isLoading: false,
                       ),
-                    ],
-                  ),
-                ),
-                TextButton(
+                AppButtons.textButton(
+                  text: _isSignUp
+                      ? 'Уже есть аккаунт? Войти'
+                      : 'Нет аккаунта? Зарегистрироваться',
                   onPressed: () {
                     setState(() {
                       _isSignUp = !_isSignUp;
@@ -323,18 +305,11 @@ class _AuthScreenState extends State<AuthScreen> {
                       _updateButtonState();
                     });
                   },
-                  child: Text(
-                    _isSignUp
-                        ? 'Уже есть аккаунт? Войти'
-                        : 'Нет аккаунта? Зарегистрироваться',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                  ),
+                  textColor: Colors.grey,
                 ),
                 if (_isSignUp)
-                  ElevatedButton(
+                  AppButtons.roleButton(
+                    text: 'Изменить роль',
                     onPressed: () {
                       setState(() {
                         _showRoleSelection = true;
@@ -342,28 +317,6 @@ class _AuthScreenState extends State<AuthScreen> {
                         _updateButtonState();
                       });
                     },
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.orange, width: 1),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(width: 8),
-                        Text(
-                          'Изменить роль',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
               ],
             ],
@@ -374,10 +327,10 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Widget _buildRegistrationSection(
-      String title,
-      TextEditingController controller, {
-        bool obscureText = false,
-      }) {
+    String title,
+    TextEditingController controller, {
+    bool obscureText = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -411,7 +364,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 borderSide: BorderSide(color: Colors.grey[400]!, width: 1),
               ),
               contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -469,7 +422,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 borderSide: BorderSide(color: Colors.grey[400]!, width: 1),
               ),
               contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               hintText: 'XXX XXX-XX-XX',
               hintStyle: const TextStyle(
                 fontSize: 18,
@@ -499,7 +452,7 @@ class _AuthScreenState extends State<AuthScreen> {
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(10),
               TextInputFormatter.withFunction(
-                    (oldValue, newValue) {
+                (oldValue, newValue) {
                   if (newValue.text.isEmpty) return newValue;
 
                   final text = newValue.text;
@@ -510,11 +463,11 @@ class _AuthScreenState extends State<AuthScreen> {
                   }
                   if (text.length > 6) {
                     newText =
-                    '${newText.substring(0, 7)}-${newText.substring(7)}';
+                        '${newText.substring(0, 7)}-${newText.substring(7)}';
                   }
                   if (text.length > 8) {
                     newText =
-                    '${newText.substring(0, 10)}-${newText.substring(10)}';
+                        '${newText.substring(0, 10)}-${newText.substring(10)}';
                   }
 
                   return TextEditingValue(

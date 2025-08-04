@@ -10,11 +10,11 @@ class TaskTeam {
 
   TaskTeam(
       {required this.teamId,
-        required this.taskId,
-        required this.communicatorId,
-        required this.creatorId,
-        this.observerId,
-        required this.teamMembers});
+      required this.taskId,
+      required this.communicatorId,
+      required this.creatorId,
+      this.observerId,
+      required this.teamMembers});
 
   Map<String, dynamic> toJson() {
     return {
@@ -31,19 +31,46 @@ class TaskTeam {
       teamId: json['team_id'] as String,
       taskId: json['task_id'] as String,
       communicatorId:
-      Employee.fromJson(json['communicator_id'] as Map<String, dynamic>),
+          Employee.fromJson(json['communicator_id'] as Map<String, dynamic>),
       creatorId: Employee.fromJson(json['creator_id'] as Map<String, dynamic>),
-      observerId: json['observer_id'] != null ? Employee.fromJson(json['observer_id'] as Map<String, dynamic>) : null,
+      observerId: json['observer_id'] != null
+          ? Employee.fromJson(json['observer_id'] as Map<String, dynamic>)
+          : null,
       teamMembers: json['team_members'] != null
           ? List<Employee>.from(
-        (json['team_members'] as List).map(
-              (member) => Employee.fromJson(
-              member['employee_id'] as Map<String, dynamic>),
-        ),
-      )
+              (json['team_members'] as List).map(
+                (member) => Employee.fromJson(
+                    member['employee_id'] as Map<String, dynamic>),
+              ),
+            )
           : <Employee>[],
     );
   }
 
-  TaskTeam.empty();
+  TaskTeam.empty() {
+    teamId = '';
+    taskId = '';
+    communicatorId = Employee(
+      userId: '',
+      name: '',
+      position: '',
+      phone: '',
+      telegramId: '',
+      vkId: '',
+      role: '',
+      companyId: '',
+    );
+    creatorId = Employee(
+      userId: '',
+      name: '',
+      position: '',
+      phone: '',
+      telegramId: '',
+      vkId: '',
+      role: '',
+      companyId: '',
+    );
+    observerId = null;
+    teamMembers = [];
+  }
 }

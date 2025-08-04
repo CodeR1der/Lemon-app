@@ -8,7 +8,7 @@ import 'package:task_tracker/screens/correction_details_screen.dart';
 import 'package:task_tracker/screens/correction_screen.dart';
 
 import '../models/task.dart';
-import '../screens/add_extra_time_screen.dart';
+import '../screens/task/add_extra_time_screen.dart';
 
 class RevisionsCard extends StatelessWidget {
   final List<Correction> revisions;
