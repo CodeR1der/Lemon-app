@@ -1,18 +1,19 @@
 import '../../../models/task_status.dart';
 import '../interfaces/task_layout_strategy.dart';
-import '../strategies/at_work_layout.dart';
-import '../strategies/completed_under_review_layout.dart';
-import '../strategies/control_point_layout.dart';
-import '../strategies/extra_time_layout.dart';
-import '../strategies/in_order_layout.dart';
-import '../strategies/need_explanation_layout.dart';
-import '../strategies/need_ticket_layout.dart';
-import '../strategies/new_task_layout.dart';
-import '../strategies/not_read_layout.dart';
-import '../strategies/overdue_layout.dart';
-import '../strategies/queue_layout.dart';
-import '../strategies/remaining_strategies.dart';
-import '../strategies/revision_layout.dart';
+import '../layouts/at_work_layout.dart';
+import '../layouts/completed_layout.dart';
+import '../layouts/completed_under_review_layout.dart';
+import '../layouts/control_point_layout.dart';
+import '../layouts/extra_time_layout.dart';
+import '../layouts/in_order_layout.dart';
+import '../layouts/need_explanation_layout.dart';
+import '../layouts/need_ticket_layout.dart';
+import '../layouts/new_task_layout.dart';
+import '../layouts/not_read_layout.dart';
+import '../layouts/overdue_layout.dart';
+import '../layouts/queue_layout.dart';
+import '../layouts/revision_layout.dart';
+
 
 class TaskLayoutFactory {
   static TaskLayoutStrategy getStrategy(TaskStatus status) {

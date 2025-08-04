@@ -5,8 +5,8 @@ import 'package:get_thumbnail_video/index.dart';
 import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_role.dart';
-import 'package:task_tracker/screens/add_extra_time_screen.dart';
-import 'package:task_tracker/screens/change_executer_screen.dart';
+import 'package:task_tracker/screens/task/add_extra_time_screen.dart';
+import 'package:task_tracker/screens/task/change_executer_screen.dart';
 
 import '../models/correction.dart';
 import '../models/task.dart';
@@ -14,7 +14,7 @@ import '../models/task_status.dart';
 import '../services/request_operation.dart';
 import '../services/task_provider.dart';
 import '../task_screens/task_description_tab.dart';
-import 'edit_task_details_screen.dart';
+import 'task/edit_task_details_screen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {
   final Correction correction;

@@ -103,7 +103,7 @@ class AnnouncementLog {
   final DateTime timestamp;
   final String? targetUserId; // ID сотрудника, для которого выполнено действие
   final String?
-      targetUserName; // Имя сотрудника, для которого выполнено действие
+  targetUserName; // Имя сотрудника, для которого выполнено действие
   final String? announcementId; // ID объявления
   final String companyId;
 

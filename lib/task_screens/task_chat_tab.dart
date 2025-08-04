@@ -39,9 +39,8 @@ class _ChatTabState extends State<ChatTab> {
           .eq('task_id', widget.taskId)
           .order('created_at', ascending: true);
       if (response.isNotEmpty) {
-        _messages.assignAll(response
-            .map((json) => ChatMessage.fromJson(json))
-            .toList());
+        _messages.assignAll(
+            response.map((json) => ChatMessage.fromJson(json)).toList());
       }
     } catch (e) {
       Get.snackbar('Ошибка', 'Не удалось загрузить сообщения: $e');
@@ -49,25 +48,26 @@ class _ChatTabState extends State<ChatTab> {
   }
 
   void _subscribeToChatUpdates() {
-    _chatChannel = Supabase.instance.client.channel('chat_channel_${widget.taskId}');
+    _chatChannel =
+        Supabase.instance.client.channel('chat_channel_${widget.taskId}');
 
     Supabase.instance.client
         .channel('chat_channel_${widget.taskId}')
         .onPostgresChanges(
-      event: PostgresChangeEvent.insert,
-      schema: 'public',
-      table: 'chat_messages',
-      filter: PostgresChangeFilter(
-        type: PostgresChangeFilterType.eq,
-        column: 'task_id',
-        value: widget.taskId,
-      ),
-      callback: (payload) {
-        final newData = payload.newRecord;
-        final newMessage = ChatMessage.fromJson(newData);
-        _messages.add(newMessage);
-            },
-    )
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'chat_messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'task_id',
+            value: widget.taskId,
+          ),
+          callback: (payload) {
+            final newData = payload.newRecord;
+            final newMessage = ChatMessage.fromJson(newData);
+            _messages.add(newMessage);
+          },
+        )
         .subscribe((status, [error]) {
       if (status == 'SUBSCRIBED') {
         print('Successfully subscribed to chat_channel_${widget.taskId}');
@@ -136,13 +136,11 @@ class _ChatTabState extends State<ChatTab> {
     try {
       final fileExt = file.path.split('.').last;
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-      await Supabase.instance.client.storage
-          .from('chatfiles')
-          .uploadBinary(
-        fileName,
-        await file.readAsBytes(),
-        fileOptions: const FileOptions(contentType: 'image/jpeg'),
-      );
+      await Supabase.instance.client.storage.from('chatfiles').uploadBinary(
+            fileName,
+            await file.readAsBytes(),
+            fileOptions: const FileOptions(contentType: 'image/jpeg'),
+          );
       final publicUrl = Supabase.instance.client.storage
           .from('chatfiles')
           .getPublicUrl(fileName);
@@ -168,54 +166,64 @@ class _ChatTabState extends State<ChatTab> {
       children: [
         Expanded(
           child: Obx(
-                () => ListView.builder(
+            () => ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
-                final isCurrentUser = message.userId == UserService.to.currentUser!.userId;
+                final isCurrentUser =
+                    message.userId == UserService.to.currentUser!.userId;
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 4.0),
                   child: Column(
-                    crossAxisAlignment:
-                    isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                    crossAxisAlignment: isCurrentUser
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
                     children: [
                       // Display the name above the message
                       FutureBuilder<Map<String, String?>>(
                         future: UserService.to.getUserData(message.userId),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return const Text(
                               'Загрузка...',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.bold),
                             );
                           }
-                          final userData = snapshot.data ?? {'name': 'Неизвестный', 'avatar_url': null};
+                          final userData = snapshot.data ??
+                              {'name': 'Неизвестный', 'avatar_url': null};
                           final name = userData['name'] ?? 'Неизвестный';
                           return Text(
                             name,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold),
                           );
                         },
                       ),
                       const SizedBox(height: 4),
                       // Display message with avatar
                       Row(
-                        mainAxisAlignment:
-                        isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                        mainAxisAlignment: isCurrentUser
+                            ? MainAxisAlignment.end
+                            : MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           if (!isCurrentUser) ...[
                             // Avatar on the left for other users
                             FutureBuilder<Map<String, String?>>(
-                              future: UserService.to.getUserData(message.userId),
+                              future:
+                                  UserService.to.getUserData(message.userId),
                               builder: (context, snapshot) {
                                 final avatarUrl = snapshot.data?['avatar_url'];
                                 return CircleAvatar(
                                   radius: 16,
-                                  backgroundImage:
-                                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                                  backgroundImage: avatarUrl != null
+                                      ? NetworkImage(avatarUrl)
+                                      : null,
                                   child: avatarUrl == null
                                       ? const Icon(Icons.person, size: 16)
                                       : null,
@@ -227,11 +235,14 @@ class _ChatTabState extends State<ChatTab> {
                           Flexible(
                             child: Container(
                               constraints: BoxConstraints(
-                                maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.7,
                               ),
                               padding: const EdgeInsets.all(12.0),
                               decoration: BoxDecoration(
-                                color: isCurrentUser ? Colors.blue[100] : Colors.grey[200],
+                                color: isCurrentUser
+                                    ? Colors.blue[100]
+                                    : Colors.grey[200],
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
                               child: Column(
@@ -251,7 +262,8 @@ class _ChatTabState extends State<ChatTab> {
                                           : CrossAxisAlignment.start,
                                       children: message.fileUrl.map((url) {
                                         return Padding(
-                                          padding: const EdgeInsets.only(top: 8.0),
+                                          padding:
+                                              const EdgeInsets.only(top: 8.0),
                                           child: Image.network(
                                             url,
                                             width: 200,
@@ -280,13 +292,15 @@ class _ChatTabState extends State<ChatTab> {
                             const SizedBox(width: 8),
                             // Avatar on the right for current user
                             FutureBuilder<Map<String, String?>>(
-                              future: UserService.to.getUserData(message.userId),
+                              future:
+                                  UserService.to.getUserData(message.userId),
                               builder: (context, snapshot) {
                                 final avatarUrl = snapshot.data?['avatar_url'];
                                 return CircleAvatar(
                                   radius: 16,
-                                  backgroundImage:
-                                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                                  backgroundImage: avatarUrl != null
+                                      ? NetworkImage(avatarUrl)
+                                      : null,
                                   child: avatarUrl == null
                                       ? const Icon(Icons.person, size: 16)
                                       : null,
@@ -304,7 +318,12 @@ class _ChatTabState extends State<ChatTab> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: EdgeInsets.only(
+            left: 8.0,
+            right: 8.0,
+            top: 8.0,
+            bottom: 8.0 + MediaQuery.of(context).padding.bottom,
+          ),
           child: Row(
             children: [
               if (_selectedFile != null)

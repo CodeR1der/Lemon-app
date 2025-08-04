@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_colors.dart';
+
 /// Общие стили текста для всего приложения
 class AppTextStyles {
   // Заголовки
@@ -19,7 +21,8 @@ class AppTextStyles {
 
   static const TextStyle titleSmall = TextStyle(
     fontSize: 14,
-    color: Color(0xff6D7885),
+    fontWeight: FontWeight.w400,
+    color: AppColors.primaryGrey,
     fontFamily: 'Roboto',
   );
 
@@ -27,25 +30,28 @@ class AppTextStyles {
   static const TextStyle bodyLarge = TextStyle(
     fontSize: 16,
     color: Colors.black,
+    fontWeight: FontWeight.w400,
     fontFamily: 'Roboto',
   );
 
   static const TextStyle bodyMedium = TextStyle(
     fontSize: 15,
     color: Colors.black,
+    fontWeight: FontWeight.w400,
     fontFamily: 'Roboto',
   );
 
   static const TextStyle bodySmall = TextStyle(
     fontSize: 14,
     color: Colors.black,
+    fontWeight: FontWeight.w400,
     fontFamily: 'Roboto',
   );
 
   // Подписи и метки
   static const TextStyle caption = TextStyle(
     fontSize: 12,
-    color: Color(0xff6D7885),
+    color: AppColors.primaryGrey,
     fontFamily: 'Roboto',
   );
 
@@ -81,6 +87,14 @@ class AppTextStyles {
     fontSize: 16,
     color: Colors.grey,
     fontFamily: 'Roboto',
+    fontWeight: FontWeight.w400,
+  );
+
+  static const TextStyle dropDownHint = TextStyle(
+    fontSize: 16,
+    color: AppColors.dropDownGrey,
+    fontFamily: 'Roboto',
+    fontWeight: FontWeight.w400,
   );
 
   // Стили для статусов

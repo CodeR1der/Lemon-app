@@ -82,6 +82,7 @@ class _TaskTeamTab extends State<TaskTeamTab> {
                         member.userId != team.communicatorId.userId)
                     .toList(),
               ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),

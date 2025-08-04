@@ -80,11 +80,12 @@ class AppButtonStyles {
   // Кнопка для добавления файлов
   static ButtonStyle addFilesButton = ElevatedButton.styleFrom(
     foregroundColor: Colors.black,
-    backgroundColor: Colors.orange,
+    backgroundColor: Colors.white,
+    side: const BorderSide(color: Colors.orange),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
     ),
-    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
   );
 
   // Кнопка для создания сотрудника

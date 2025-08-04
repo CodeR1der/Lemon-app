@@ -26,9 +26,9 @@ class AnnouncementService {
       if (announcement.selectedEmployees.isNotEmpty) {
         final employeeRelations = announcement.selectedEmployees
             .map((employeeId) => {
-                  'announcement_id': announcement.id,
-                  'employee_id': employeeId,
-                })
+          'announcement_id': announcement.id,
+          'employee_id': employeeId,
+        })
             .toList();
 
         await _supabase.from(_employeesTableName).insert(employeeRelations);
@@ -59,7 +59,7 @@ class AnnouncementService {
 
       for (final announcementData in response) {
         final announcement =
-            Announcement.fromJson(announcementData as Map<String, dynamic>);
+        Announcement.fromJson(announcementData as Map<String, dynamic>);
 
         // Загружаем selected_employees из отдельной таблицы
         final employeesResponse = await _supabase
@@ -158,13 +158,10 @@ class AnnouncementService {
       final updatedReadBy = [...announcement.readBy, targetUserId];
       final supabase = Supabase.instance.client;
 
-      final response = await supabase
+       await supabase
           .from('announcement')
           .update({'read_by': updatedReadBy}).eq('id', announcement.id);
 
-      if (response.error != null) {
-        throw Exception('Ошибка обновления: ${response.error!.message}');
-      }
 
       // Обновляем локальный объект
       announcement.readBy.add(targetUserId);
@@ -296,7 +293,7 @@ class AnnouncementService {
       }
 
       final announcement =
-          Announcement.fromJson(response as Map<String, dynamic>);
+      Announcement.fromJson(response as Map<String, dynamic>);
 
       // Загружаем selected_employees из отдельной таблицы
       final selectedEmployees = await getSelectedEmployees(announcementId);
@@ -351,9 +348,9 @@ class AnnouncementService {
       if (employeeIds.isNotEmpty) {
         final employeeRelations = employeeIds
             .map((employeeId) => {
-                  'announcement_id': announcementId,
-                  'employee_id': employeeId,
-                })
+          'announcement_id': announcementId,
+          'employee_id': employeeId,
+        })
             .toList();
 
         await _supabase.from(_employeesTableName).insert(employeeRelations);

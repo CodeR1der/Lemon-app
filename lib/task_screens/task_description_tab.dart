@@ -317,7 +317,8 @@ class TaskDescriptionTab extends StatelessWidget {
                 task: task,
                 role: RoleHelper.determineUserRoleInTask(
                     currentUserId: UserService.to.currentUser!.userId,
-                    task: task))
+                    task: task)),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),

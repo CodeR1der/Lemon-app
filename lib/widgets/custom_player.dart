@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   final String audioUrl;
@@ -116,13 +117,9 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(_formatDuration(position),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displayMedium),
+                                    style: AppTextStyles.linkText),
                                 Text(_formatDuration(duration),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displayMedium),
+                                    style: AppTextStyles.linkText),
                               ],
                             ),
                           ),

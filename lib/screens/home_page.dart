@@ -4,9 +4,8 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:task_tracker/models/announcement.dart';
-import 'package:task_tracker/screens/announcement_screen.dart';
-import 'package:task_tracker/screens/project_details_screen.dart';
-import 'package:task_tracker/screens/tasks_list_screen.dart';
+import 'package:task_tracker/screens/project/project_details_screen.dart';
+import 'package:task_tracker/screens/task/tasks_list_screen.dart';
 import 'package:task_tracker/services/announcement_operations.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/project_operations.dart';
@@ -21,7 +20,8 @@ import '../services/task_categories.dart';
 import '../services/task_provider.dart';
 import '../task_screens/task_title_screen.dart';
 import '../widgets/common/app_common.dart';
-import 'employee_details_screen.dart';
+import 'annoncement/announcement_screen.dart';
+import 'employee/employee_details_screen.dart';
 import 'employee_queue_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -236,12 +236,8 @@ class _HomeScreenState extends State<HomeScreen> {
             physics: const NeverScrollableScrollPhysics(),
             scrollDirection: isHorizontal ? Axis.horizontal : Axis.vertical,
             itemCount: itemCount,
-            separatorBuilder: (context, index) => isHorizontal
-                ? const SizedBox(width: 10)
-                : const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Divider(),
-                  ),
+            separatorBuilder: (context, index) =>
+                isHorizontal ? const SizedBox(width: 10) : const Divider(),
             itemBuilder: (context, index) {
               return isHorizontal
                   ? _buildShimmerHorizontalItem()
@@ -342,39 +338,37 @@ class _HomeScreenState extends State<HomeScreen> {
 
       return Scaffold(
         backgroundColor: Colors.white,
-        body: SafeArea(
-          top: false,
-          child: _errorMessage != null
-              ? Center(child: Text(_errorMessage!))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppSpacing.height20,
-                      _buildUserInfo(),
-                      AppSpacing.height20,
-                      _buildSearchBox(),
-                      AppSpacing.height20,
-                      _buildAddTaskButton(),
-                      AppSpacing.height20,
-                      if (UserService.to.currentUser!.role == 'Директор') ...[
-                        _buildAddAnnouncementButton(),
-                        AppSpacing.height20,
-                      ],
-                      if (_announcement.isNotEmpty) ...[
-                        _buildAnnouncementCard(),
-                        AppSpacing.height20,
-                      ],
-                      _buildTasksSection(),
-                      AppSpacing.height20,
-                      _buildEmployeesSection(),
-                      AppSpacing.height20,
-                      _buildProjectsSection(),
+        body: _errorMessage != null
+            ? Center(child: Text(_errorMessage!))
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppSpacing.height16,
+                    _buildUserInfo(),
+                    AppSpacing.height16,
+                    _buildSearchBox(),
+                    AppSpacing.height16,
+                    _buildAddTaskButton(),
+                    AppSpacing.height16,
+                    if (UserService.to.currentUser!.role == 'Директор' ||
+                        UserService.to.currentUser!.role == 'Коммуникатор') ...[
+                      _buildAddAnnouncementButton(),
+                      AppSpacing.height16,
                     ],
-                  ),
+                    if (_announcement.isNotEmpty) ...[
+                      _buildAnnouncementCard(),
+                      AppSpacing.height16,
+                    ],
+                    _buildTasksSection(),
+                    AppSpacing.height16,
+                    _buildEmployeesSection(),
+                    AppSpacing.height16,
+                    _buildProjectsSection(),
+                  ],
                 ),
-        ),
+              ),
       );
     });
   }
@@ -487,7 +481,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(
                       announcement.status == 'closed'
                           ? Icons.close
-                          : Iconsax.flash,
+                          : Iconsax.flash_1,
                       size: 18,
                       color: announcement.status == 'closed'
                           ? Colors.grey
@@ -517,10 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12.0, vertical: 6.0),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
+                    decoration: AppContainerStyles.cardDecoration,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -588,16 +579,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            'Мои задачи',
-            style: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
+        const Text('Задачи', style: AppTextStyles.titleMedium),
         const SizedBox(height: 8.0),
         Consumer<TaskProvider>(
           builder: (context, taskProvider, child) {
@@ -615,10 +597,8 @@ class _HomeScreenState extends State<HomeScreen> {
               physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.all(1.0),
               itemCount: categories.length,
-              separatorBuilder: (context, index) => const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Divider(),
-              ),
+              separatorBuilder: (context, index) =>
+                  const Divider(color: Color(0xffbd7d8d9)),
               itemBuilder: (context, index) {
                 final category = categories[index];
                 return _buildTaskCategoryItem(category);
@@ -635,8 +615,7 @@ class _HomeScreenState extends State<HomeScreen> {
         category.status); // Используем существующий метод
 
     return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      contentPadding: const EdgeInsets.symmetric(vertical: 0.0),
       leading: Icon(icon, color: Colors.blue),
       title: Text(
         category.title,
@@ -646,7 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
         decoration: BoxDecoration(
           color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(
           category.count.toString(),
@@ -696,19 +675,34 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppCommonWidgets.sectionHeader(
-          title: 'Сотрудники',
-          counter: _employees.length.toString(),
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 0.0),
+          title: const Text('Сотрудники', style: AppTextStyles.titleMedium),
+          trailing: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Text(
+              _employees.length.toString(),
+              style: const TextStyle(
+                fontSize: 14.0,
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ),
-        AppSpacing.height8,
         _employees.isEmpty
             ? AppCommonWidgets.emptyState('Нет сотрудников')
             : SizedBox(
-                height: 180,
+                height: 160,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _employees.length,
-                  separatorBuilder: (context, index) => AppSpacing.width10,
+                  separatorBuilder: (context, index) => AppSpacing.width12,
                   itemBuilder: (context, index) =>
                       _buildEmployeeCell(_employees[index]),
                 ),
@@ -725,12 +719,11 @@ class _HomeScreenState extends State<HomeScreen> {
       child: SizedBox(
         width: 120,
         child: Container(
-          padding: AppSpacing.paddingAll12,
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              AppSpacing.height12,
               SizedBox(
                 height: 68,
                 child: AppCommonWidgets.avatar(
@@ -740,15 +733,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   fallbackIcon: Icons.account_box,
                 ),
               ),
-              AppSpacing.height12,
+              AppSpacing.height6,
               SizedBox(
-                height: 32,
+                height: 38,
                 child: Text(
                   employee.name.split(' ').take(2).join(' '),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.normal,
-                    fontSize: 12,
-                  ),
+                  style: AppTextStyles.bodySmall,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -775,19 +765,30 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppCommonWidgets.sectionHeader(
-          title: 'Проекты',
-          counter: _projects.length.toString(),
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 0.0),
+          title: const Text('Проекты', style: AppTextStyles.titleMedium),
+          trailing: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            child: Text(
+              _projects.length.toString(),
+              style: const TextStyle(
+                fontSize: 14.0,
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ),
-        AppSpacing.height8,
         _projects.isEmpty
             ? AppCommonWidgets.emptyState('Нет проектов')
             : SizedBox(
-                height: 140,
+                height: 150,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _projects.length,
-                  separatorBuilder: (context, index) => AppSpacing.width10,
+                  separatorBuilder: (context, index) => AppSpacing.width6,
                   itemBuilder: (context, index) =>
                       _buildProjectCell(_projects[index]),
                 ),
@@ -801,37 +802,40 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () {
         Get.to(() => ProjectDetailsScreen(project: project.project));
       },
-      child: SizedBox(
+      child: Container(
+        //padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
         width: 150,
+        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+        decoration: AppContainerStyles.,
         child: AppCommonWidgets.card(
-          padding: AppSpacing.paddingAll12,
+          padding: AppSpacing.paddingAll16,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppSpacing.height12,
               AppCommonWidgets.avatar(
                 radius: 17,
                 imageUrl: project.project.avatarUrl,
                 fallbackIcon: Icons.account_box,
               ),
-              AppSpacing.height12,
+              AppSpacing.height16,
               Text(
                 project.project.name,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              AppSpacing.height8,
+              AppSpacing.height4,
               Row(
                 children: [
-                  const Icon(Icons.account_circle_sharp, size: 16),
+                  const Icon(Iconsax.profile_2user,
+                      size: 16, color: Colors.grey),
                   AppSpacing.width6,
                   Text(
                     project.employees.toString(),
-                    style: AppTextStyles.bodySmall,
+                    style: AppTextStyles.titleSmall,
                   ),
                 ],
               ),

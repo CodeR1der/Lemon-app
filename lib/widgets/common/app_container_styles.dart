@@ -9,8 +9,8 @@ class AppContainerStyles {
     boxShadow: const [
       BoxShadow(
         color: Colors.black12,
-        blurRadius: 10,
-        spreadRadius: 2,
+        blurRadius: 12,
+        spreadRadius: 0,
       ),
     ],
   );

@@ -1,17 +1,23 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/task_screens/deadline_screen.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/employee.dart';
 import '../models/task.dart';
 import '../models/task_team.dart';
+import '../widgets/common/app_colors.dart';
 
 class EmployeeSelectionScreen extends StatefulWidget {
   final Task taskData;
+  final Employee?
+      preSelectedEmployee; // Добавляем предварительно выбранного сотрудника
 
-  const EmployeeSelectionScreen(this.taskData, {super.key});
+  const EmployeeSelectionScreen(this.taskData,
+      {super.key, this.preSelectedEmployee});
 
   @override
   _EmployeeSelectionScreenState createState() =>
@@ -28,7 +34,18 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
   @override
   void initState() {
     super.initState();
-    employeesFuture = loadEmployees();
+    // Если есть предварительно выбранный сотрудник, устанавливаем его как исполнителя
+    if (widget.taskData.team.teamMembers.isNotEmpty) {
+      selectedPerformer = widget.taskData.team.teamMembers.first;
+    }
+
+    employeesFuture = loadEmployees().then((employees) {
+      if (selectedPerformer != null &&
+          !employees.any((e) => e.userId == selectedPerformer!.userId)) {
+        return [...employees, selectedPerformer!];
+      }
+      return employees;
+    });
   }
 
   Future<List<Employee>> loadEmployees() async {
@@ -52,7 +69,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
             } else if (snapshot.hasError) {
               return const Center(child: Text('Ошибка загрузки сотрудников'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('Нет доступных сотрудников в проекте'));
+              return const Center(
+                  child: Text('Нет доступных сотрудников в проекте'));
             }
 
             final employees = snapshot.data!;
@@ -61,6 +79,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
               children: <Widget>[
                 _buildEmployeeSelectionTile(
                   title: 'Исполнитель',
+                  hintText: 'Выберите исполнителя',
                   selectedEmployee: selectedPerformer,
                   onSelected: (Employee? employee) {
                     if (_isEmployeeAlreadySelected(employee)) {
@@ -74,11 +93,18 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                       });
                     }
                   },
-                  employees: employees.where((employee) => employee.userId != UserService.to.currentUser!.userId && employee.role != 'Коммуникатор').toList(),
+                  employees: employees
+                      .where((employee) =>
+                          employee.userId !=
+                              UserService.to.currentUser!.userId &&
+                          employee.role != 'Коммуникатор')
+                      .toList(),
+                  isSelected: widget.taskData.team.teamMembers.isNotEmpty,
                 ),
                 const SizedBox(height: 16),
                 _buildEmployeeSelectionTile(
                   title: 'Коммуникатор',
+                  hintText: 'Выберите коммуникатора',
                   selectedEmployee: selectedCommunicator,
                   onSelected: (Employee? employee) {
                     if (_isEmployeeAlreadySelected(employee)) {
@@ -92,11 +118,14 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                       });
                     }
                   },
-                  employees: employees.where((employee) => employee.role == 'Коммуникатор').toList(),
+                  employees: employees
+                      .where((employee) => employee.role == 'Коммуникатор')
+                      .toList(),
                 ),
                 const SizedBox(height: 16),
                 _buildEmployeeSelectionTile(
                   title: 'Наблюдатель',
+                  hintText: 'Выберите наблюдателя',
                   selectedEmployee: selectedObserver,
                   onSelected: (Employee? employee) {
                     if (_isEmployeeAlreadySelected(employee)) {
@@ -110,42 +139,44 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                       });
                     }
                   },
-                  employees: employees,
+                  employees: employees
+                      .where((employee) =>
+                          employee.userId !=
+                              UserService.to.currentUser!.userId &&
+                          employee.role != 'Коммуникатор' &&
+                          !_isEmployeeAlreadySelected(employee))
+                      .toList(),
                 ),
                 const SizedBox(height: 16),
                 const Spacer(),
                 SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (selectedPerformer != null &&
-                          selectedCommunicator != null) {
-                        final newTeam = TaskTeam(
-                          teamId: const Uuid().v4(),
-                          taskId: widget.taskData.id,
-                          communicatorId: selectedCommunicator!,
-                          creatorId: UserService.to.currentUser!,
-                          observerId: selectedObserver,
-                          teamMembers: [selectedPerformer!],
-                        );
+                    width: double.infinity,
+                    child: AppButtons.primaryButton(
+                        text: 'Дальше',
+                        onPressed: () {
+                          if (selectedPerformer != null &&
+                              selectedCommunicator != null) {
+                            final newTeam = TaskTeam(
+                              teamId: const Uuid().v4(),
+                              taskId: widget.taskData.id,
+                              communicatorId: selectedCommunicator!,
+                              creatorId: UserService.to.currentUser!,
+                              observerId: selectedObserver,
+                              teamMembers: [selectedPerformer!],
+                            );
 
-                        widget.taskData.team = newTeam;
+                            widget.taskData.team = newTeam;
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DeadlineScreen(widget.taskData),
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Дальше'),
-                  ),
-                ),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    DeadlineScreen(widget.taskData),
+                              ),
+                            );
+                          }
+                        })),
+                SizedBox(height: MediaQuery.of(context).padding.bottom),
               ],
             );
           },
@@ -164,23 +195,27 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
 
   Widget _buildEmployeeSelectionTile({
     required String title,
+    required String hintText,
     required Employee? selectedEmployee,
     required ValueChanged<Employee?> onSelected,
     required List<Employee> employees,
+    bool? isSelected,
   }) {
+    final bool isDisabled = isSelected ?? false;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: AppTextStyles.titleSmall,
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey, width: 1),
+            border: Border.all(color: AppColors.dropDownGrey, width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.15),
@@ -194,20 +229,21 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<Employee?>(
               value: selectedEmployee,
-              hint: const Text('Выберите сотрудника'),
-              icon: const Icon(Icons.arrow_drop_down),
+              icon: const Icon(CupertinoIcons.chevron_down,
+                  size: 20, color: AppColors.dropDownGrey),
               isExpanded: true,
+              enableFeedback: false,
               dropdownColor: Colors.white,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
+              style: AppTextStyles.bodyLarge,
               borderRadius: BorderRadius.circular(12),
-              onChanged: onSelected,
+              onChanged: isDisabled ? null : onSelected,
               items: [
-                const DropdownMenuItem<Employee?>(
+                DropdownMenuItem<Employee?>(
                   value: null,
-                  child: Text('Выберите сотрудника'),
+                  child: Text(
+                    hintText,
+                    style: AppTextStyles.dropDownHint,
+                  ),
                 ),
                 ...employees.map((employee) {
                   return DropdownMenuItem<Employee?>(

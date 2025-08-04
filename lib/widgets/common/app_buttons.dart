@@ -199,7 +199,7 @@ class AppButtons {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 20),
+            Icon(icon, size: 24),
             AppSpacing.width8,
           ],
           Text(text, style: AppTextStyles.buttonTextSecondary),

@@ -2,14 +2,15 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart'; // Для выбора файлов
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart'; // Для выбора видео
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart'; // Для записи аудио
 import 'package:task_tracker/task_screens/employees_screen.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
 
 import '../models/task.dart'; // Импортируйте ваш класс Task
-
 
 class AddedFilesScreen extends StatefulWidget {
   final Task taskData;
@@ -48,7 +49,8 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
   Future<void> recordAudio() async {
     if (await _checkPermission()) {
       final dir = await getTemporaryDirectory(); // путь к временной папке
-      final filePath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.m4a'; // имя файла
+      final filePath =
+          '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.m4a'; // имя файла
 
       await _audioRecorder.start(
         const RecordConfig(),
@@ -173,17 +175,10 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            ElevatedButton.icon(
-              onPressed: pickFile,
-              icon: const Icon(Icons.attach_file, color: Colors.black),
-              label: const Text('Добавить файл'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.orange),
-                minimumSize: const Size(double.infinity, 50),
-              ),
-            ),
+            AppButtons.addFilesButton(
+                text: 'Добавить файл',
+                onPressed: pickFile,
+                icon: Iconsax.add_circle_copy),
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerLeft,
@@ -193,30 +188,15 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            ElevatedButton.icon(
-              onPressed: isRecording ? stopRecording : recordAudio,
-              icon: Icon(isRecording ? Icons.stop : Icons.mic,
-                  color: Colors.black),
-              label: Text(isRecording ? 'Остановить запись' : 'Записать аудио'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.orange),
-                minimumSize: const Size(double.infinity, 50),
-              ),
-            ),
+            AppButtons.addFilesButton(
+                text: isRecording ? 'Остановить запись' : 'Записать аудио',
+                onPressed: isRecording ? stopRecording : recordAudio,
+                icon: isRecording ? Iconsax.stop_circle_copy : Iconsax.microphone_2_copy,),
             const SizedBox(height: 16),
-            ElevatedButton.icon(
+            AppButtons.addFilesButton(
+              text: 'Прослушать запись',
               onPressed: playAudio,
-              icon: const Icon(Icons.play_arrow, color: Colors.black),
-              label: const Text('Прослушать запись'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.orange),
-                minimumSize: const Size(double.infinity, 50),
-              ),
-            ),
+              icon: Iconsax.play_circle_copy),
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerLeft,
@@ -226,17 +206,10 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            ElevatedButton.icon(
+            AppButtons.addFilesButton(
+              text: 'Добавить видео',
               onPressed: _showMediaPicker,
-              icon: const Icon(Icons.video_library, color: Colors.black),
-              label: const Text('Добавить видео'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.orange),
-                minimumSize: const Size(double.infinity, 50),
-              ),
-            ),
+              icon: Iconsax.video_play_copy),
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerLeft,
@@ -285,6 +258,8 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
                   widget.taskData.attachments = attachments;
                   widget.taskData.audioMessage = audioMessage;
                   widget.taskData.videoMessage = videoMessage;
+
+                  // Иначе идем на экран выбора сотрудников
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -300,6 +275,7 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
                 child: const Text('Дальше'),
               ),
             ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),

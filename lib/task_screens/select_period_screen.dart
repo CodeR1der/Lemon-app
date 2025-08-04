@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:task_tracker/widgets/common/app_common_widgets.dart';
+import 'package:task_tracker/widgets/common/app_spacing.dart';
+import 'package:task_tracker/widgets/common/app_text_styles.dart';
 
 class SelectPeriodScreen extends StatefulWidget {
   final DateTime selectedStartDate;
@@ -16,112 +18,172 @@ class SelectPeriodScreen extends StatefulWidget {
 }
 
 class _SelectPeriodScreenState extends State<SelectPeriodScreen> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+  DateTime _focusedDate = DateTime.now();
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
-  late DateTime selectedStartDate;
-  late DateTime selectedEndDate;
 
   @override
   void initState() {
     super.initState();
-    selectedStartDate = widget.selectedStartDate;
-    selectedEndDate = widget.selectedEndDate;
-    _selectedDay = _focusedDay;
-  }
-
-  // Метод для обновления выбранной даты
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    if (!isSameDay(_selectedDay, selectedDay)) {
-      setState(() {
-        _selectedDay = selectedDay;
-        _focusedDay = focusedDay;
-      });
-    }
-  }
-
-  void _onRangeSelected(DateTime? start, DateTime? end, DateTime focusedDay) {
-    setState(() {
-      _selectedDay = null;
-      _focusedDay = focusedDay;
-      _rangeStart = start;
-      _rangeEnd = end;
-      selectedStartDate = _rangeStart ?? selectedStartDate;
-      selectedEndDate = _rangeEnd ?? selectedEndDate;
-    });
+    _focusedDate = widget.selectedStartDate;
+    _rangeStart = widget.selectedStartDate;
+    _rangeEnd = widget.selectedEndDate;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: const Text('Выбор периода'),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            TableCalendar(
-              firstDay: DateTime.now(),
-              lastDay: DateTime.now().add(const Duration(days: 365)),
-              focusedDay: _focusedDay,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              calendarFormat: _calendarFormat,
-              startingDayOfWeek: StartingDayOfWeek.monday,
-              onDaySelected: _onDaySelected,
-              rangeStartDay: _rangeStart,
-              rangeEndDay: _rangeEnd,
-              onRangeSelected: _onRangeSelected,
-              rangeSelectionMode: RangeSelectionMode.toggledOn,
-              calendarStyle: const CalendarStyle(
-                outsideDaysVisible: false,
-              ),
-              onFormatChanged: (format) {
-                if (_calendarFormat != format) {
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              // Календарь с поддержкой диапазона
+              AppCommonWidgets.calendar(
+                focusedDate: _focusedDate,
+                selectedDate: null,
+                // Не используем для диапазона
+                onDateSelected: (date) {},
+                // Не используется для диапазона
+                onMonthChanged: (date) {
                   setState(() {
-                    _calendarFormat = format;
+                    _focusedDate = date;
                   });
-                }
-              },
-              onPageChanged: (focusedDay) {
-                _focusedDay = focusedDay;
-              },
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Начальная дата: ${selectedStartDate.toLocal().toString().split(' ')[0]}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    'Конечная дата: ${selectedEndDate.toLocal().toString().split(' ')[0]}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context)
-                      .pop([selectedStartDate, selectedEndDate]);
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Сохранить'),
+                onYearChanged: (date) {
+                  setState(() {
+                    _focusedDate = date;
+                  });
+                },
+                isRangeSelection: true,
+                rangeStart: _rangeStart,
+                rangeEnd: _rangeEnd,
+                onRangeStartChanged: (date) {
+                  setState(() {
+                    _rangeStart = date;
+                  });
+                },
+                onRangeEndChanged: (date) {
+                  setState(() {
+                    _rangeEnd = date;
+                  });
+                },
+                rangeColor: Colors.blue[50]!,
+                rangeStartColor: Colors.blue[400]!,
+                rangeEndColor: Colors.blue[400]!,
+                selectedColor: Colors.grey[600],
               ),
-            ),
-          ],
+              AppSpacing.height24,
+              // Информация о выбранном периоде
+              if (_rangeStart != null)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Выбранный период:',
+                        style: AppTextStyles.titleSmall.copyWith(
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      AppSpacing.height8,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Начало:',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                Text(
+                                  _rangeStart!
+                                      .toLocal()
+                                      .toString()
+                                      .split(' ')[0],
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blue[700],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_rangeEnd != null)
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Конец:',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  Text(
+                                    _rangeEnd!
+                                        .toLocal()
+                                        .toString()
+                                        .split(' ')[0],
+                                    style: AppTextStyles.bodyLarge.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blue[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: (_rangeStart != null &&
+                          _rangeEnd != null &&
+                          _rangeStart?.compareTo(DateTime.now()
+                                  .subtract(const Duration(days: 1))) !=
+                              -1 &&
+                          _rangeEnd?.compareTo(DateTime.now()
+                                  .subtract(const Duration(days: 1))) !=
+                              -1)
+                      ? () {
+                          Navigator.of(context).pop([_rangeStart!, _rangeEnd!]);
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Сохранить'),
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom),
+            ],
+          ),
         ),
       ),
     );
