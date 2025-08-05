@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:task_tracker/services/user_service.dart';
 
 import '../../models/task.dart';
+import '../../models/task_role.dart';
 import '../../services/task_provider.dart';
 import '../../task_screens/task_chat_tab.dart';
 import '../../task_screens/task_description_tab.dart';
 import '../../task_screens/task_period_tab.dart';
 import '../../task_screens/task_team_tab.dart';
-
 
 class TaskDetailsScreen extends StatelessWidget {
   final Task task;
@@ -16,23 +17,29 @@ class TaskDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMember = RoleHelper.determineUserRoleInTask(
+        currentUserId: UserService.to.currentUser!.userId,
+        task: task) !=
+        TaskRole.none;
+
     return Consumer<TaskProvider>(
       builder: (context, taskProvider, child) {
         final updatedTask = taskProvider.getTask(task.id) ?? task;
         return DefaultTabController(
-          length: 4,
+          length: isMember ? 4 : 3,
           child: Scaffold(
             appBar: AppBar(
               backgroundColor: Colors.white,
               title: Text('Задача ${updatedTask.taskName}'),
-              bottom: const TabBar(
+              bottom: TabBar(
                 isScrollable: false,
                 tabAlignment: TabAlignment.fill,
                 tabs: [
-                  Tab(text: 'Описание'),
-                  Tab(text: 'Чат'),
-                  Tab(text: 'Срочность'),
-                  Tab(text: 'Команда'),
+                  const Tab(text: 'Описание'),
+                  if (isMember)
+                    const Tab(text: 'Чат'),
+                  const Tab(text: 'Срочность'),
+                  const Tab(text: 'Команда'),
                 ],
               ),
             ),
@@ -43,9 +50,10 @@ class TaskDetailsScreen extends StatelessWidget {
                   : TabBarView(
                       children: [
                         TaskDescriptionTab(task: updatedTask),
-                        ChatTab(
-                          taskId: updatedTask.id,
-                        ),
+                        if (isMember)
+                          ChatTab(
+                            taskId: updatedTask.id,
+                          ),
                         TaskPeriodTab(task: updatedTask),
                         TaskTeamTab(task: updatedTask),
                       ],

@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart'; // Для выбора виде
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart'; // Для записи аудио
-import 'package:task_tracker/task_screens/employees_screen.dart';
+import 'package:task_tracker/task_screens/employees_selection_screen.dart';
 import 'package:task_tracker/widgets/common/app_buttons.dart';
 
 import '../models/task.dart'; // Импортируйте ваш класс Task
@@ -251,31 +251,20 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
               ),
             ),
             const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  widget.taskData.attachments = attachments;
-                  widget.taskData.audioMessage = audioMessage;
-                  widget.taskData.videoMessage = videoMessage;
+            AppButtons.primaryButton(text: 'Дальше', onPressed: () {
+              widget.taskData.attachments = attachments;
+              widget.taskData.audioMessage = audioMessage;
+              widget.taskData.videoMessage = videoMessage;
 
-                  // Иначе идем на экран выбора сотрудников
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          EmployeeSelectionScreen(widget.taskData),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
+              // Иначе идем на экран выбора сотрудников
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      EmployeeSelectionScreen(widget.taskData),
                 ),
-                child: const Text('Дальше'),
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom),
+              );
+            }),
           ],
         ),
       ),

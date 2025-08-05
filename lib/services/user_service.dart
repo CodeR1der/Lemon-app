@@ -29,7 +29,6 @@ class UserService extends GetxService {
         await initializeUser(_supabase.auth.currentSession!.user.id);
       }
     } catch (error) {
-      Get.snackbar('Ошибка', 'Не удалось проверить статус авторизации: $error');
       _currentUser.value = null;
     } finally {
       isInitialized.value = true;
@@ -129,7 +128,7 @@ class UserService extends GetxService {
       }
       return false;
     } catch (e) {
-      Get.snackbar('Ошибка', 'Регистрация не удалась: $e');
+      Get.snackbar('Ошибка', 'Регистрация не удалась');
       return false;
     } finally {
       isInitialized.value = true;
@@ -160,7 +159,7 @@ class UserService extends GetxService {
       }
       return false;
     } catch (e) {
-      Get.snackbar('Ошибка', 'Вход не удался: $e');
+      Get.snackbar('Ошибка', 'Вход не удался');
       return false;
     } finally {
       isInitialized.value = true;
@@ -234,14 +233,14 @@ class UserService extends GetxService {
           .maybeSingle();
 
       if (userData == null) {
-        Get.snackbar('Ошибка', 'Данные сотрудника не найдены для user_id: $userId');
+        Get.snackbar('Ошибка', 'Данные сотрудника не найдены');
         _currentUser.value = null;
         return;
       }
 
       _currentUser.value = Employee.fromJson(userData);
     } catch (error) {
-      Get.snackbar('Ошибка', 'Не удалось инициализировать пользователя: $error');
+      Get.snackbar('Ошибка', 'Не удалось инициализировать пользователя');
       _currentUser.value = null;
     } finally {
       isInitialized.value = true;

@@ -10,6 +10,7 @@ import '../../models/task.dart';
 import '../../models/task_category.dart';
 import '../../services/employee_operations.dart';
 import '../../services/task_categories.dart';
+import '../../services/user_service.dart';
 
 class EmployeeDetailScreen extends StatefulWidget {
   final Employee employee;
@@ -60,9 +61,6 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка загрузки проектов: $e')),
-      );
     }
   }
 
@@ -291,44 +289,45 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                       }).toList(),
                     ),
             ),
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          TaskTitleScreen(employee: widget.employee),
+            if (widget.employee.userId != UserService.to.currentUser!.userId && widget.employee.role != "Коммуникатор")
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TaskTitleScreen(employee: widget.employee),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF9700),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF9700),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_circle, color: Colors.white, size: 24),
+                      SizedBox(width: 8),
+                      Text(
+                        'Поставить задачу',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_circle, color: Colors.white, size: 24),
-                    SizedBox(width: 8),
-                    Text(
-                      'Поставить задачу',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ),
           ],
         ),
       ),

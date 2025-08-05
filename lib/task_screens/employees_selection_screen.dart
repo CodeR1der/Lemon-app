@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/task_screens/deadline_screen.dart';
 import 'package:task_tracker/widgets/common/app_common.dart';
 import 'package:uuid/uuid.dart';
@@ -9,6 +10,7 @@ import 'package:uuid/uuid.dart';
 import '../models/employee.dart';
 import '../models/task.dart';
 import '../models/task_team.dart';
+import '../services/employee_operations.dart';
 import '../widgets/common/app_colors.dart';
 
 class EmployeeSelectionScreen extends StatefulWidget {
@@ -29,7 +31,6 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
   Employee? selectedPerformer;
   Employee? selectedCommunicator;
   Employee? selectedObserver;
-  final TaskService _database = TaskService();
 
   @override
   void initState() {
@@ -40,13 +41,20 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
     }
 
     employeesFuture = loadEmployees().then((employees) {
-      if (selectedPerformer != null &&
-          !employees.any((e) => e.userId == selectedPerformer!.userId)) {
-        return [...employees, selectedPerformer!];
+      // Убираем предвыбранного сотрудника из списка, чтобы избежать конфликта
+      final filteredEmployees = employees
+          .where((employee) =>
+              selectedPerformer == null ||
+              employee.userId != selectedPerformer!.userId)
+          .toList();
+      if (selectedPerformer != null && !widget.taskData.project!.team.contains(selectedPerformer)) {
+        return [...filteredEmployees, selectedPerformer!];
       }
-      return employees;
+
+      return filteredEmployees;
     });
   }
+
 
   Future<List<Employee>> loadEmployees() async {
     // Загружаем только сотрудников из команды проекта
@@ -82,7 +90,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   hintText: 'Выберите исполнителя',
                   selectedEmployee: selectedPerformer,
                   onSelected: (Employee? employee) {
-                    if (_isEmployeeAlreadySelected(employee)) {
+                    if (employee != null &&
+                        _isEmployeeAlreadySelected(employee)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                             content: Text('Этот сотрудник уже выбран')),
@@ -107,7 +116,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   hintText: 'Выберите коммуникатора',
                   selectedEmployee: selectedCommunicator,
                   onSelected: (Employee? employee) {
-                    if (_isEmployeeAlreadySelected(employee)) {
+                    if (employee != null &&
+                        _isEmployeeAlreadySelected(employee)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                             content: Text('Этот сотрудник уже выбран')),
@@ -128,7 +138,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                   hintText: 'Выберите наблюдателя',
                   selectedEmployee: selectedObserver,
                   onSelected: (Employee? employee) {
-                    if (_isEmployeeAlreadySelected(employee)) {
+                    if (employee != null &&
+                        _isEmployeeAlreadySelected(employee)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                             content: Text('Этот сотрудник уже выбран')),
@@ -143,8 +154,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                       .where((employee) =>
                           employee.userId !=
                               UserService.to.currentUser!.userId &&
-                          employee.role != 'Коммуникатор' &&
-                          !_isEmployeeAlreadySelected(employee))
+                          employee.role != 'Коммуникатор')
                       .toList(),
                 ),
                 const SizedBox(height: 16),
@@ -187,10 +197,14 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
 
   bool _isEmployeeAlreadySelected(Employee? employee) {
     if (employee == null) return false;
-    return employee == selectedPerformer ||
-        employee == selectedCommunicator ||
-        employee == selectedObserver ||
-        employee == UserService.to.currentUser!;
+    return (selectedCommunicator != null &&
+            employee.userId == selectedCommunicator!.userId) ||
+        (selectedPerformer != null &&
+            employee.userId == selectedPerformer!.userId) ||
+        (selectedObserver != null &&
+            employee.userId == selectedObserver!.userId) ||
+        (UserService.to.currentUser != null &&
+            employee.userId == UserService.to.currentUser!.userId);
   }
 
   Widget _buildEmployeeSelectionTile({
@@ -251,8 +265,9 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              _database.getAvatarUrl(employee.avatarUrl)),
+                          backgroundImage: NetworkImage(EmployeeService()
+                                  .getAvatarUrl(employee.avatarUrl!) ??
+                              ''),
                           radius: 16,
                         ),
                         const SizedBox(width: 10),

@@ -46,8 +46,10 @@ class ProjectService {
       }
 
       if (project.avatarUrl != null) {
-        var filename = uploadAvatar(File(project.avatarUrl!), project.projectId);
-        project.avatarUrl = 'https://xusyxtgdmtpupmroemzb.supabase.co/storage/v1/object/public/Avatars/$filename';
+        var filename =
+            uploadAvatar(File(project.avatarUrl!), project.projectId);
+        project.avatarUrl =
+            'https://xusyxtgdmtpupmroemzb.supabase.co/storage/v1/object/public/Avatars/$filename';
       }
 
       print('Проект успешно добавлен');
@@ -58,7 +60,8 @@ class ProjectService {
 
   Future<List<Employee>> getProjectTeam(String projectId) async {
     try {
-      final response = await _client.from('project_team')
+      final response = await _client
+          .from('project_team')
           .select('*, employee:employee_id(*)')
           .eq('project_id', projectId);
 
@@ -69,7 +72,8 @@ class ProjectService {
     }
   }
 
-  Future<void> updateProjectTeam(String projectId, List<String> employeeIds) async {
+  Future<void> updateProjectTeam(
+      String projectId, List<String> employeeIds) async {
     try {
       // 1. Получаем company_id проекта
       final projectResponse = await _client
@@ -95,12 +99,10 @@ class ProjectService {
           .toList();
 
       // 3. Определяем, кого нужно удалить и кого добавить
-      final employeesToRemove = currentEmployeeIds
-          .where((id) => !employeeIds.contains(id))
-          .toList();
-      final employeesToAdd = employeeIds
-          .where((id) => !currentEmployeeIds.contains(id))
-          .toList();
+      final employeesToRemove =
+          currentEmployeeIds.where((id) => !employeeIds.contains(id)).toList();
+      final employeesToAdd =
+          employeeIds.where((id) => !currentEmployeeIds.contains(id)).toList();
 
       // 4. Удаляем сотрудников, которые больше не в проекте
       if (employeesToRemove.isNotEmpty) {
@@ -113,11 +115,13 @@ class ProjectService {
 
       // 5. Добавляем новых сотрудников в проект
       if (employeesToAdd.isNotEmpty) {
-        final newEntries = employeesToAdd.map((employeeId) => {
-          'project_id': projectId,
-          'employee_id': employeeId,
-          'company_id': companyId,
-        }).toList();
+        final newEntries = employeesToAdd
+            .map((employeeId) => {
+                  'project_id': projectId,
+                  'employee_id': employeeId,
+                  'company_id': companyId,
+                })
+            .toList();
 
         await _client.from('project_team').insert(newEntries);
       }
@@ -125,6 +129,66 @@ class ProjectService {
       throw Exception('Ошибка обновления команды проекта: $e');
     }
   }
+
+  /// Добавление одного сотрудника в команду проекта
+  Future<bool> addEmployeeToProject(String projectId, String employeeId) async {
+    try {
+      // 1. Получаем company_id проекта
+      final projectResponse = await _client
+          .from('project')
+          .select('company_id')
+          .eq('project_id', projectId)
+          .single();
+
+      if (projectResponse.isEmpty) {
+        throw Exception('Проект с ID $projectId не найден');
+      }
+
+      final companyId = projectResponse['company_id'] as String;
+
+      // 2. Проверяем, есть ли уже сотрудник в команде проекта
+      final existingEmployeeResponse = await _client
+          .from('project_team')
+          .select('employee_id')
+          .eq('project_id', projectId)
+          .eq('employee_id', employeeId);
+
+      if (existingEmployeeResponse.isNotEmpty) {
+        print('Сотрудник уже есть в команде проекта');
+        return false; // Сотрудник уже в команде
+      }
+
+      // 3. Добавляем сотрудника в команду проекта
+      await _client.from('project_team').insert({
+        'project_id': projectId,
+        'employee_id': employeeId,
+        'company_id': companyId,
+      });
+
+      print('Сотрудник успешно добавлен в команду проекта');
+      return true; // Сотрудник успешно добавлен
+    } catch (e) {
+      print('Ошибка при добавлении сотрудника в команду проекта: $e');
+      throw Exception('Ошибка при добавлении сотрудника в команду проекта: $e');
+    }
+  }
+
+  /// Проверка, есть ли сотрудник в команде проекта
+  Future<bool> isEmployeeInProject(String projectId, String employeeId) async {
+    try {
+      final response = await _client
+          .from('project_team')
+          .select('employee_id')
+          .eq('project_id', projectId)
+          .eq('employee_id', employeeId);
+
+      return response.isNotEmpty;
+    } catch (e) {
+      print('Ошибка при проверке сотрудника в команде проекта: $e');
+      return false;
+    }
+  }
+
   // Получение списка всех проектов
   Future<List<Project>> getAllProjects() async {
     try {
@@ -198,7 +262,7 @@ class ProjectService {
   // Загрузка аватара проекта
   Future<String?> uploadAvatar(File imageFile, String projectId) async {
     final fileService = FileService();
-    
+
     // Валидация файла
     if (!fileService.validateFile(
       imageFile,
@@ -208,18 +272,16 @@ class ProjectService {
       print("Файл не прошел валидацию");
       return null;
     }
-    
+
     try {
       final fileName = await fileService.uploadFile(
-        imageFile, 
-        'Avatars/projects',
-        prefix: 'project_$projectId'
-      );
-      
+          imageFile, 'Avatars/projects',
+          prefix: 'project_$projectId');
+
       if (fileName != null) {
         print("Аватар проекта успешно загружен: $fileName");
       }
-      
+
       return fileName;
     } catch (e) {
       print("Ошибка загрузки аватарки проекта: $e");
@@ -230,10 +292,10 @@ class ProjectService {
   // Удаление аватара проекта
   Future<void> deleteAvatar(String fileName) async {
     if (fileName.isEmpty) return;
-    
+
     final fileService = FileService();
     final success = await fileService.deleteFile(fileName, 'Avatars');
-    
+
     if (success) {
       print('Аватар проекта успешно удален');
     } else {
@@ -302,7 +364,7 @@ class ProjectService {
 
       // Если ответ содержит список, возвращаем его длину
       return projectResponse.length;
-          // Если ответ в другом формате, возможно нужно адаптировать
+      // Если ответ в другом формате, возможно нужно адаптировать
       return 0;
     } catch (e) {
       print('Error getting count of project workers: $e');

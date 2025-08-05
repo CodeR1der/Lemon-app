@@ -107,8 +107,6 @@ class NavigationController extends GetxController {
       isScreensReady.value = true;
       debugPrint('Screens initialized');
     } catch (e) {
-      debugPrint('Error initializing screens: $e');
-      Get.snackbar('Ошибка', 'Не удалось инициализировать экраны: $e');
       isScreensReady.value = true; // Allow UI to proceed even on error
     }
   }

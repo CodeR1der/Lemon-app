@@ -153,9 +153,6 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка загрузки задач: ${e.toString()}')),
-      );
     }
   }
 }

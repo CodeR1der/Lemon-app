@@ -38,9 +38,7 @@ class _ControlPointScreenState extends State<ControlPointScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки: ${e.toString()}')),
-        );
+
       }
     }
   }
@@ -72,9 +70,7 @@ class _ControlPointScreenState extends State<ControlPointScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: ${e.toString()}')),
-        );
+
       }
     }
   }

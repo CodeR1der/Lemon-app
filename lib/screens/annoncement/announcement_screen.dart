@@ -74,7 +74,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
       setState(() {
         _isLoadingEmployees = false;
       });
-      Get.snackbar('Ошибка', 'Не удалось загрузить сотрудников: $e');
+      Get.snackbar('Ошибка', 'Не удалось загрузить сотрудников');
     }
   }
 
@@ -89,7 +89,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
       setState(() {
         _isLoadingLogs = false;
       });
-      Get.snackbar('Ошибка', 'Не удалось загрузить логи: $e');
+      Get.snackbar('Ошибка', 'Не удалось загрузить логи');
     }
   }
 
@@ -292,8 +292,6 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
                         'Успех', 'Объявление отмечено как прочитанное');
                     setState(() {}); // Обновляем UI
                   } catch (e) {
-                    Get.snackbar(
-                        'Ошибка', 'Не удалось отметить как прочитанное: $e');
                   }
                 },
                 style: ElevatedButton.styleFrom(

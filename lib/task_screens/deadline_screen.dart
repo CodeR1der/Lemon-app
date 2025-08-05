@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:task_tracker/models/priority.dart';
+import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/task_screens/task_title_screen.dart';
 import 'package:task_tracker/widgets/common/app_spacing.dart';
 import 'package:task_tracker/widgets/common/app_text_styles.dart';
 
+import '../models/employee.dart';
 import '../models/task.dart';
 import '../screens/task/task_details_screen.dart';
 import 'select_period_screen.dart';
@@ -185,6 +187,10 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
                     );
 
                     try {
+                      if (!widget.taskData.project!.team.contains(widget.taskData.team.teamMembers.first)) {
+                        _addEmployeeToProjectIfNeeded(widget.taskData.team.teamMembers.first);
+                      }
+
                       // Дожидаемся завершения сохранения
                       await _database.addNewTask(widget.taskData);
 
@@ -270,5 +276,38 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
         ),
       ),
     );
+  }
+
+  /// Добавляет сотрудника в команду проекта, если его там нет
+  Future<void> _addEmployeeToProjectIfNeeded(Employee employee) async {
+    try {
+      final isInProject = await ProjectService().isEmployeeInProject(
+          widget.taskData.project!.projectId, employee.userId);
+
+      if (!isInProject) {
+        final added = await ProjectService().addEmployeeToProject(
+            widget.taskData.project!.projectId, employee.userId);
+
+        if (added) {
+          print('Сотрудник ${employee.name} добавлен в команду проекта');
+          // Показываем уведомление пользователю об успешном добавлении
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Сотрудник ${employee.name} добавлен в команду проекта'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Ошибка при добавлении сотрудника в проект: $e');
+      // Показываем уведомление пользователю
+      if (mounted) {
+
+      }
+    }
   }
 }

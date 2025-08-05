@@ -25,7 +25,6 @@ class ProjectProvider with ChangeNotifier {
       _error = null;
     } catch (e) {
       _error = e.toString();
-      Get.snackbar('Ошибка', 'Не удалось загрузить проекты: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -72,7 +71,6 @@ class ProjectProvider with ChangeNotifier {
       _error = null;
     } catch (e) {
       _error = e.toString();
-      Get.snackbar('Ошибка', 'Не удалось добавить проект: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

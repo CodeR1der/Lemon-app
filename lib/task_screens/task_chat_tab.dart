@@ -43,7 +43,7 @@ class _ChatTabState extends State<ChatTab> {
             response.map((json) => ChatMessage.fromJson(json)).toList());
       }
     } catch (e) {
-      Get.snackbar('Ошибка', 'Не удалось загрузить сообщения: $e');
+      Get.snackbar('Ошибка', 'Не удалось загрузить сообщения');
     }
   }
 
@@ -110,7 +110,7 @@ class _ChatTabState extends State<ChatTab> {
         });
       }
     } catch (e) {
-      Get.snackbar('Ошибка', 'Не удалось отправить сообщение: $e');
+      Get.snackbar('Ошибка', 'Не удалось отправить сообщение');
     }
   }
 
@@ -146,7 +146,7 @@ class _ChatTabState extends State<ChatTab> {
           .getPublicUrl(fileName);
       return publicUrl;
     } catch (e) {
-      Get.snackbar('Ошибка', 'Не удалось загрузить файл: $e');
+      Get.snackbar('Ошибка', 'Не удалось загрузить файл');
       return null;
     }
   }

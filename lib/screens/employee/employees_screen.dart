@@ -11,8 +11,6 @@ import '../../models/task_status.dart';
 import '../../services/user_service.dart';
 import 'employee_details_screen.dart';
 
-
-
 class EmployeesScreen extends StatefulWidget {
   const EmployeesScreen({super.key});
 
@@ -74,7 +72,6 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
         _filteredEmployees = employees;
       });
     } catch (e) {
-      Get.snackbar('Ошибка', 'Не удалось загрузить сотрудников: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -109,7 +106,6 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       Get.snackbar(
           'Успех', 'Роль сотрудника ${employee.name} изменена на $newRole');
     } catch (e) {
-      Get.snackbar('Ошибка', 'Не удалось изменить роль: $e');
     }
   }
 
@@ -155,8 +151,18 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     );
   }
 
+  Widget _buildEmployeeRoles(
+      String title, String? selectedAction, ValueChanged func) {
+    return RadioListTile<String?>(
+      title: Text(title),
+      value: title,
+      groupValue: selectedAction,
+      onChanged: func,
+    );
+  }
+
   void _showEmployeeOptions(Employee employee) {
-    String? selectedAction;
+    String? selectedAction = employee.role;
 
     showModalBottomSheet(
       context: context,
@@ -171,55 +177,47 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  const Text(
                     'Назначить роль сотруднику',
                     style: TextStyle(
                         color: Colors.black,
                         fontSize: 18,
                         fontFamily: 'Roboto'),
                   ),
-                  RadioListTile<String?>(
-                    title: const Text('Коммуникатор'),
-                    value: 'Коммуникатор',
-                    groupValue: selectedAction,
-                    onChanged: (String? value) {
-                      setModalState(() {
+                  _buildEmployeeRoles('Коммуникатор', selectedAction, (value) {
+                    setModalState(() {
+                      if (selectedAction != value) {
                         selectedAction = value;
                         if (value != null) {
                           changeRole(employee, value);
                         }
-                      });
-                      Navigator.pop(context);
-                    },
-                  ),
-                  RadioListTile<String?>(
-                    title: const Text('Руководитель'),
-                    value: 'Руководитель',
-                    groupValue: selectedAction,
-                    onChanged: (String? value) {
-                      setModalState(() {
+                      }
+                    });
+                    Navigator.pop(context);
+                  }),
+                  _buildEmployeeRoles('Руководитель', selectedAction, (value) {
+                    setModalState(() {
+                      if (selectedAction != value) {
                         selectedAction = value;
                         if (value != null) {
                           changeRole(employee, value);
                         }
-                      });
-                      Navigator.pop(context);
-                    },
-                  ),
-                  RadioListTile<String?>(
-                    title: const Text('Исполнитель / Постановщик'),
-                    value: 'Исполнитель / Постановщик',
-                    groupValue: selectedAction,
-                    onChanged: (String? value) {
-                      setModalState(() {
+                      }
+                    });
+                    Navigator.pop(context);
+                  }),
+                  _buildEmployeeRoles(
+                      'Исполнитель / Постановщик', selectedAction, (value) {
+                    setModalState(() {
+                      if (selectedAction != value) {
                         selectedAction = value;
                         if (value != null) {
                           changeRole(employee, value);
                         }
-                      });
-                      Navigator.pop(context);
-                    },
-                  ),
+                      }
+                    });
+                    Navigator.pop(context);
+                  }),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -254,7 +252,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      const Text(
                         'Создать нового сотрудника',
                         style: TextStyle(
                             color: Colors.black,
@@ -324,8 +322,6 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                                   'Ошибка', 'Пожалуйста, заполните все поля');
                             }
                           } catch (e) {
-                            Get.snackbar(
-                                'Ошибка', 'Не удалось создать сотрудника: $e');
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -367,7 +363,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Код компании',
                   style: TextStyle(
                     fontSize: 18,
@@ -378,7 +374,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                 const SizedBox(height: 16),
                 Text(
                   companyCode ?? 'Код не найден',
-                  style: TextStyle(fontSize: 16, fontFamily: 'Roboto'),
+                  style: const TextStyle(fontSize: 16, fontFamily: 'Roboto'),
                 ),
                 const SizedBox(height: 16),
                 Align(
@@ -398,20 +394,22 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
         },
       );
     } catch (e) {
-      Get.snackbar('Ошибка', 'Не удалось загрузить код компании: $e');
+      Get.snackbar('Ошибка', 'Не удалось загрузить код компании');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const bottomSheetHeight = 0.0;
-    if (_userService.currentUser!.role == 'Директор') const bottomSheetHeight = 120.0;
+    var bottomSheetHeight = 0.0;
+    if (_userService.currentUser!.role == 'Директор') {
+      bottomSheetHeight = 120.0;
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.only(bottom: bottomSheetHeight),
+              padding: EdgeInsets.only(bottom: bottomSheetHeight),
               child: Column(
                 children: [
                   const SizedBox(height: 40),

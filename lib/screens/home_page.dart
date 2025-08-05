@@ -10,6 +10,7 @@ import 'package:task_tracker/services/announcement_operations.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/widgets/common/app_colors.dart';
 
 import '../models/employee.dart';
 import '../models/project.dart';
@@ -92,8 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _employees.assignAll(employees
           .where((e) => e.userId != UserService.to.currentUser!.userId));
     } catch (e) {
-      _errorMessage = 'Ошибка загрузки данных: $e';
-      Get.snackbar('Ошибка', _errorMessage!);
     } finally {
       _isLoading.value = false;
     }
@@ -448,7 +447,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onPressed: () {
         Get.toNamed(TaskTitleScreen.routeName);
       },
-      icon: Icons.add,
+      icon: Iconsax.add_circle,
     );
   }
 
@@ -500,18 +499,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              Text(announcement.title,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(announcement.title, style: AppTextStyles.bodyMedium),
               const SizedBox(height: 16),
-              Text('Cтатус объявления',
-                  style: Theme.of(context).textTheme.titleSmall),
+              Text('Cтатус объявления', style: AppTextStyles.titleSmall),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12.0, vertical: 6.0),
-                    decoration: AppContainerStyles.cardDecoration,
+                    decoration: AppContainerStyles.counterContainerDecoration,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -524,12 +521,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             if (snapshot.hasData) {
                               return Text(
                                 'Прочитали ${announcement.readBy.length} из ${snapshot.data!.length}',
-                                style: Theme.of(context).textTheme.bodySmall,
+                                style: AppTextStyles.bodySmall,
                               );
                             }
                             return Text(
                               'Прочитали ${announcement.readBy.length} из ...',
-                              style: Theme.of(context).textTheme.bodySmall,
+                              style: AppTextStyles.bodySmall,
                             );
                           },
                         ),
@@ -541,32 +538,17 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AnnouncementDetailScreen(
-                            announcement: announcement,
-                          ),
-                        ));
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    side: const BorderSide(color: Colors.orange, width: 1),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 24),
-                  ),
-                  child: Text(
-                    UserService.to.currentUser!.role == 'Директор'
-                        ? 'Посмотреть'
-                        : 'Прочитать',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
-                  ),
-                ),
+                child: AppButtons.secondaryButton(text: UserService.to.currentUser!.role == 'Директор'
+                    ? 'Посмотреть'
+                    : 'Прочитать', onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AnnouncementDetailScreen(
+                          announcement: announcement,
+                        ),
+                      ));
+                },)
               ),
             ],
           ),
@@ -665,9 +647,6 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка загрузки задач: ${e.toString()}')),
-      );
     }
   }
 
@@ -727,10 +706,10 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(
                 height: 68,
                 child: AppCommonWidgets.avatar(
-                  radius: 34,
-                  imageUrl:
-                  EmployeeService().getAvatarUrl(employee.avatarUrl!) ??
-                      ''),
+                    radius: 34,
+                    imageUrl:
+                        EmployeeService().getAvatarUrl(employee.avatarUrl!) ??
+                            ''),
               ),
               AppSpacing.height6,
               SizedBox(
@@ -770,6 +749,10 @@ class _HomeScreenState extends State<HomeScreen> {
           trailing: Container(
             padding:
                 const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8.0),
+            ),
             child: Text(
               _projects.length.toString(),
               style: const TextStyle(

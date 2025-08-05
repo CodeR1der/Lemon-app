@@ -193,9 +193,6 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
 
       Navigator.pop(context, TaskStatus.completedUnderReview);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка: ${e.toString()}')),
-      );
     }
   }
 

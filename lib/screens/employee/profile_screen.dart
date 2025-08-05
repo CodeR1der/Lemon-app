@@ -245,7 +245,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Get.snackbar('Успех', 'Профиль обновлен');
     } catch (e) {
       print('Ошибка при сохранении данных профиля: $e');
-      Get.snackbar('Ошибка', 'Не удалось обновить профиль: $e');
     }
   }
 
@@ -270,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _userService.signOut();
       Get.offNamed('/auth');
     } catch (e) {
-      Get.snackbar('Ошибка', 'Ошибка при выходе: $e');
+      Get.snackbar('Ошибка', 'Ошибка при выходе');
     }
   }
 

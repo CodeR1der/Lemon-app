@@ -108,9 +108,6 @@ class _QueueScreenState extends State<QueueScreen> {
         const SnackBar(content: Text('Задача добавлена в очередь')),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка при добавлении в очередь: $e')),
-      );
     }
   }
 

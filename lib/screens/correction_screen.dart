@@ -207,9 +207,6 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
 
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка: ${e.toString()}')),
-      );
     }
   }
 

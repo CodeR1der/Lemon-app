@@ -38,7 +38,6 @@ class _TaskTeamTab extends State<TaskTeamTab> {
         _isLoadingEmployees = false;
       });
     } catch (e) {
-      Get.snackbar('Ошибка', e.toString());
       setState(() => _isLoadingEmployees = false);
     }
   }

@@ -51,9 +51,6 @@ class _EditTaskDetailsScreenState extends State<EditTaskDetailsScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка обновления: $e')),
-          );
         }
       }
     }

@@ -57,9 +57,6 @@ class _AddControlPointScreenState extends State<AddControlPointScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: ${e.toString()}')),
-        );
       }
     } finally {
       if (mounted) {

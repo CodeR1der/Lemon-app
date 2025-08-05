@@ -1,10 +1,7 @@
 import 'dart:io';
-
-import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:task_tracker/services/file_service.dart';
-
 import '/models/employee.dart';
 import '/models/project.dart';
 import '/models/task.dart';

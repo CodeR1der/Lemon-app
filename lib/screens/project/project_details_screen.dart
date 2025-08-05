@@ -68,7 +68,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
         _isLoadingEmployees = false;
       });
     } catch (e) {
-      Get.snackbar('Ошибка', e.toString());
       setState(() => _isLoadingEmployees = false);
     }
   }
@@ -314,8 +313,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
                           Navigator.pop(context);
                           Get.snackbar('Успех', 'Команда проекта обновлена');
                         } catch (e) {
-                          Get.snackbar(
-                              'Ошибка', 'Не удалось обновить команду: $e');
                         }
                       },
                       style: ElevatedButton.styleFrom(

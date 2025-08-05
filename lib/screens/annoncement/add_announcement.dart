@@ -48,7 +48,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     try {
       final employees = await EmployeeService().getAllEmployees();
       setState(() {
-        _allEmployees = employees;
+        _allEmployees = employees.where((e) => e.userId != UserService.to.currentUser!.userId).toList();
         // По умолчанию выбираем всех сотрудников
         _selectedEmployeeIds = employees.map((e) => e.userId).toSet();
         _isLoadingEmployees = false;
@@ -57,7 +57,6 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       setState(() {
         _isLoadingEmployees = false;
       });
-      Get.snackbar('Ошибка', 'Не удалось загрузить сотрудников: $e');
     }
   }
 
@@ -142,7 +141,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       Navigator.pop(context);
       Get.back(result: true);
     } catch (e) {
-      Get.snackbar('Ошибка', 'Не удалось создать объявление: $e');
+      Get.snackbar('Ошибка', 'Не удалось создать объявление');
     } finally {
       setState(() {
         _isLoading = false;
@@ -297,7 +296,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                             backgroundImage: employee.avatarUrl !=
                                 null &&
                                 employee.avatarUrl!.isNotEmpty
-                                ? NetworkImage(employee.avatarUrl!)
+                                ? NetworkImage(EmployeeService().getAvatarUrl(employee.avatarUrl!))
                                 : null,
                             child: employee.avatarUrl == null ||
                                 employee.avatarUrl!.isEmpty

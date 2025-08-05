@@ -66,9 +66,6 @@ class _TaskControlPointsTabState extends State<TaskControlPointsTab> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: ${e.toString()}')),
-        );
       }
     }
   }

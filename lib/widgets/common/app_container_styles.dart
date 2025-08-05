@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/widgets/common/app_colors.dart';
 
 /// Общие стили контейнеров для всего приложения
 class AppContainerStyles {
@@ -49,7 +50,7 @@ class AppContainerStyles {
 
   // Контейнер для счетчика
   static BoxDecoration counterContainerDecoration = BoxDecoration(
-    color: Colors.grey[300],
+    color: AppColors.counterGrey,
     borderRadius: BorderRadius.circular(12),
   );
 
