@@ -1,0 +1,31 @@
+name: Build Flutter APK
+
+on:
+  push:
+    branches: [ "master" ] 
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Установка Flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable' 
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK (debug)
+        run: flutter build apk --debug 
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-debug.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
