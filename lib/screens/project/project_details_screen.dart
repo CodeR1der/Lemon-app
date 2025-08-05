@@ -255,7 +255,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
                             itemBuilder: (context, index) {
                               final employee = _allEmployees[index];
                               final isInProject =
-                                  _tempSelectedEmployees.contains(employee);
+                                  _tempSelectedEmployees.firstWhereOrNull(
+                                      (e) => e.userId == employee.userId) != null;
                               return CheckboxListTile(
                                 secondary: CircleAvatar(
                                   child: Text(employee.name?[0] ?? 'N'),
@@ -312,8 +313,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
                           });
                           Navigator.pop(context);
                           Get.snackbar('Успех', 'Команда проекта обновлена');
-                        } catch (e) {
-                        }
+                        } catch (e) {}
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
