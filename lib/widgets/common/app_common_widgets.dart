@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/models/employee.dart';
+import 'package:task_tracker/screens/employee/employee_details_screen.dart';
+import 'package:task_tracker/services/employee_operations.dart';
+import 'package:task_tracker/widgets/common/app_colors.dart';
 
 import 'app_container_styles.dart';
 import 'app_spacing.dart';
@@ -217,6 +221,54 @@ class AppCommonWidgets {
     );
   }
 
+  static Widget defaultAlert({required String title, String? description}) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      backgroundColor: Color(0xFFF0F7E9), // Светло-зеленый фон
+      content: Container(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 40.0,
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 24.0),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop; // Закрыть алерт
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: Text(
+                'Закрыть',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// Виджет для отображения поля ввода с заливкой
   static Widget filledInputField({
     required TextEditingController controller,
@@ -267,9 +319,9 @@ class AppCommonWidgets {
 
   /// Виджет для отображения разделителя
   static Widget divider() {
-    return Padding(
+    return const Padding(
       padding: AppSpacing.dividerPadding,
-      child: const Divider(),
+      child: Divider(height: 1.0, color: AppColors.divider,),
     );
   }
 
@@ -299,6 +351,183 @@ class AppCommonWidgets {
       ),
     );
   }
+
+
+
+  /// Виджет для отображения сотрудника в виде ListTile
+  static Widget employeeTile({
+    required Employee employee,
+    required BuildContext context,
+    double avatarRadius = 24,
+    EdgeInsets? contentPadding,
+    Widget? subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+    bool showNavigation = true,
+  }) {
+    final employeeService = EmployeeService();
+
+    return ListTile(
+      contentPadding: contentPadding ??
+          const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      leading: CircleAvatar(
+        radius: avatarRadius,
+        backgroundImage: employee.avatarUrl != null &&
+                employee.avatarUrl!.isNotEmpty
+            ? NetworkImage(employeeService.getAvatarUrl(employee.avatarUrl!))
+            : null,
+        child: employee.avatarUrl == null || employee.avatarUrl!.isEmpty
+            ? Icon(Icons.person, size: avatarRadius)
+            : null,
+      ),
+      title: Text(
+        employee.name,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 16),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: subtitle ??
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                employee.position,
+                style: const TextStyle(
+                  color: Colors.black38,
+                  fontSize: 12,
+                  fontFamily: 'Roboto',
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+      trailing: trailing,
+      onTap: onTap ??
+          (showNavigation
+              ? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          EmployeeDetailScreen(employee: employee),
+                    ),
+                  );
+                }
+              : null),
+    );
+  }
+
+  /// Виджет для отображения сотрудника в виде карточки
+  static Widget employeeCard({
+    required Employee employee,
+    required BuildContext context,
+    double avatarRadius = 24,
+    EdgeInsets? margin,
+    VoidCallback? onTap,
+    bool showNavigation = true,
+  }) {
+    final employeeService = EmployeeService();
+
+    return Card(
+      color: Colors.white,
+      margin: margin ?? const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          radius: avatarRadius,
+          backgroundImage: employee.avatarUrl != null &&
+                  employee.avatarUrl!.isNotEmpty
+              ? NetworkImage(employeeService.getAvatarUrl(employee.avatarUrl!))
+              : null,
+          child: employee.avatarUrl == null || employee.avatarUrl!.isEmpty
+              ? const Icon(Icons.person)
+              : null,
+        ),
+        title: Text(
+          employee.name,
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        subtitle: Text(employee.position),
+        onTap: onTap ??
+            (showNavigation
+                ? () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            EmployeeDetailScreen(employee: employee),
+                      ),
+                    );
+                  }
+                : null),
+      ),
+    );
+  }
+
+  /// Виджет для отображения сотрудника в виде ячейки (для горизонтальных списков)
+  static Widget employeeCell({
+    required Employee employee,
+    required BuildContext context,
+    double avatarRadius = 34,
+    double width = 120,
+    VoidCallback? onTap,
+    bool showNavigation = true,
+  }) {
+    return GestureDetector(
+      onTap: onTap ??
+          (showNavigation
+              ? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          EmployeeDetailScreen(employee: employee),
+                    ),
+                  );
+                }
+              : null),
+      child: SizedBox(
+        width: width,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: avatarRadius * 2,
+                child: avatar(
+                  radius: avatarRadius,
+                  imageUrl: EmployeeService().getAvatarUrl(employee.avatarUrl!),
+                ),
+              ),
+              AppSpacing.height6,
+              SizedBox(
+                height: 38,
+                child: Text(
+                  employee.name.split(' ').take(2).join(' '),
+                  style: AppTextStyles.bodySmall,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              AppSpacing.height8,
+              SizedBox(
+                height: 20,
+                child: Text(
+                  employee.position,
+                  style: AppTextStyles.caption,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Приватный виджет календаря
@@ -314,6 +543,7 @@ class _CalendarWidget extends StatefulWidget {
   final Color todayColor;
   final Color textColor;
   final Color disabledTextColor;
+
   // Новые параметры для диапазона
   final DateTime? rangeStart;
   final DateTime? rangeEnd;

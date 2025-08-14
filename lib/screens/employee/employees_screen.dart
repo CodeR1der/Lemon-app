@@ -4,12 +4,12 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/services/company_service.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/task_operations.dart'; // Для TaskService
+import 'package:task_tracker/widgets/common/app_common_widgets.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../models/employee.dart';
 import '../../models/task_status.dart';
 import '../../services/user_service.dart';
-import 'employee_details_screen.dart';
 
 class EmployeesScreen extends StatefulWidget {
   const EmployeesScreen({super.key});
@@ -105,11 +105,10 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       });
       Get.snackbar(
           'Успех', 'Роль сотрудника ${employee.name} изменена на $newRole');
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
-  Widget _buildEmployeeIcons(Employee employee) {
+  Widget buildEmployeeIcons(Employee employee) {
     final taskCounts = _employeeTaskCounts[employee.userId] ?? {};
 
     return Row(
@@ -321,8 +320,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                               Get.snackbar(
                                   'Ошибка', 'Пожалуйста, заполните все поля');
                             }
-                          } catch (e) {
-                          }
+                          } catch (e) {}
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
@@ -409,20 +407,17 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: EdgeInsets.only(bottom: bottomSheetHeight),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 children: [
                   const SizedBox(height: 40),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Поиск',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
+                  TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Поиск',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
                       ),
                     ),
                   ),
@@ -452,34 +447,9 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                         bool isCurrentUser =
                             employee.userId == _userService.currentUser?.userId;
 
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 4.0, horizontal: 8.0),
-                          leading: CircleAvatar(
-                            radius: 20,
-                            backgroundImage: employee.avatarUrl != ''
-                                ? NetworkImage(_employeeService
-                                    .getAvatarUrl(employee.avatarUrl))
-                                : null,
-                            child: employee.avatarUrl == ''
-                                ? const Icon(Icons.person, size: 20)
-                                : null,
-                          ),
-                          title: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  employee.name,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.copyWith(fontSize: 16),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
+                        return AppCommonWidgets.employeeTile(
+                          employee: employee,
+                          context: context,
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -496,7 +466,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                               const SizedBox(height: 2),
                               SizedBox(
                                 height: 16,
-                                child: _buildEmployeeIcons(employee),
+                                child: buildEmployeeIcons(employee),
                               ),
                             ],
                           ),
@@ -511,15 +481,6 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                                       _showEmployeeOptions(employee),
                                 )
                               : null,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    EmployeeDetailScreen(employee: employee),
-                              ),
-                            );
-                          },
                         );
                       },
                     ),

@@ -6,6 +6,9 @@ import 'package:task_tracker/models/announcement.dart';
 import 'package:task_tracker/models/employee.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/widgets/common/app_colors.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
+import 'package:task_tracker/widgets/employees_modal_sheet.dart';
 
 import '../../services/announcement_operations.dart';
 
@@ -48,9 +51,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     try {
       final employees = await EmployeeService().getAllEmployees();
       setState(() {
-        _allEmployees = employees.where((e) => e.userId != UserService.to.currentUser!.userId).toList();
+        _allEmployees = employees
+            .where((e) => e.userId != UserService.to.currentUser!.userId)
+            .toList();
         // По умолчанию выбираем всех сотрудников
-        _selectedEmployeeIds = employees.map((e) => e.userId).toSet();
         _isLoadingEmployees = false;
       });
     } catch (e) {
@@ -89,6 +93,35 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     setState(() {
       _selectedEmployeeIds.clear();
     });
+  }
+
+  String _getLastName(String fullName) {
+    final nameParts = fullName.trim().split(' ');
+    return nameParts.isNotEmpty ? nameParts.first : fullName;
+  }
+
+  void _showEmployeesModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      enableDrag: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: EmployeesModalSheet(
+          allEmployees: _allEmployees,
+          selectedEmployeeIds: _selectedEmployeeIds,
+          onEmployeesSelected: (Set<String> selectedIds) {
+            setState(() {
+              _selectedEmployeeIds = selectedIds;
+            });
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -137,7 +170,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
           currentUser.name,
           currentUser.role,
           newAnnouncement.companyId);
-      Get.snackbar('Успех', 'Объявление успешно создано');
+      AppCommonWidgets.defaultAlert(title: 'Объявление опубликовано');
       Navigator.pop(context);
       Get.back(result: true);
     } catch (e) {
@@ -153,7 +186,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset:
-      false, // Предотвращаем поднятие контента при появлении клавиатуры
+          false, // Предотвращаем поднятие контента при появлении клавиатуры
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -165,200 +198,165 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         top: false,
         child: _companyId == null
             ? const Center(
-            child: Text('Ошибка: идентификатор компании не указан'))
+                child: Text('Ошибка: идентификатор компании не указан'))
             : _isLoadingEmployees
-            ? const Center(child: CircularProgressIndicator())
-            : Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Название объявления',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _titleController,
-                    decoration: InputDecoration(
-                      hintText: 'Краткий текст',
-                      hintStyle:
-                      Theme.of(context).textTheme.bodyMedium,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Пожалуйста, введите заголовок';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Подробное описание объявления',
-                      style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _fullTextController,
-                    decoration: InputDecoration(
-                      hintText: 'Описание',
-                      hintStyle:
-                      Theme.of(context).textTheme.bodyMedium,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    maxLines: 5,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Пожалуйста, введите полный текст';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Секция выбора сотрудников
-                  Text(
-                    'Выберите сотрудников',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Кнопки выбора всех/отмены выбора всех
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _selectAllEmployees,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.black,
-                            side: const BorderSide(
-                                color: Colors.orange),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                ? const Center(child: CircularProgressIndicator())
+                : Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Form(
+                      key: _formKey,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Секция выбора сотрудников
+                            Text(
+                              'Для кого объявление',
+                              style: AppTextStyles.titleSmall,
                             ),
-                          ),
-                          child: const Text('Выбрать всех'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _deselectAllEmployees,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.black,
-                            side:
-                            const BorderSide(color: Colors.grey),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                            AppSpacing.height8,
+
+                            /// Поле для отображения выбранных сотрудников
+                            GestureDetector(
+                              onTap: _showEmployeesModal,
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  border:
+                                      Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.white,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (_selectedEmployeeIds.isEmpty) ...[
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              'Выбрать сотрудников',
+                                              style: AppTextStyles.titleSmall,
+                                            ),
+                                          ),
+                                          const Icon(Icons.arrow_drop_down,
+                                              color: Colors.grey),
+                                        ],
+                                      ),
+                                    ],
+                                    if (_selectedEmployeeIds.isNotEmpty) ...[
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: GestureDetector(
+                                              onTap: _showEmployeesModal,
+                                              child: Text(
+                                                _allEmployees
+                                                    .where((employee) =>
+                                                        _selectedEmployeeIds
+                                                            .contains(employee
+                                                                .userId))
+                                                    .map((employee) =>
+                                                        _getLastName(
+                                                            employee.name))
+                                                    .join(', '),
+                                                style: AppTextStyles.titleSmall,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Icon(Icons.arrow_drop_down,
+                                              color: Colors.grey),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                          child: const Text('Снять выбор'),
+                            AppSpacing.height24,
+                            Text(
+                              'Название объявления',
+                              style: AppTextStyles.titleSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _titleController,
+                              decoration: InputDecoration(
+                                hintText: 'Краткий текст',
+                                hintStyle:
+                                    AppTextStyles.bodyMedium,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Пожалуйста, введите заголовок';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            Text('Подробное описание объявления',
+                                style: AppTextStyles.titleSmall),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _fullTextController,
+                              decoration: InputDecoration(
+                                hintText: 'Описание',
+                                hintStyle:
+                                    AppTextStyles.bodyMedium,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: AppColors.primaryGrey, width: 1.0),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              maxLines: 5,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Пожалуйста, введите полный текст';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'Прикрепить файлы (в том числе фото)',
+                              style: AppTextStyles.titleSmall,
+                            ),
+                            const SizedBox(height: 6),
+                            // Кнопка добавления файла
+                            AppButtons.secondaryButton(text: 'Добавить файл', icon:Iconsax.add_circle_copy , onPressed: pickFile),
+                            const SizedBox(height: 8),
+                            Container(
+                              color: Colors.white,
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _submitForm,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      _canSubmit ? AppColors.appPrimary : Colors.grey,
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text('Опубликовать',style: AppTextStyles.buttonText,),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Список сотрудников
-                  Container(
-                    constraints: const BoxConstraints(maxHeight: 200),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _allEmployees.length,
-                      itemBuilder: (context, index) {
-                        final employee = _allEmployees[index];
-                        final isSelected = _selectedEmployeeIds
-                            .contains(employee.userId);
-
-                        return CheckboxListTile(
-                          value: isSelected,
-                          onChanged: (bool? value) {
-                            _toggleEmployeeSelection(employee.userId);
-                          },
-                          title: Text(employee.name),
-                          subtitle: Text(employee.position),
-                          secondary: CircleAvatar(
-                            radius: 16,
-                            backgroundImage: employee.avatarUrl !=
-                                null &&
-                                employee.avatarUrl!.isNotEmpty
-                                ? NetworkImage(EmployeeService().getAvatarUrl(employee.avatarUrl!))
-                                : null,
-                            child: employee.avatarUrl == null ||
-                                employee.avatarUrl!.isEmpty
-                                ? const Icon(Icons.person, size: 16)
-                                : null,
-                          ),
-                          controlAffinity:
-                          ListTileControlAffinity.leading,
-                        );
-                      },
                     ),
                   ),
-
-                  const SizedBox(height: 16),
-                  Text(
-                    'Прикрепить файлы (в том числе фото)',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 6),
-                  // Кнопка добавления файла
-                  OutlinedButton(
-                    onPressed: pickFile,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      side: const BorderSide(color: Colors.orange),
-                      padding:
-                      const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Iconsax.add_circle_copy),
-                        SizedBox(width: 8),
-                        Text('Добавить файл'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    color: Colors.white,
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _submitForm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _canSubmit ? Colors.orange : Colors.grey,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Опубликовать'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

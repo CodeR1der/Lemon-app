@@ -163,110 +163,122 @@ class AddedFilesScreenState extends State<AddedFilesScreen> {
       appBar: AppBar(
         title: const Text('Материалы для выполнения задачи'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SafeArea(
         child: Column(
           children: <Widget>[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Добавить файлы по задаче (в том числе фото)',
-                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-              ),
-            ),
-            const SizedBox(height: 8),
-            AppButtons.addFilesButton(
-                text: 'Добавить файл',
-                onPressed: pickFile,
-                icon: Iconsax.add_circle_copy),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Записать аудио сообщение',
-                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-              ),
-            ),
-            const SizedBox(height: 8),
-            AppButtons.addFilesButton(
-                text: isRecording ? 'Остановить запись' : 'Записать аудио',
-                onPressed: isRecording ? stopRecording : recordAudio,
-                icon: isRecording ? Iconsax.stop_circle_copy : Iconsax.microphone_2_copy,),
-            const SizedBox(height: 16),
-            AppButtons.addFilesButton(
-              text: 'Прослушать запись',
-              onPressed: playAudio,
-              icon: Iconsax.play_circle_copy),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Прикрепить видео',
-                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-              ),
-            ),
-            const SizedBox(height: 8),
-            AppButtons.addFilesButton(
-              text: 'Добавить видео',
-              onPressed: _showMediaPicker,
-              icon: Iconsax.video_play_copy),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Добавленные файлы:',
-                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-              ),
-            ),
-            const SizedBox(height: 8),
+            // Основной контент с возможностью прокрутки
             Expanded(
-              child: ListView.builder(
-                itemCount: attachments.length + videoMessage.length,
-                itemBuilder: (context, index) {
-                  String filePath;
-                  bool isVideo = false;
-
-                  if (index < attachments.length) {
-                    filePath = attachments[index];
-                    if (filePath.endsWith(".mp4")) {
-                      isVideo = true;
-                    }
-                  } else {
-                    filePath = videoMessage[index - attachments.length];
-                    isVideo = true;
-                  }
-
-                  return ListTile(
-                    leading: isVideo
-                        ? const Icon(Icons.video_library, color: Colors.red)
-                        : Image.file(File(filePath),
-                            width: 50, height: 50, fit: BoxFit.cover),
-                    title: Text(filePath.split('/').last),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => removeAttachment(filePath),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: <Widget>[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Добавить файлы по задаче (в том числе фото)',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      ),
                     ),
-                  );
-                },
+                    const SizedBox(height: 8),
+                    AppButtons.addFilesButton(
+                        text: 'Добавить файл',
+                        onPressed: pickFile,
+                        icon: Iconsax.add_circle_copy),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Записать аудио сообщение',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    AppButtons.addFilesButton(
+                        text: isRecording ? 'Остановить запись' : 'Записать аудио',
+                        onPressed: isRecording ? stopRecording : recordAudio,
+                        icon: isRecording ? Iconsax.stop_circle_copy : Iconsax.microphone_2_copy),
+                    const SizedBox(height: 16),
+                    AppButtons.addFilesButton(
+                        text: 'Прослушать запись',
+                        onPressed: playAudio,
+                        icon: Iconsax.play_circle_copy),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Прикрепить видео',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    AppButtons.addFilesButton(
+                        text: 'Добавить видео',
+                        onPressed: _showMediaPicker,
+                        icon: Iconsax.video_play_copy),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Добавленные файлы:',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Список файлов
+                    ListView.builder(
+                      shrinkWrap: true, // Важно для вложенных ListView
+                      physics: const NeverScrollableScrollPhysics(), // Отключаем прокрутку вложенного списка
+                      itemCount: attachments.length + videoMessage.length,
+                      itemBuilder: (context, index) {
+                        String filePath;
+                        bool isVideo = false;
+
+                        if (index < attachments.length) {
+                          filePath = attachments[index];
+                          if (filePath.endsWith(".mp4")) {
+                            isVideo = true;
+                          }
+                        } else {
+                          filePath = videoMessage[index - attachments.length];
+                          isVideo = true;
+                        }
+
+                        return ListTile(
+                          leading: isVideo
+                              ? const Icon(Icons.video_library, color: Colors.red)
+                              : Image.file(File(filePath),
+                              width: 50, height: 50, fit: BoxFit.cover),
+                          title: Text(filePath.split('/').last),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => removeAttachment(filePath),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 80), // Отступ для кнопки внизу
+                  ],
+                ),
               ),
             ),
-            const Spacer(),
-            AppButtons.primaryButton(text: 'Дальше', onPressed: () {
-              widget.taskData.attachments = attachments;
-              widget.taskData.audioMessage = audioMessage;
-              widget.taskData.videoMessage = videoMessage;
-
-              // Иначе идем на экран выбора сотрудников
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      EmployeeSelectionScreen(widget.taskData),
-                ),
-              );
-            }),
           ],
         ),
+      ),
+      // Фиксированная кнопка внизу
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: AppButtons.primaryButton(text: 'Дальше', onPressed: () {
+          widget.taskData.attachments = attachments;
+          widget.taskData.audioMessage = audioMessage;
+          widget.taskData.videoMessage = videoMessage;
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EmployeeSelectionScreen(widget.taskData),
+            ),
+          );
+        }),
       ),
     );
   }

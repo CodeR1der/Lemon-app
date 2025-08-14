@@ -5,6 +5,14 @@ import 'app_colors.dart';
 /// Общие стили текста для всего приложения
 class AppTextStyles {
   // Заголовки
+
+  static const TextStyle titleAnnouncement = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+    fontFamily: 'Roboto',
+  );
+
   static const TextStyle titleLarge = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.bold,

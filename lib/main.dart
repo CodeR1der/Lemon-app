@@ -7,9 +7,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/models/announcement.dart';
 import 'package:task_tracker/screens/annoncement/add_announcement.dart';
 import 'package:task_tracker/screens/annoncement/announcement_screen.dart';
+import 'package:task_tracker/screens/employee/employee_details_screen.dart';
 import 'package:task_tracker/screens/employee/employees_screen.dart';
 import 'package:task_tracker/screens/employee/profile_screen.dart';
 import 'package:task_tracker/screens/home_page.dart';
+import 'package:task_tracker/screens/project/project_details_screen.dart';
 import 'package:task_tracker/screens/project/projects_screen.dart';
 import 'package:task_tracker/screens/search_screen.dart';
 import 'package:task_tracker/screens/task/tasks_screen.dart';
@@ -111,6 +113,12 @@ class MyApp extends StatelessWidget {
                   page: () => AnnouncementDetailScreen(
                         announcement: Get.arguments as Announcement,
                       )),
+              GetPage(
+                  name: '/project_details',
+                  page: () => ProjectDetailsScreen(project: Get.arguments)),
+              GetPage(
+                  name: '/employee_details',
+                  page: () => EmployeeDetailScreen(employee: Get.arguments)),
             ],
             initialBinding: InitialBindings(),
             theme: ThemeData(

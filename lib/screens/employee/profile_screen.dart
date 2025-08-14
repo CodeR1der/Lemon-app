@@ -27,6 +27,8 @@ class ViewProfileState implements ProfileState {
         screen._buildAvatar(),
         screen._buildProfileSection('ФИО', screen.name),
         screen._buildBorders(),
+        screen._buildProfileSection('Роль', screen.role),
+        screen._buildBorders(),
         screen._buildProfileSection('Должность', screen.position),
         screen._buildBorders(),
         screen._buildPhoneSection(
@@ -157,11 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (url.isNotEmpty) {
       try {
         final Uri uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          Get.snackbar('Ошибка', 'Не удалось открыть ссылку');
-        }
       } catch (e) {
         Get.snackbar('Ошибка', 'Неверный формат ссылки');
       }

@@ -94,7 +94,7 @@ class _ProjectSelectionScreenState extends State<ProjectSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Выборите проект'),
+        title: const Text('Выберите проект'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

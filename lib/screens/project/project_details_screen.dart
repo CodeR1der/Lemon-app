@@ -6,14 +6,17 @@ import 'package:task_tracker/screens/task/position_tasks_tab.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/task_screens/task_title_screen.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
+import 'package:task_tracker/widgets/common/app_common_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/employee.dart';
 import '../../models/project.dart';
 import '../../models/task.dart';
+import '../../models/task_status.dart';
 import '../../services/task_operations.dart';
 import '../../services/user_service.dart';
-import '../employee/employee_details_screen.dart';
+import '../../widgets/common/app_text_styles.dart';
 
 class ProjectDetailsScreen extends StatefulWidget {
   final Project project;
@@ -41,6 +44,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   List<Employee> _communicators = [];
   List<Employee> _otherEmployees = [];
   List<Task> _taskList = [];
+  Map<String, Map<TaskStatus, int>> _employeeTaskCounts = {};
 
   @override
   void initState() {
@@ -60,15 +64,27 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   }
 
   Future<void> _loadEmployees() async {
+    if (!mounted) return;
+
     setState(() => _isLoadingEmployees = true);
     try {
       final employees = await EmployeeService().getAllEmployees();
-      setState(() {
-        _allEmployees = employees;
-        _isLoadingEmployees = false;
-      });
+      // Загружаем количество задач для каждого сотрудника
+      for (var employee in employees) {
+        final taskCounts =
+            await _taskService.getTasksAsExecutor(employee.userId);
+        _employeeTaskCounts[employee.userId] = taskCounts;
+      }
+      if (mounted) {
+        setState(() {
+          _allEmployees = employees;
+          _isLoadingEmployees = false;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoadingEmployees = false);
+      if (mounted) {
+        setState(() => _isLoadingEmployees = false);
+      }
     }
   }
 
@@ -178,152 +194,174 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
   }
 
   Widget _buildTeamTab() {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          if (_communicators.isNotEmpty)
-            _buildTeamSection('Коммуникатор', _communicators),
-          if (_otherEmployees.isNotEmpty)
-            _buildTeamSection('Команда проекта', _otherEmployees),
-          SliverPadding(
-            padding:
-                EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: CustomScrollView(
+          slivers: [
+            if (_communicators.isNotEmpty)
+              _buildTeamSection('Коммуникатор', _communicators),
+            if (_otherEmployees.isNotEmpty)
+              _buildTeamSection('Команда проекта', _otherEmployees),
+            SliverPadding(
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom),
+            ),
+          ],
+        ),
+        bottomSheet: UserService.to.currentUser!.role == 'Директор' ||
+                UserService.to.currentUser!.role == 'Коммуникатор'
+            ? AppButtons.secondaryButton(
+                text: 'Добавить сотрудников',
+                icon: Iconsax.user_cirlce_add,
+                onPressed: _showEmployeesModalSheet)
+            : null,
       ),
-      bottomSheet: UserService.to.currentUser!.role.trim() == 'Директор'
-          ? Container(
-              color: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
-              child: OutlinedButton(
-                onPressed: _showEmployeesModalSheet,
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  side: const BorderSide(color: Colors.orange),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Iconsax.user_cirlce_add,
-                      size: 24,
-                    ),
-                    SizedBox(width: 8),
-                    Text('Добавить новых сотрудников'),
-                  ],
-                ),
-              ),
-            )
-          : null,
     );
   }
 
   void _showEmployeesModalSheet() {
+    final itemHeight = 50.0; // Высота одного элемента списка
+    final headerHeight = 100.0; // Высота заголовка и handle bar
+    final paddingBottom = 16.0; // Отступ снизу
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
+        final contentHeight = _isLoadingEmployees
+            ? 200.0 // Высота для индикатора загрузки
+            : headerHeight + (_allEmployees.length * itemHeight) + paddingBottom;
+
+        final actualHeight = contentHeight ;
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Container(
               color: Colors.white,
-              height: MediaQuery.of(context).size.height * 0.6,
-              padding: const EdgeInsets.all(16),
+              height: actualHeight,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Выберите сотрудников',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  _isLoadingEmployees
-                      ? const Center(child: CircularProgressIndicator())
-                      : Expanded(
-                          child: ListView.builder(
-                            itemCount: _allEmployees.length,
-                            itemBuilder: (context, index) {
-                              final employee = _allEmployees[index];
-                              final isInProject =
-                                  _tempSelectedEmployees.firstWhereOrNull(
-                                      (e) => e.userId == employee.userId) != null;
-                              return CheckboxListTile(
-                                secondary: CircleAvatar(
-                                  child: Text(employee.name?[0] ?? 'N'),
-                                ),
-                                title: Text(employee.name ?? 'Без имени'),
-                                subtitle: Text(employee.role ?? 'Без роли'),
-                                value: isInProject,
-                                onChanged: (bool? value) {
+                  // Title
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'Прикрепить сотрудника',
+                      style: AppTextStyles.titleLarge,
+                    ),
+                  ),
+                  // Employee list
+                  Expanded(
+                    child: _isLoadingEmployees
+                        ? const Center(child: CircularProgressIndicator())
+                        : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _allEmployees.length,
+                      itemBuilder: (context, index) {
+                        final employee = _allEmployees[index];
+                        final isInProject =
+                            _tempSelectedEmployees.firstWhereOrNull(
+                                    (e) => e.userId == employee.userId) !=
+                                null;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
                                   setModalState(() {
-                                    if (value == true) {
-                                      _tempSelectedEmployees.add(employee);
-                                    } else {
+                                    if (isInProject) {
                                       _tempSelectedEmployees.remove(employee);
+                                    } else {
+                                      _tempSelectedEmployees.add(employee);
                                     }
                                   });
                                 },
-                              );
-                            },
+                                child: Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: isInProject
+                                        ? Colors.blue
+                                        : Colors.white,
+                                    border: Border.all(
+                                      color: isInProject
+                                          ? Colors.blue
+                                          : Colors.grey[400]!,
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: isInProject
+                                      ? const Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 16,
+                                  )
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Avatar
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundImage:
+                                employee.avatarUrl != null &&
+                                    employee.avatarUrl!.isNotEmpty
+                                    ? NetworkImage(
+                                    _employeeService.getAvatarUrl(
+                                        employee.avatarUrl!))
+                                    : null,
+                                child: employee.avatarUrl == null ||
+                                    employee.avatarUrl!.isEmpty
+                                    ? Text(
+                                  employee.name?.isNotEmpty == true
+                                      ? employee.name![0].toUpperCase()
+                                      : 'N',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                )
+                                    : null,
+                              ),
+                              const SizedBox(width: 12),
+                              // Employee details
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      employee.name ?? 'Без имени',
+                                      style: AppTextStyles.bodySmall,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      employee.position ?? 'Без должности',
+                                      style: AppTextStyles.caption,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                  const SizedBox(height: 16),
-                  Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 30, horizontal: 16),
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        // Сохраняем изменения в проекте
-                        try {
-                          await ProjectService().updateProjectTeam(
-                            widget.project.projectId,
-                            _tempSelectedEmployees
-                                .map((e) => e.userId)
-                                .toList(),
-                          );
-                          // Обновляем локальные данные
-                          setState(() {
-                            _projectEmployees =
-                                List.from(_tempSelectedEmployees);
-                            _communicators = _projectEmployees
-                                .where((e) =>
-                                    e.role == 'Коммуникатор' ||
-                                    _taskList.any((task) =>
-                                        task.team.communicatorId.userId ==
-                                        e.userId))
-                                .toList();
-                            _otherEmployees = _projectEmployees
-                                .where((e) =>
-                                    e.role != 'Коммуникатор' &&
-                                    !_communicators
-                                        .any((c) => c.userId == e.userId))
-                                .toList();
-                          });
-                          Navigator.pop(context);
-                          Get.snackbar('Успех', 'Команда проекта обновлена');
-                        } catch (e) {}
+                        );
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Готово'),
                     ),
                   ),
                 ],
@@ -332,6 +370,26 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
           },
         );
       },
+    ).then((_) async {
+        await ProjectService().updateProjectTeam(
+          widget.project.projectId,
+          _tempSelectedEmployees.map((e) => e.userId).toList(),
+        );
+        setState(() {
+          _projectEmployees = List.from(_tempSelectedEmployees);
+          _communicators = _projectEmployees
+              .where((e) =>
+          e.role == 'Коммуникатор' ||
+              _taskList.any((task) =>
+              task.team.communicatorId.userId == e.userId))
+              .toList();
+          _otherEmployees = _projectEmployees
+              .where((e) =>
+          e.role != 'Коммуникатор' &&
+              !_communicators.any((c) => c.userId == e.userId))
+              .toList();
+        });
+      }
     );
   }
 
@@ -455,8 +513,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
         (context, index) {
           if (index == 0) {
             return Padding(
-              padding: const EdgeInsets.only(
-                  left: 16.0, right: 16.0, top: 16, bottom: 4),
+              padding: const EdgeInsets.only(bottom: 0),
               child:
                   Text(title, style: Theme.of(context).textTheme.titleMedium),
             );
@@ -466,18 +523,13 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
         childCount: employees.length + 1,
       ),
     );
-  }
+  } //
 
   Widget _buildEmployeeItem(Employee employee) {
-    return ListTile(
-      leading: CircleAvatar(
-        radius: 24,
-        backgroundImage: employee.avatarUrl!.isNotEmpty
-            ? NetworkImage(_employeeService.getAvatarUrl(employee.avatarUrl))
-            : null,
-        child: employee.avatarUrl!.isEmpty ? const Icon(Icons.person) : null,
-      ),
-      title: Text(employee.name, style: Theme.of(context).textTheme.bodySmall),
+    return AppCommonWidgets.employeeTile(
+      employee: employee,
+      context: context,
+      avatarRadius: 24,
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -489,17 +541,13 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
               fontFamily: 'Roboto',
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
+          SizedBox(
+            height: 16,
+            child: buildEmployeeIcons(employee),
+          ),
         ],
       ),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EmployeeDetailScreen(employee: employee),
-          ),
-        );
-      },
     );
   }
 
@@ -507,5 +555,47 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     }
+  }
+
+  Widget buildEmployeeIcons(Employee employee) {
+    final taskCounts = _employeeTaskCounts[employee.userId] ?? {};
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        _buildIconWithNumber(Iconsax.archive_tick,
+            taskCounts[TaskStatus.atWork] ?? 0), // Сейчас в работе
+        _buildIconWithNumber(Iconsax.task_square,
+            taskCounts[TaskStatus.queue] ?? 0), // В очереди
+        _buildIconWithNumber(Iconsax.calendar_remove,
+            taskCounts[TaskStatus.overdue] ?? 0), // Просроченные
+        _buildIconWithNumber(Iconsax.edit,
+            taskCounts[TaskStatus.needTicket] ?? 0), //Нужно письмо решение
+        _buildIconWithNumber(
+            Iconsax.eye, taskCounts[TaskStatus.notRead] ?? 0), // Не прочитано
+        _buildIconWithNumber(Iconsax.search_normal,
+            taskCounts[TaskStatus.completedUnderReview] ?? 0), // На проверке
+        _buildIconWithNumber(
+            Iconsax.clock, taskCounts[TaskStatus.extraTime] ?? 0), // Доп. время
+      ],
+    );
+  }
+
+  Widget _buildIconWithNumber(IconData icon, int count) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 4),
+        Text(
+          count.toString(),
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.black54,
+          ),
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -12,12 +13,7 @@ class ProjectScreen extends StatelessWidget {
   const ProjectScreen({super.key});
 
   void _openProjectDetails(BuildContext context, Project project) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProjectDetailsScreen(project: project),
-      ),
-    );
+    Get.to(() => ProjectDetailsScreen(project: project));
   }
 
   void _openAddProjectScreen(BuildContext context) {

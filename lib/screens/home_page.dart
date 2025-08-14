@@ -10,7 +10,6 @@ import 'package:task_tracker/services/announcement_operations.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
-import 'package:task_tracker/widgets/common/app_colors.dart';
 
 import '../models/employee.dart';
 import '../models/project.dart';
@@ -19,10 +18,8 @@ import '../models/task_role.dart';
 import '../models/task_status.dart';
 import '../services/task_categories.dart';
 import '../services/task_provider.dart';
-import '../task_screens/task_title_screen.dart';
 import '../widgets/common/app_common.dart';
 import 'annoncement/announcement_screen.dart';
-import 'employee/employee_details_screen.dart';
 import 'employee_queue_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -444,10 +441,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAddTaskButton() {
     return AppButtons.primaryButton(
       text: 'Поставить задачу',
-      onPressed: () {
-        Get.toNamed(TaskTitleScreen.routeName);
-      },
       icon: Iconsax.add_circle,
+      onPressed: () {
+        Get.toNamed('/createTaskStart');
+      },
     );
   }
 
@@ -537,19 +534,21 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               SizedBox(
-                width: double.infinity,
-                child: AppButtons.secondaryButton(text: UserService.to.currentUser!.role == 'Директор'
-                    ? 'Посмотреть'
-                    : 'Прочитать', onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AnnouncementDetailScreen(
-                          announcement: announcement,
-                        ),
-                      ));
-                },)
-              ),
+                  width: double.infinity,
+                  child: AppButtons.secondaryButton(
+                    text: UserService.to.currentUser!.role == 'Директор'
+                        ? 'Посмотреть'
+                        : 'Прочитать',
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AnnouncementDetailScreen(
+                              announcement: announcement,
+                            ),
+                          ));
+                    },
+                  )),
             ],
           ),
         ),
@@ -646,8 +645,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Widget _buildEmployeesSection() {
@@ -691,51 +689,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildEmployeeCell(Employee employee) {
-    return GestureDetector(
-      onTap: () {
-        Get.to(() => EmployeeDetailScreen(employee: employee));
-      },
-      child: SizedBox(
-        width: 120,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                height: 68,
-                child: AppCommonWidgets.avatar(
-                    radius: 34,
-                    imageUrl:
-                        EmployeeService().getAvatarUrl(employee.avatarUrl!) ??
-                            ''),
-              ),
-              AppSpacing.height6,
-              SizedBox(
-                height: 38,
-                child: Text(
-                  employee.name.split(' ').take(2).join(' '),
-                  style: AppTextStyles.bodySmall,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              AppSpacing.height8,
-              SizedBox(
-                height: 20,
-                child: Text(
-                  employee.position,
-                  style: AppTextStyles.caption,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return AppCommonWidgets.employeeCell(
+      employee: employee,
+      context: context,
     );
   }
 

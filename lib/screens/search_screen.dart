@@ -3,11 +3,11 @@ import 'package:get/get.dart';
 import 'package:task_tracker/models/employee.dart';
 import 'package:task_tracker/models/task.dart';
 import 'package:task_tracker/models/task_status.dart';
-import 'package:task_tracker/screens/employee/employee_details_screen.dart';
 import 'package:task_tracker/screens/task/task_details_screen.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/widgets/common/app_common_widgets.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -20,7 +20,7 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final TaskService _taskService = TaskService();
   final EmployeeService _employeeService = EmployeeService();
-  
+
   List<Task> _tasks = [];
   List<Employee> _employees = [];
   List<Task> _filteredTasks = [];
@@ -45,10 +45,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
     try {
       final currentUser = UserService.to.currentUser!;
-      
+
       // Загружаем задачи в зависимости от роли пользователя
       List<Task> allTasks = [];
-      if (currentUser.role == 'Директор' || currentUser.role == 'Коммуникатор') {
+      if (currentUser.role == 'Директор' ||
+          currentUser.role == 'Коммуникатор') {
         allTasks = await _taskService.getAllTasks();
       } else {
         allTasks = await _taskService.getTasksByPosition(
@@ -59,10 +60,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
       // Загружаем всех сотрудников
       final allEmployees = await _employeeService.getAllEmployees();
-      
+
       setState(() {
         _tasks = allTasks;
-        _employees = allEmployees.where((e) => e.userId != currentUser.userId).toList();
+        _employees =
+            allEmployees.where((e) => e.userId != currentUser.userId).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -81,7 +83,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _onSearchChanged() {
     final query = _searchController.text.trim().toLowerCase();
-    
+
     if (query.isEmpty) {
       setState(() {
         _filteredTasks = [];
@@ -97,15 +99,15 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       _filteredTasks = _tasks.where((task) {
         return task.taskName.toLowerCase().contains(query) ||
-               task.description.toLowerCase().contains(query) ||
-               task.project?.name.toLowerCase().contains(query) == true;
+            task.description.toLowerCase().contains(query) ||
+            task.project?.name.toLowerCase().contains(query) == true;
       }).toList();
 
       _filteredEmployees = _employees.where((employee) {
         return employee.name.toLowerCase().contains(query) ||
-               employee.position.toLowerCase().contains(query);
+            employee.position.toLowerCase().contains(query);
       }).toList();
-      
+
       _hasSearched = true;
     });
   }
@@ -161,7 +163,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               ),
               onChanged: (value) => _performSearch(),
             ),
@@ -189,7 +192,8 @@ class _SearchScreenState extends State<SearchScreen> {
       children: [
         _buildSectionHeader('Все задачи', _tasks.length),
         const SizedBox(height: 8),
-        ...(_showAllTasks ? _tasks : _tasks.take(5)).map((task) => _buildTaskCard(task)),
+        ...(_showAllTasks ? _tasks : _tasks.take(5))
+            .map((task) => _buildTaskCard(task)),
         if (_tasks.length > 5) ...[
           const SizedBox(height: 8),
           Center(
@@ -200,7 +204,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.grey.withOpacity(0.3)),
@@ -209,8 +214,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _showAllTasks 
-                          ? 'Скрыть задачи' 
+                      _showAllTasks
+                          ? 'Скрыть задачи'
                           : 'Показать еще ${_tasks.length - 5} задач',
                       style: const TextStyle(
                         fontSize: 14,
@@ -219,7 +224,9 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                     const SizedBox(width: 4),
                     Icon(
-                      _showAllTasks ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                      _showAllTasks
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
                       size: 16,
                     ),
                   ],
@@ -231,7 +238,8 @@ class _SearchScreenState extends State<SearchScreen> {
         const SizedBox(height: 20),
         _buildSectionHeader('Все сотрудники', _employees.length),
         const SizedBox(height: 8),
-        ...(_showAllEmployees ? _employees : _employees.take(5)).map((employee) => _buildEmployeeCard(employee)),
+        ...(_showAllEmployees ? _employees : _employees.take(5))
+            .map((employee) => _buildEmployeeCard(employee)),
         if (_employees.length > 5) ...[
           const SizedBox(height: 8),
           Center(
@@ -242,7 +250,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.grey.withOpacity(0.3)),
@@ -251,8 +260,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _showAllEmployees 
-                          ? 'Скрыть сотрудников' 
+                      _showAllEmployees
+                          ? 'Скрыть сотрудников'
                           : 'Показать еще ${_employees.length - 5} сотрудников',
                       style: const TextStyle(
                         fontSize: 14,
@@ -261,7 +270,9 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                     const SizedBox(width: 4),
                     Icon(
-                      _showAllEmployees ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                      _showAllEmployees
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
                       size: 16,
                     ),
                   ],
@@ -363,7 +374,8 @@ class _SearchScreenState extends State<SearchScreen> {
             children: [
               Icon(StatusHelper.getStatusIcon(task.status), size: 16),
               const SizedBox(width: 6),
-              Text(StatusHelper.displayName(task.status), style: Theme.of(context).textTheme.bodySmall),
+              Text(StatusHelper.displayName(task.status),
+                  style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
         ),
@@ -375,27 +387,9 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildEmployeeCard(Employee employee) {
-    return Card(
-      color: Colors.white,
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundImage: (employee.avatarUrl != null && employee.avatarUrl!.isNotEmpty)
-              ? NetworkImage(_employeeService.getAvatarUrl(employee.avatarUrl!))
-              : null,
-          child: (employee.avatarUrl == null || employee.avatarUrl!.isEmpty)
-              ? const Icon(Icons.person)
-              : null,
-        ),
-        title: Text(
-          employee.name,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        subtitle: Text(employee.position),
-        onTap: () {
-          Get.to(() => EmployeeDetailScreen(employee: employee));
-        },
-      ),
+    return AppCommonWidgets.employeeCard(
+      employee: employee,
+      context: context,
     );
   }
-} 
+}

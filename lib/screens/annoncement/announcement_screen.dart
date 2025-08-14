@@ -3,12 +3,11 @@ import 'package:get/get.dart';
 import 'package:task_tracker/models/employee.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
 
 import '../../models/announcement.dart';
 import '../../services/announcement_operations.dart';
 import '../../task_screens/task_description_tab.dart';
-
-
 
 class AnnouncementDetailScreen extends StatefulWidget {
   final Announcement announcement;
@@ -110,11 +109,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Get.back(),
         ),
-        title: Text(widget.announcement.title),
         actions: [
           // Кнопка закрытия объявления для директоров и коммуникаторов
-          if ((userRole == 'Директор' || userRole == 'Коммуникатор') &&
-              widget.announcement.status == 'active')
+          if (showTabs && widget.announcement.status == 'active')
             IconButton(
               icon: const Icon(Icons.close),
               onPressed: _closeAnnouncement,
@@ -183,10 +180,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
                   ),
                   const SizedBox(height: 16),
                 ],
-
+                Text(
+                  widget.announcement.title,
+                  style: AppTextStyles.titleAnnouncement,
+                ),
+                AppSpacing.height24,
                 Text(
                   widget.announcement.fullText,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: AppTextStyles.bodyMedium,
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -198,8 +199,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text('Фотографии',
-                          style: Theme.of(context).textTheme.titleSmall),
+                      Text('Фотографии', style: AppTextStyles.titleSmall),
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -291,8 +291,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
                     Get.snackbar(
                         'Успех', 'Объявление отмечено как прочитанное');
                     setState(() {}); // Обновляем UI
-                  } catch (e) {
-                  }
+                  } catch (e) {}
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
@@ -330,18 +329,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
         // Все сотрудники в _employees уже являются выбранными для этого объявления
         final isSelected = true;
 
-        return ListTile(
-          leading: CircleAvatar(
-            radius: 20,
-            backgroundImage:
-                employee.avatarUrl != null && employee.avatarUrl!.isNotEmpty
-                    ? NetworkImage(EmployeeService().getAvatarUrl(employee.avatarUrl!))
-                    : null,
-            child: employee.avatarUrl == null || employee.avatarUrl!.isEmpty
-                ? const Icon(Icons.person)
-                : null,
-          ),
-          title: Text(employee.name),
+        return AppCommonWidgets.employeeTile(
+          employee: employee,
+          context: context,
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -359,10 +349,6 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                hasRead ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: hasRead ? Colors.green : Colors.grey,
-              ),
               if (canMarkAsRead && !hasRead && isSelected) ...[
                 const SizedBox(width: 8),
                 IconButton(
@@ -371,8 +357,13 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
                   tooltip: 'Отметить как прочитанное',
                 ),
               ],
+              Icon(
+                hasRead ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: hasRead ? Colors.green : Colors.grey,
+              ),
             ],
           ),
+          showNavigation: false,
         );
       },
     );
