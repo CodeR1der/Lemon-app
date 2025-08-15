@@ -26,6 +26,16 @@ class AppButtonStyles {
     ),
   );
 
+  static ButtonStyle onboardingButton = OutlinedButton.styleFrom(
+    backgroundColor: Colors.white,
+    foregroundColor: Colors.black,
+    side: const BorderSide(color: AppColors.appPrimary, width: 1),
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+  );
+
   // Кнопка с синей границей
   static ButtonStyle blueBorderButton = OutlinedButton.styleFrom(
     backgroundColor: Colors.white,

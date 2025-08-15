@@ -13,6 +13,13 @@ class AppTextStyles {
     fontFamily: 'Roboto',
   );
 
+  static const TextStyle titleOnboarding = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w400,
+    color: Colors.black,
+    fontFamily: 'Roboto',
+  );
+
   static const TextStyle titleLarge = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.bold,
@@ -45,6 +52,13 @@ class AppTextStyles {
   static const TextStyle bodyMedium = TextStyle(
     fontSize: 15,
     color: Colors.black,
+    fontWeight: FontWeight.w400,
+    fontFamily: 'Roboto',
+  );
+
+  static const TextStyle onboardingBody = TextStyle(
+    fontSize: 15,
+    color: AppColors.primaryGrey,
     fontWeight: FontWeight.w400,
     fontFamily: 'Roboto',
   );

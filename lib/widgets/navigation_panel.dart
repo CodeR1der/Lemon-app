@@ -101,7 +101,7 @@ class NavigationController extends GetxController {
         const HomeScreen(),
         const ProjectScreen(),
         TasksScreen(user: UserService.to.currentUser!),
-        EmployeesScreen(),
+        const EmployeesScreen(),
         ProfileScreen(user: UserService.to.currentUser!),
       ]);
       isScreensReady.value = true;

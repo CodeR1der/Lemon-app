@@ -349,7 +349,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: const Text('Опубликовать',style: AppTextStyles.buttonText,),
+                                child: const Text('Опубликовать',style: AppTextStyles.buttonText, )
                               ),
                             ),
                           ],

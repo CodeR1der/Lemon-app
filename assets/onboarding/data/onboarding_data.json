@@ -1,0 +1,89 @@
+{
+  "onboarding_screens": [
+    {
+      "image": "assets/onboarding/images/onboard_1.webp",
+      "translations": {
+        "en": {
+          "title": "Welcome",
+          "subtitle": "Task management system",
+          "text": "LemonApp is your personal communication center. Free up manager's time from micromanagement routine and focus on strategic tasks.",
+          "subtext": null
+        },
+        "ru": {
+          "title": "Добро пожаловать",
+          "subtitle": "Система управления задачами",
+          "text": "LemonApp - ваш персональный коммуникационный центр. Освободите время руководителя от рутины микроменеджмента и сосредоточьтесь на стратегических задачах",
+          "subtext": null
+        }
+      }
+    },
+    {
+      "image": "assets/onboarding/images/onboard_2.webp",
+      "translations": {
+        "en": {
+          "title": "Your roles",
+          "subtitle": "Who are you in the system?",
+          "text": "You can be:\n\u2022 Task creator\n\u2022 Executor\n\u2022 Observer\n\u2022 Communicator",
+          "subtext": "The system automatically determines your roles depending on the context."
+        },
+        "ru": {
+          "title": "Ваши роли",
+          "subtitle": "Кто вы в системе?",
+          "text": "Вы можете быть:\n\u2022 Постановщиком задач\n\u2022 Исполнителем\n\u2022 Наблюдателем\n\u2022 Коммуникатором",
+          "subtext": "Система автоматически определяет ваши роли в зависимости от контекста."
+        }
+      }
+    },
+    {
+      "image": "assets/onboarding/images/onboard_3.webp",
+      "translations": {
+        "en": {
+          "title": "Task management",
+          "subtitle": "Clear path for every task",
+          "text": "Set priorities: Normal, High or \"Operations interruption\".",
+          "subtext": null
+        },
+        "ru": {
+          "title": "Управление задачами",
+          "subtitle": "Чёткий путь каждой задачи",
+          "text": "Устанавливайте приоритеты: Обычный, Высокий или \"Прерывание операционки\".",
+          "subtext": null
+        }
+      }
+    },
+    {
+      "image": "assets/onboarding/images/onboard_4.webp",
+      "translations": {
+        "en": {
+          "title": "Key features",
+          "subtitle": "Smart capabilities",
+          "text": "\u2022 Solution letter for complex tasks\n\u2022 Automatic observer assignment\n\u2022 Checkpoints for timely problem detection\n\u2022 Recurring tasks",
+          "subtext": null
+        },
+        "ru": {
+          "title": "Ключевые функции",
+          "subtitle": "Умные возможности",
+          "text": "\u2022 Письмо-решение для сложных задач\n\u2022 Автоматическое назначение наблюдателей\n\u2022 Контрольные точки для своевременного выявления проблем\n\u2022 Повторяющиеся задачи",
+          "subtext": null
+        }
+      }
+    },
+    {
+      "image": "assets/onboarding/images/onboard_5.webp",
+      "translations": {
+        "en": {
+          "title": "Get started",
+          "subtitle": "Ready for efficient work?",
+          "text": "\u2022 Reduce number of meetings\n\u2022 Prevent task loss\n\u2022 Simplify priority setting",
+          "subtext": "Click \"Start\" to create your first task!"
+        },
+        "ru": {
+          "title": "Начните работу",
+          "subtitle": "Готовы к эффективной работе?",
+          "text": "\u2022 Сократит количество встреч\n\u2022 Предотвратит потерю задач\n\u2022 Упростит постановку приоритетов",
+          "subtext": "Нажмите \"Начать\", чтобы создать свою первую задачу!"
+        }
+      }
+    }
+  ]
+}
