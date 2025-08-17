@@ -70,8 +70,11 @@ class AuthService {
   }
 
   Future<bool> isPhoneExist(String phone) async {
-    final response =
-        await _supabase.from('users').select().eq('phone', phone).single();
+    final response = await _supabase
+        .from('users')
+        .select()
+        .eq('phone', phone)
+        .single();
 
     return response.isNotEmpty;
   }

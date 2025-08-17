@@ -75,6 +75,10 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
+      if (await AuthService().isPhoneExist(_phoneController.text) == true) {
+        throw ArgumentError('Данный номер уже зарегистрирован!');
+      }
+
       AuthService().sendOtp(_phoneController.text);
 
       // Показываем экран ввода OTP
@@ -100,6 +104,8 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       );
+    } on ArgumentError catch (e) {
+      Get.snackbar('Ошибка!', e.message);
     } catch (e) {
       Get.snackbar('Ошибка!', 'Ошибка при отправке смс-кода');
       return;

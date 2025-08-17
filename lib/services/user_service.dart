@@ -70,7 +70,9 @@ class UserService extends GetxService {
       isInitialized.value = false;
 
       String? companyId;
+      bool companyCreated = false;
 
+      // Проверка роли
       if (role != 'Директор' && role != 'Исполнитель / Постановщик') {
         throw Exception('Недопустимая роль: $role');
       }
@@ -101,14 +103,18 @@ class UserService extends GetxService {
         companyId = company['id'];
       }
 
-      final response = await _supabase.auth.signUp(
-        email: email,
-        password: password,
-        data: {'company_id': companyId, 'role': role},
-      );
+        // Регистрация пользователя
+        final response = await _supabase.auth.signUp(
+          email: email,
+          password: password,
+          data: {'company_id': companyId, 'role': role},
+        );
 
-      if (response.user != null) {
-        // Добавление пользователя в таблицу employee через RPC
+        if (response.user == null) {
+          throw Exception('Ошибка регистрации пользователя');
+        }
+
+        // Добавление сотрудника
         await _supabase.rpc('insert_employee', params: {
           'p_user_id': response.user!.id,
           'p_company_id': companyId,
@@ -118,7 +124,10 @@ class UserService extends GetxService {
           'p_phone': '+7 $phone',
         });
 
-        // Уведомление о необходимости подтвердить email
+        // Фиксация транзакции
+        await _supabase.rpc('commit_transaction');
+
+        // Уведомление об успехе
         Get.snackbar(
           'Успех',
           'Регистрация прошла успешно.',
@@ -133,7 +142,12 @@ class UserService extends GetxService {
       return false;
     } catch (e) {
       print(e);
-      Get.snackbar('Ошибка', 'Регистрация не удалась');
+      Get.snackbar(
+        'Ошибка',
+        'Регистрация не удалась',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
       return false;
     } finally {
       isInitialized.value = true;
