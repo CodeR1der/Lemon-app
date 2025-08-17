@@ -68,4 +68,14 @@ class AuthService {
 
     return (response['otp_attempts'] ?? 0) >= 3; // Лимит 3 попытки
   }
+
+  Future<bool> isPhoneExist(String phone) async {
+    final response = await _supabase
+        .from('users')
+        .select()
+        .eq('phone', phone)
+        .single();
+
+    return response.isNotEmpty;
+  }
 }
