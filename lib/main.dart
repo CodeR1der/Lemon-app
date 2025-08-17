@@ -1,24 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/models/announcement.dart';
 import 'package:task_tracker/screens/annoncement/add_announcement.dart';
 import 'package:task_tracker/screens/annoncement/announcement_screen.dart';
-import 'package:task_tracker/screens/employee/employee_details_screen.dart';
 import 'package:task_tracker/screens/employee/employees_screen.dart';
 import 'package:task_tracker/screens/employee/profile_screen.dart';
 import 'package:task_tracker/screens/home_page.dart';
-import 'package:task_tracker/screens/project/project_details_screen.dart';
 import 'package:task_tracker/screens/project/projects_screen.dart';
 import 'package:task_tracker/screens/search_screen.dart';
-import 'package:task_tracker/screens/splash_screen.dart';
 import 'package:task_tracker/screens/task/tasks_screen.dart';
-import 'package:task_tracker/services/onboarding_service.dart';
 import 'package:task_tracker/services/project_provider.dart';
 import 'package:task_tracker/services/task_provider.dart';
 import 'package:task_tracker/services/user_service.dart';
@@ -26,6 +20,7 @@ import 'package:task_tracker/task_screens/task_title_screen.dart';
 import 'package:task_tracker/widgets/navigation_panel.dart';
 
 import 'auth/auth.dart';
+import 'auth/auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,30 +40,21 @@ void main() async {
   await Supabase.initialize(
     url: 'https://xusyxtgdmtpupmroemzb.supabase.co',
     anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1c3l4dGdkbXRwdXBtcm9lbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0NDU2NTgsImV4cCI6MjA0ODAyMTY1OH0.Z7gU-A_s6ymY7-vTW4ObeHurvtbSIt4kWe-9EXF5j9M',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1c3l4dGdkbXRwdXBtcm9lbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0NDU2NTgsImV4cCI6MjA0ODAyMTY1OH0.Z7gU-A_s6ymY7-vTW4ObeHurvtbSIt4kWe-9EXF5j9M',
   );
 
-  final prefs = await SharedPreferences.getInstance();
-  final showHome = true; //prefs.getBool('showHome') ?? false;
-
-  // Инициализируем GetX сервисы заранее
-  Get.put(UserService(Supabase.instance.client));
-  Get.put(OnboardingService());
-
-  initializeDateFormatting().then((_) => runApp(MyApp(showHome: showHome)));
+  initializeDateFormatting().then((_) => runApp(const MyApp()));
 }
 
 class InitialBindings extends Bindings {
   @override
   void dependencies() {
-    // Сервисы уже инициализированы в main()
+    Get.put(UserService(Supabase.instance.client));
   }
 }
 
 class MyApp extends StatelessWidget {
-  final bool showHome;
-
-  const MyApp({required this.showHome, super.key});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +98,7 @@ class MyApp extends StatelessWidget {
               GetPage(
                   name: '/tasks',
                   page: () => TasksScreen(user: UserService.to.currentUser!)),
-              GetPage(name: '/employees', page: () => const EmployeesScreen()),
+              GetPage(name: '/employees', page: () => EmployeesScreen()),
               GetPage(
                   name: '/profile',
                   page: () => ProfileScreen(user: UserService.to.currentUser!)),
@@ -124,25 +110,10 @@ class MyApp extends StatelessWidget {
               GetPage(
                   name: '/announcement_detail',
                   page: () => AnnouncementDetailScreen(
-                        announcement: Get.arguments as Announcement,
-                      )),
-              GetPage(
-                  name: '/project_details',
-                  page: () => ProjectDetailsScreen(project: Get.arguments)),
-              GetPage(
-                  name: '/employee_details',
-                  page: () => EmployeeDetailScreen(employee: Get.arguments)),
+                    announcement: Get.arguments as Announcement,
+                  )),
             ],
             initialBinding: InitialBindings(),
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale('ru'),
-            ],
-            locale: const Locale('ru'),
             theme: ThemeData(
               appBarTheme: const AppBarTheme(
                 backgroundColor: Colors.white,
@@ -153,10 +124,37 @@ class MyApp extends StatelessWidget {
               fontFamily: 'Roboto',
             ),
             debugShowCheckedModeBanner: false,
-            home: const SplashScreen(),
+            home: FutureBuilder(
+              future: _initializeApp(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (snapshot.hasError) {
+                    return Scaffold(
+                      body: Center(
+                          child: Text('Ошибка запуска: ${snapshot.error}')),
+                    );
+                  }
+                  return const BottomNavigationMenu();
+                }
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              },
+            ),
           );
         },
       ),
     );
+  }
+
+  Future<void> _initializeApp() async {
+    try {
+      AuthWrapper(
+          supabase: Supabase.instance.client,
+          homeScreen: const BottomNavigationMenu());
+    } catch (e) {
+      print('Ошибка инициализации приложения: $e');
+      rethrow;
+    }
   }
 }

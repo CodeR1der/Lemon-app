@@ -64,7 +64,8 @@ class UserService extends GetxService {
     String? role,
     String? code,
     String? phone,
-  }) async {
+  })
+  async {
     try {
       isInitialized.value = false;
 
@@ -120,15 +121,18 @@ class UserService extends GetxService {
         // Уведомление о необходимости подтвердить email
         Get.snackbar(
           'Успех',
-          'Регистрация прошла успешно. Пожалуйста, подтвердите ваш email и войдите.',
-          backgroundColor: Colors.green,
+          'Регистрация прошла успешно.',
+          backgroundColor: Colors.lightGreen,
           colorText: Colors.white,
         );
 
+        await initializeUser(response.user!.id);
+        isLoggedIn.value = _currentUser.value != null;
         return true;
       }
       return false;
     } catch (e) {
+      print(e);
       Get.snackbar('Ошибка', 'Регистрация не удалась');
       return false;
     } finally {
