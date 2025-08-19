@@ -36,8 +36,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   bool _isLoadingEmployees = true;
 
   bool get _canSubmit {
-    return _titleController.text.isNotEmpty &&
-        _fullTextController.text.isNotEmpty &&
+    return _titleController.text.trim().isNotEmpty &&
+        _fullTextController.text.trim().isNotEmpty &&
         _selectedEmployeeIds.isNotEmpty;
   }
 
@@ -45,6 +45,16 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   void initState() {
     super.initState();
     _loadEmployees();
+
+    // Добавляем слушатели для автоматической активации кнопки
+    _titleController.addListener(_updateButtonState);
+    _fullTextController.addListener(_updateButtonState);
+  }
+
+  void _updateButtonState() {
+    setState(() {
+      // Обновляем состояние для перерисовки кнопки
+    });
   }
 
   Future<void> _loadEmployees() async {
@@ -126,6 +136,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
 
   @override
   void dispose() {
+    _titleController.removeListener(_updateButtonState);
+    _fullTextController.removeListener(_updateButtonState);
     _titleController.dispose();
     _fullTextController.dispose();
     super.dispose();
@@ -170,9 +182,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
           currentUser.name,
           currentUser.role,
           newAnnouncement.companyId);
-      AppCommonWidgets.defaultAlert(title: 'Объявление опубликовано');
-      Navigator.pop(context);
-      Get.back(result: true);
+
     } catch (e) {
       Get.snackbar('Ошибка', 'Не удалось создать объявление');
     } finally {
@@ -185,8 +195,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset:
-          false, // Предотвращаем поднятие контента при появлении клавиатуры
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -194,169 +203,186 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         ),
         title: const Text('Объявление'),
       ),
-      body: SafeArea(
-        top: false,
-        child: _companyId == null
-            ? const Center(
-                child: Text('Ошибка: идентификатор компании не указан'))
-            : _isLoadingEmployees
-                ? const Center(child: CircularProgressIndicator())
-                : Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Form(
-                      key: _formKey,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Секция выбора сотрудников
-                            Text(
-                              'Для кого объявление',
-                              style: AppTextStyles.titleSmall,
-                            ),
-                            AppSpacing.height8,
+      body: Column(
+        children: [
+          _companyId == null
+              ? const Center(
+                  child: Text('Ошибка: идентификатор компании не указан'))
+              : _isLoadingEmployees
+                  ? const Center(child: CircularProgressIndicator())
+                  : Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Form(
+                        key: _formKey,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Секция выбора сотрудников
+                              Text(
+                                'Для кого объявление',
+                                style: AppTextStyles.titleSmall,
+                              ),
+                              AppSpacing.height8,
 
-                            /// Поле для отображения выбранных сотрудников
-                            GestureDetector(
-                              onTap: _showEmployeesModal,
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.grey.shade300),
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: Colors.white,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (_selectedEmployeeIds.isEmpty) ...[
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              'Выбрать сотрудников',
-                                              style: AppTextStyles.titleSmall,
-                                            ),
-                                          ),
-                                          const Icon(Icons.arrow_drop_down,
-                                              color: Colors.grey),
-                                        ],
-                                      ),
-                                    ],
-                                    if (_selectedEmployeeIds.isNotEmpty) ...[
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: GestureDetector(
-                                              onTap: _showEmployeesModal,
+                              /// Поле для отображения выбранных сотрудников
+                              GestureDetector(
+                                onTap: _showEmployeesModal,
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    border:
+                                        Border.all(color: Colors.grey.shade300),
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: Colors.white,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (_selectedEmployeeIds.isEmpty) ...[
+                                        Row(
+                                          children: [
+                                            Expanded(
                                               child: Text(
-                                                _allEmployees
-                                                    .where((employee) =>
-                                                        _selectedEmployeeIds
-                                                            .contains(employee
-                                                                .userId))
-                                                    .map((employee) =>
-                                                        _getLastName(
-                                                            employee.name))
-                                                    .join(', '),
+                                                'Выбрать сотрудников',
                                                 style: AppTextStyles.titleSmall,
-                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Icon(Icons.arrow_drop_down,
-                                              color: Colors.grey),
-                                        ],
-                                      ),
+                                            const Icon(Icons.arrow_drop_down,
+                                                color: Colors.grey),
+                                          ],
+                                        ),
+                                      ],
+                                      if (_selectedEmployeeIds.isNotEmpty) ...[
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: GestureDetector(
+                                                onTap: _showEmployeesModal,
+                                                child: Text(
+                                                  _allEmployees
+                                                      .where((employee) =>
+                                                          _selectedEmployeeIds
+                                                              .contains(employee
+                                                                  .userId))
+                                                      .map((employee) =>
+                                                          _getLastName(
+                                                              employee.name))
+                                                      .join(', '),
+                                                  style:
+                                                      AppTextStyles.bodyLarge,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            const Icon(Icons.arrow_drop_down,
+                                                color: Colors.grey),
+                                          ],
+                                        ),
+                                      ],
                                     ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                            AppSpacing.height24,
-                            Text(
-                              'Название объявления',
-                              style: AppTextStyles.titleSmall,
-                            ),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _titleController,
-                              decoration: InputDecoration(
-                                hintText: 'Краткий текст',
-                                hintStyle:
-                                    AppTextStyles.bodyMedium,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                filled: true,
-                                fillColor: Colors.white,
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Пожалуйста, введите заголовок';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            Text('Подробное описание объявления',
-                                style: AppTextStyles.titleSmall),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _fullTextController,
-                              decoration: InputDecoration(
-                                hintText: 'Описание',
-                                hintStyle:
-                                    AppTextStyles.bodyMedium,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: AppColors.primaryGrey, width: 1.0),
-                                ),
-                                filled: true,
-                                fillColor: Colors.white,
-                              ),
-                              maxLines: 5,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Пожалуйста, введите полный текст';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Прикрепить файлы (в том числе фото)',
-                              style: AppTextStyles.titleSmall,
-                            ),
-                            const SizedBox(height: 6),
-                            // Кнопка добавления файла
-                            AppButtons.secondaryButton(text: 'Добавить файл', icon:Iconsax.add_circle_copy , onPressed: pickFile),
-                            const SizedBox(height: 8),
-                            Container(
-                              color: Colors.white,
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _isLoading ? null : _submitForm,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      _canSubmit ? AppColors.appPrimary : Colors.grey,
-                                  foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: const Text('Опубликовать',style: AppTextStyles.buttonText, )
                               ),
-                            ),
-                          ],
+                              AppSpacing.height24,
+                              Text(
+                                'Название объявления',
+                                style: AppTextStyles.titleSmall,
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _titleController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    // Обновляем состояние при изменении текста
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  hintText: 'Краткий текст',
+                                  hintStyle: AppTextStyles.bodyMedium,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Пожалуйста, введите заголовок';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              Text('Подробное описание объявления',
+                                  style: AppTextStyles.titleSmall),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _fullTextController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    // Обновляем состояние при изменении текста
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  hintText: 'Описание',
+                                  hintStyle: AppTextStyles.bodyMedium,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                        color: AppColors.primaryGrey,
+                                        width: 1.0),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                ),
+                                maxLines: 5,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Пожалуйста, введите полный текст';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                'Прикрепить файлы (в том числе фото)',
+                                style: AppTextStyles.titleSmall,
+                              ),
+                              const SizedBox(height: 6),
+                              // Кнопка добавления файла
+                              AppButtons.secondaryButton(
+                                  text: 'Добавить файл',
+                                  icon: Iconsax.add_circle_copy,
+                                  onPressed: pickFile),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
+        ],
+      ),
+      bottomSheet: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        color: Colors.white,
+        width: double.infinity,
+        child: ElevatedButton(
+            onPressed: _isLoading ? null : _submitForm,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _canSubmit ? AppColors.appPrimary : Colors.grey,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),//
+            child: const Text(
+              'Опубликовать',
+              style: AppTextStyles.buttonText,
+            )),
       ),
     );
   }

@@ -78,6 +78,43 @@ class AppButtons {
     );
   }
 
+  /// Серая кнопка
+  static Widget greyButton({
+    required String text,
+    required VoidCallback onPressed,
+    IconData? icon,
+    Color? iconColor,
+    bool isLoading = false,
+    bool isFullWidth = true,
+  }) {
+    return SizedBox(
+      width: isFullWidth ? double.infinity : null,
+      child: OutlinedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: AppButtonStyles.greyButton,
+        child: isLoading
+            ? const SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+          ),
+        )
+            : Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 20, color: iconColor,),
+              AppSpacing.width8,
+            ],
+            Text(text, style: AppTextStyles.buttonTextSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// Кнопка для аутентификации
   static Widget authButton({
     required String text,

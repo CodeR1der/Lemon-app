@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Для Clipboard
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/employee.dart';
@@ -39,6 +40,7 @@ class ViewProfileState implements ProfileState {
         screen._buildBorders(),
         screen._buildEditableProfileSection(
             'Адрес страницы в VK', screen._vkController, false),
+        screen._buildLogOutButton(),
       ],
     );
   }
@@ -66,6 +68,8 @@ class EditProfileState implements ProfileState {
         const SizedBox(height: 40),
         screen._buildAvatar(),
         screen._buildProfileSection('ФИО', screen.name),
+        screen._buildBorders(),
+        screen._buildProfileSection('Роль', screen.role),
         screen._buildBorders(),
         screen._buildProfileSection('Должность', screen.position),
         screen._buildBorders(),
@@ -287,11 +291,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 : null,
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.logout, color: Colors.red, size: 30),
-          onPressed: _logout,
-          tooltip: 'Выйти',
-        ),
       ],
     );
   }
@@ -307,6 +306,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
+  Widget _buildLogOutButton() {
+    return AppButtons.greyButton(text: 'Выйти из аккаунта', icon: Icons.logout, iconColor: Colors.red, onPressed: _logout);
+  }
 
   Widget _buildProfileSection(String title, String content) {
     return Column(
@@ -315,11 +317,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 13),
         Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium,
+          style: AppTextStyles.titleSmall,
         ),
         Text(
           content.isNotEmpty ? content : 'Загрузка...',
-          style: Theme.of(context).textTheme.bodyLarge,
+          style: AppTextStyles.bodyMedium,
         ),
         const SizedBox(height: 13),
       ],
@@ -398,19 +400,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 13),
         Text(
           title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: Colors.grey,
-            fontFamily: 'Roboto',
-          ),
+          style: AppTextStyles.titleSmall
         ),
         const SizedBox(height: 8),
         if (isEditing)
           SizedBox(
             height: 20,
             child: TextField(
-              style: Theme.of(context).textTheme.titleMedium,
+              style: AppTextStyles.bodyMedium,
               controller: controller,
               decoration: const InputDecoration(
                 isCollapsed: true,

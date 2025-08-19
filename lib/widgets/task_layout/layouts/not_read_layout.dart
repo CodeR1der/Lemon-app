@@ -64,14 +64,10 @@ class NotReadLayoutStrategy extends BaseTaskLayoutStrategy {
     return [
       buildControlPointsSection(
           context, task, TaskRole.communicator, controlPoints),
-      buildPrimaryButton(
-        text: 'Напомнить прочитать',
-        onPressed: () {},
-      ),
       const Divider(),
       buildSectionItem(icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
       const Divider(),
-      buildSectionItem(icon: Iconsax.clock_copy, title: 'История задачи'),
+      buildHistorySection(context, revisions),
       const Divider(),
     ];
   }

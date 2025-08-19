@@ -96,34 +96,29 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
     if (controlPoints.isEmpty) {
       return Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-            child: Row(
-              children: [
-                const Icon(Iconsax.clock_copy,
-                    size: 24, color: Color(0xFF6D7885)),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Text(
-                    'Контрольные точки',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
+          Row(
+            children: [
+              const Icon(Iconsax.clock_copy,
+                  size: 24, color: Color(0xFF6D7885)),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Text(
+                  'Контрольные точки',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
                   ),
                 ),
-                if (role == TaskRole.communicator)...[
-                  IconButton(
-                    onPressed: () => _addControlPoint(context, task),
-                    icon: const Icon(Icons.add, color: Colors.orange),
-                    iconSize: 20,
-                  ),
-                ],
-
+              ),
+              if (role == TaskRole.communicator) ...[
+                IconButton(
+                  onPressed: () => _addControlPoint(context, task),
+                  icon: const Icon(Icons.add, color: Colors.orange),
+                  iconSize: 20,
+                ),
               ],
-            ),
+            ],
           ),
-          const Divider(),
         ],
       );
     }
@@ -131,7 +126,7 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
     return Column(
       children: [
         // Заголовок секции
-        const Padding(//
+        const Padding(
           padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           child: Row(
             children: [
@@ -162,7 +157,7 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
           );
         }),
         // Кнопки для коммуникатора
-        if (role == TaskRole.communicator) ...[
+        if (role == TaskRole.communicator && controlPoints.isNotEmpty) ...[
           Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Column(
@@ -179,7 +174,8 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
                     icon: Icons.add,
                   ),
                 ],
-              ))
+              )
+          )
         ],
       ],
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:task_tracker/models/employee.dart';
 import 'package:task_tracker/screens/employee/employee_details_screen.dart';
 import 'package:task_tracker/services/employee_operations.dart';
@@ -221,51 +222,87 @@ class AppCommonWidgets {
     );
   }
 
-  static Widget defaultAlert({required String title, String? description}) {
+  /// Универсальный алерт с настраиваемыми параметрами
+  static Widget customAlert({
+    required String title,
+    String? description,
+    IconData? icon,
+    Color? backgroundColor,
+    Color? iconColor,
+    Color? buttonColor,
+    String buttonText = 'Закрыть',
+    VoidCallback? onButtonPressed,
+  }) {
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
       ),
-      backgroundColor: Color(0xFFF0F7E9), // Светло-зеленый фон
+      backgroundColor: backgroundColor ??
+          const Color(0xFFF0F7E9), // Светло-зеленый фон по умолчанию
       content: Container(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.check_circle,
-              color: Colors.green,
+              icon ?? Icons.check_circle,
+              color: iconColor ?? Colors.green,
               size: 40.0,
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20.0,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
             ),
-            SizedBox(height: 24.0),
+            if (description != null) ...[
+              const SizedBox(height: 8.0),
+              Text(
+                description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14.0,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
+            const SizedBox(height: 24.0),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop; // Закрыть алерт
-              },
+              onPressed: onButtonPressed ??
+                  () {
+                    Navigator.of(Get.context!).pop();
+                  },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: buttonColor ?? Colors.green,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
               child: Text(
-                'Закрыть',
-                style: TextStyle(color: Colors.white),
+                buttonText,
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  /// Дефолтный алерт для успешных операций
+  static Widget defaultAlert({required String title, String? description}) {
+    return customAlert(
+      title: title,
+      description: description,
+      icon: Icons.check_circle,
+      backgroundColor: const Color(0xFFF0F7E9),
+      iconColor: Colors.green,
+      buttonColor: Colors.green,
+      buttonText: 'Закрыть',
     );
   }
 
@@ -321,7 +358,10 @@ class AppCommonWidgets {
   static Widget divider() {
     return const Padding(
       padding: AppSpacing.dividerPadding,
-      child: Divider(height: 1.0, color: AppColors.divider,),
+      child: Divider(
+        height: 1.0,
+        color: AppColors.divider,
+      ),
     );
   }
 
@@ -351,8 +391,6 @@ class AppCommonWidgets {
       ),
     );
   }
-
-
 
   /// Виджет для отображения сотрудника в виде ListTile
   static Widget employeeTile({

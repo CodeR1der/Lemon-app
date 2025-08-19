@@ -10,8 +10,7 @@ import '../../widgets/common/app_common_widgets.dart';
 import '../../widgets/common/app_spacing.dart';
 import '../../widgets/common/app_text_styles.dart';
 
-
-class TaskListByStatusScreen extends StatelessWidget {
+class TaskListByStatusScreen extends StatefulWidget {
   final String? position;
   final String? userId;
   final String? projectId;
@@ -25,7 +24,110 @@ class TaskListByStatusScreen extends StatelessWidget {
     super.key,
   });
 
+  @override
+  State<TaskListByStatusScreen> createState() => _TaskListByStatusScreenState();
+}
+
+class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
+  List<Task> _tasks = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  Future<void> _loadTasks() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      print(
+          'TaskListScreen: Загружаем задачи для статуса: ${widget.status}, позиции: ${widget.position}');
+
+      if (widget.status == TaskStatus.controlPoint &&
+          widget.position ==
+              RoleHelper.convertToString(TaskRole.communicator)) {
+        print(
+            'TaskListScreen: Используем асинхронный метод для контрольных точек коммуникатора');
+        // Для контрольных точек коммуникатора используем асинхронный метод
+        _tasks = await taskProvider.getTasksByStatusWithControlPoints(
+          widget.status,
+          projectId: widget.projectId,
+          userId: widget.userId,
+          position: widget.position,
+        );
+      } else if (widget.status == TaskStatus.atWork &&
+          widget.position ==
+              RoleHelper.convertToString(TaskRole.communicator)) {
+        print(
+            'TaskListScreen: Используем асинхронный метод для задач "В работе" коммуникатора');
+        // Для задач "В работе" коммуникатора используем асинхронный метод (исключая контрольные точки)
+        _tasks = await taskProvider.getTasksByStatusWithControlPoints(
+          widget.status,
+          projectId: widget.projectId,
+          userId: widget.userId,
+          position: widget.position,
+        );
+      } else if (widget.status == TaskStatus.controlPoint &&
+          (widget.position == RoleHelper.convertToString(TaskRole.executor) ||
+              widget.position ==
+                  RoleHelper.convertToString(TaskRole.creator))) {
+        print('TaskListScreen: Объединяем задачи для исполнителя/постановщика');
+        // Для исполнителя и постановщика объединяем задачи "В работе" и "Контрольная точка"
+        final atWorkTasks = taskProvider.getTasksByStatus(
+          TaskStatus.atWork,
+          projectId: widget.projectId,
+          userId: widget.userId,
+          position: widget.position,
+        );
+        final controlPointTasks = taskProvider.getTasksByStatus(
+          widget.status,
+          projectId: widget.projectId,
+          userId: widget.userId,
+          position: widget.position,
+        );
+        _tasks = [...atWorkTasks, ...controlPointTasks];
+      } else {
+        print('TaskListScreen: Используем обычный метод');
+        // Для остальных случаев используем обычный метод
+        _tasks = taskProvider.getTasksByStatus(
+          widget.status,
+          projectId: widget.projectId,
+          userId: widget.userId,
+          position: widget.position,
+        );
+      }
+
+      print(
+          'TaskListScreen: Найдено задач: ${_tasks.length} для статуса: ${widget.status}, position: ${widget.position}, userId: ${widget.userId}');
+    } catch (e) {
+      print('TaskListScreen: Ошибка при загрузке задач: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Widget _buildTaskCard(BuildContext context, Task task) {
+    // Определяем отображаемый статус для коммуникатора
+    TaskStatus displayStatus = task.status;
+    if (widget.position == RoleHelper.convertToString(TaskRole.communicator) &&
+        task.status == TaskStatus.atWork &&
+        widget.status == TaskStatus.controlPoint) {
+      // Для коммуникатора в списке контрольных точек отображаем как "Контрольная точка"
+      displayStatus = TaskStatus.controlPoint;
+      print(
+          'TaskListScreen: Отображаем задачу ${task.id} как "Контрольная точка"');
+    } else {
+      print(
+          'TaskListScreen: Отображаем задачу ${task.id} со статусом: ${task.status}');
+    }
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -45,12 +147,13 @@ class TaskListByStatusScreen extends StatelessWidget {
             AppCommonWidgets.labeledField(
               label: 'Статус',
               child: AppCommonWidgets.statusChip(
-                icon: StatusHelper.getStatusIcon(task.status),
-                text: StatusHelper.displayName(task.status),
+                icon: StatusHelper.getStatusIcon(displayStatus),
+                text: StatusHelper.displayName(displayStatus),
               ),
             ),
-            if (position == RoleHelper.convertToString(TaskRole.communicator) &&
-                status == TaskStatus.queue) ...[
+            if (widget.position ==
+                    RoleHelper.convertToString(TaskRole.communicator) &&
+                widget.status == TaskStatus.queue) ...[
               AppCommonWidgets.labeledField(
                 label: 'Очередность задачи',
                 child: AppCommonWidgets.counterChip(
@@ -84,54 +187,29 @@ class TaskListByStatusScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text(StatusHelper.displayName(status)),
+        title: Text(StatusHelper.displayName(widget.status)),
       ),
       body: SafeArea(
         top: false,
         child: Consumer<TaskProvider>(
           builder: (context, taskProvider, child) {
-            var tasks = [];
-
-            if (taskProvider.isLoading) {
+            if (_isLoading) {
               return AppCommonWidgets.loadingIndicator();
             }
             if (taskProvider.error != null) {
               return AppCommonWidgets.errorWidget(
                   'Ошибка: ${taskProvider.error}');
             }
-            if (status == TaskStatus.controlPoint &&
-                (position == TaskRole.executor ||
-                    position == TaskRole.creator)) {
-              tasks = taskProvider.getTasksByStatus(
-                TaskStatus.atWork,
-                projectId: projectId,
-                userId: userId,
-                position: position,
-              );
-              tasks += taskProvider.getTasksByStatus(
-                status,
-                projectId: projectId,
-                userId: userId,
-                position: position,
-              );
-            } else {
-              tasks = taskProvider.getTasksByStatus(
-                status,
-                projectId: projectId,
-                userId: userId,
-                position: position,
-              );
-            }
-            print(
-                'Найдено задач: ${tasks.length} для статуса: $status, position: $position, userId: $userId');
-            if (tasks.isEmpty) {
+
+            if (_tasks.isEmpty) {
               return AppCommonWidgets.emptyState('Нет задач с таким статусом');
             }
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                children:
-                    tasks.map((task) => _buildTaskCard(context, task)).toList(),
+                children: _tasks
+                    .map((task) => _buildTaskCard(context, task))
+                    .toList(),
               ),
             );
           },

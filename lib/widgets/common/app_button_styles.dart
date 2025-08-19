@@ -26,6 +26,18 @@ class AppButtonStyles {
     ),
   );
 
+  // Вторичная кнопка с белым фоном и оранжевой границей
+  static ButtonStyle greyButton = OutlinedButton.styleFrom(
+    backgroundColor: Colors.white,
+    foregroundColor: Colors.black,
+    side: const BorderSide(color: AppColors.buttonGrey, width: 1),
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+  );
+
+
   static ButtonStyle onboardingButton = OutlinedButton.styleFrom(
     backgroundColor: Colors.white,
     foregroundColor: Colors.black,

@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
+import 'package:task_tracker/services/control_point_operations.dart';
 import 'package:task_tracker/services/file_service.dart';
+import 'package:uuid/uuid.dart';
 
 import '/models/project.dart';
 import '../models/employee.dart';
@@ -305,6 +305,8 @@ class ProjectService {
 
   Future<Map<String, int>> getTasksByProject(String projectId) async {
     try {
+      final controlPointService = ControlPointService();
+
       final tasksResponse = await _client.from('task').select('''
       *,
       project:project_id(*,
@@ -331,13 +333,36 @@ class ProjectService {
         statusCounts[StatusHelper.displayName(status)] = 0;
       }
 
-      // Считаем задачи по статусам
+      // Считаем задачи по статусам с учетом контрольных точек
       for (final task in tasksResponse) {
         if (task['status'] != null) {
           final status = task['status'] as String;
           final taskStatus = StatusHelper.toTaskStatus(status);
-          final statusName = StatusHelper.displayName(taskStatus);
-          statusCounts[statusName] = (statusCounts[statusName] ?? 0) + 1;
+          final taskId = task['id'] as String;
+
+          // Если задача в статусе "В работе", проверяем контрольные точки
+          if (taskStatus == TaskStatus.atWork) {
+            final hasUnclosedControlPoints =
+                await controlPointService.hasUnclosedControlPoints(taskId);
+
+            if (hasUnclosedControlPoints) {
+              // Если есть незакрытые контрольные точки, считаем как "Контрольная точка"
+              statusCounts[StatusHelper.displayName(TaskStatus.controlPoint)] =
+                  (statusCounts[StatusHelper.displayName(
+                              TaskStatus.controlPoint)] ??
+                          0) +
+                      1;
+              // НЕ добавляем в статус "В работе"
+            } else {
+              // Если нет незакрытых контрольных точек, считаем как "В работе"
+              statusCounts[StatusHelper.displayName(taskStatus)] =
+                  (statusCounts[StatusHelper.displayName(taskStatus)] ?? 0) + 1;
+            }
+          } else {
+            // Для остальных статусов считаем как обычно
+            statusCounts[StatusHelper.displayName(taskStatus)] =
+                (statusCounts[StatusHelper.displayName(taskStatus)] ?? 0) + 1;
+          }
         }
       }
 

@@ -3,11 +3,13 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_status.dart';
+import 'package:task_tracker/widgets/common/app_button_styles.dart';
 
 import '../../models/task.dart';
 import '../../models/task_role.dart';
 import '../../services/task_operations.dart';
 import '../../services/task_provider.dart';
+import '../../widgets/common/app_buttons.dart';
 import 'choose_task_deadline_screen.dart';
 
 class QueueScreen extends StatefulWidget {
@@ -30,17 +32,6 @@ class _QueueScreenState extends State<QueueScreen> {
     super.initState();
     _currentTask = widget.task; // Инициализируем текущую задачу
     _loadQueuedTasks();
-
-    // Если у задачи есть дедлайн, показываем уведомление
-    if (_currentTask.deadline != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'Дедлайн установлен. Теперь можно добавить задачу в очередь')),
-        );
-      });
-    }
   }
 
   void _loadQueuedTasks() {
@@ -107,12 +98,86 @@ class _QueueScreenState extends State<QueueScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Задача добавлена в очередь')),
       );
+    } catch (e) {}
+  }
+
+  Future<void> _changeQueuePosition(
+      int currentPosition, int newPosition) async {
+    try {
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      final tasks = await _queuedTasks ?? [];
+
+      if (currentPosition == newPosition) return;
+
+      // Находим задачу, которую нужно переместить
+      Task? taskToMove;
+      try {
+        taskToMove = tasks.firstWhere(
+          (task) => int.parse(task.queuePosition!) == currentPosition,
+        );
+      } catch (e) {
+        // Если задача не найдена в списке, возможно это текущая задача
+        if (_currentTask.queuePosition == currentPosition.toString()) {
+          taskToMove = _currentTask;
+        } else {
+          throw Exception('Задача с позицией $currentPosition не найдена');
+        }
+      }
+
+      if (currentPosition < newPosition) {
+        // Перемещаем вниз по очереди
+        for (var task in tasks) {
+          final taskPosition = int.parse(task.queuePosition!);
+          if (taskPosition > currentPosition && taskPosition <= newPosition) {
+            final updatedTask = task.copyWith(
+              queuePosition: (taskPosition - 1).toString(),
+            );
+            await taskProvider.updateTask(updatedTask);
+          }
+        }
+      } else {
+        // Перемещаем вверх по очереди
+        for (var task in tasks) {
+          final taskPosition = int.parse(task.queuePosition!);
+          if (taskPosition >= newPosition && taskPosition < currentPosition) {
+            final updatedTask = task.copyWith(
+              queuePosition: (taskPosition + 1).toString(),
+            );
+            await taskProvider.updateTask(updatedTask);
+          }
+        }
+      }
+
+      // Обновляем позицию перемещаемой задачи
+      final updatedTask = taskToMove!.copyWith(
+        queuePosition: newPosition.toString(),
+      );
+      await taskProvider.updateTask(updatedTask);
+
+      // Если перемещаем текущую задачу, обновляем локальную копию
+      if (taskToMove.id == _currentTask.id) {
+        setState(() {
+          _currentTask = updatedTask;
+        });
+      }
+
+      // Перезагружаем список задач
+      _loadQueuedTasks();
+
+      // Показываем уведомление об успехе
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Позиция в очереди изменена')),
+      );
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка при изменении позиции: $e')),
+      );
     }
   }
 
-  void _showPositionSelectionDialog(int tasksCount) {
-    final maxPosition = tasksCount + 1;
+  void _showPositionSelectionDialog(int tasksCount, {int? currentPosition}) {
+    // Если изменяем позицию существующей задачи, показываем только позиции среди задач в очереди
+    final maxPosition = currentPosition != null ? tasksCount : tasksCount + 1;
     const itemHeight = 48.0;
     const headerHeight = 80.0;
 
@@ -152,10 +217,17 @@ class _QueueScreenState extends State<QueueScreen> {
                           RadioListTile<int>(
                         title: Text('$position'),
                         value: position,
-                        groupValue: _selectedPosition,
+                        groupValue: currentPosition ?? _selectedPosition,
                         onChanged: (value) async {
                           if (value != null) {
-                            await _addToQueue(value);
+                            if (currentPosition != null) {
+                              // Изменяем позицию существующей задачи в очереди
+                              await _changeQueuePosition(
+                                  currentPosition, value);
+                            } else {
+                              // Добавляем новую задачу в очередь
+                              await _addToQueue(value);
+                            }
                             Navigator.pop(context);
                           }
                         },
@@ -181,8 +253,9 @@ class _QueueScreenState extends State<QueueScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             // Возвращаемся к предыдущему экрану с обновленной задачей
-            if (widget.task.deadline == null && _currentTask.deadline != null) {
-              // Если дедлайн был установлен на этом экране, возвращаем обновленную задачу
+            if (widget.task.status != TaskStatus.queue &&
+                _currentTask.status == TaskStatus.queue) {
+              // Если задача была добавлена в очередь на этом экране, возвращаем обновленную задачу
               Navigator.pop(context, _currentTask);
             } else {
               // Иначе просто возвращаемся назад
@@ -206,21 +279,30 @@ class _QueueScreenState extends State<QueueScreen> {
 
             final tasks = snapshot.data ?? [];
 
+            // Сортируем задачи по позиции в очереди
+            final sortedTasks = List<Task>.from(tasks)
+              ..sort((a, b) {
+                final aPosition = int.tryParse(a.queuePosition ?? '0') ?? 0;
+                final bPosition = int.tryParse(b.queuePosition ?? '0') ?? 0;
+                return aPosition.compareTo(bPosition);
+              });
+
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0), //
               child: Column(
                 children: [
                   if (_currentTask.status == TaskStatus.inOrder) ...[
-                    _buildTaskCard(task: _currentTask, count: tasks.length),
+                    _buildTaskCard(
+                        task: _currentTask, count: sortedTasks.length),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12.0),
                       child: Divider(),
                     ),
                   ],
-                  if (tasks.isEmpty)
+                  if (sortedTasks.isEmpty)
                     const Center(child: Text('Нет задач в очереди'))
                   else
-                    ...tasks.asMap().entries.map((entry) {
+                    ...sortedTasks.asMap().entries.map((entry) {
                       final queueTask = entry.value;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16.0),
@@ -230,6 +312,8 @@ class _QueueScreenState extends State<QueueScreen> {
                           deadline: queueTask.deadline,
                           priority: queueTask.priorityToString(),
                           project: queueTask.project!.name,
+                          tasksCount: sortedTasks.length,
+                          task: queueTask,
                         ),
                       );
                     }),
@@ -299,93 +383,32 @@ class _QueueScreenState extends State<QueueScreen> {
             style: const TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 16),
-          if (task.deadline != null) ...[
-            Text(
-              'Сделать до',
-              style: Theme.of(context).textTheme.titleSmall,
+          ElevatedButton(
+            onPressed: () {
+              _showPositionSelectionDialog(count);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              formatDeadline(task.deadline),
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                _showPositionSelectionDialog(count);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(width: 8),
+                Text(
+                  'Выставить в очередь',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
                 ),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(width: 8),
-                  Text(
-                    'Выставить в очередь',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
-          ] else ...[
-            ElevatedButton(
-              onPressed: () async {
-                final deadline = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        TaskCompletionPage(task: _currentTask),
-                  ),
-                );
-                if (deadline != null) {
-                  final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
-                  final updatedTask = _currentTask.copyWith(deadline: deadline);
-                  await taskProvider.updateTask(updatedTask);
-                  setState(() {
-                    _currentTask = updatedTask;
-                  });
-
-                  // Показываем уведомление об успехе
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text(
-                            'Дедлайн установлен. Теперь можно добавить задачу в очередь')),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(width: 8),
-                  Text(
-                    'Выставить дату завершения задачи',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ]
+          ),
         ]),
       ),
     );
@@ -397,6 +420,8 @@ class _QueueScreenState extends State<QueueScreen> {
     required DateTime? deadline,
     String? priority,
     String? project,
+    required int tasksCount,
+    Task? task, // Добавляем параметр для конкретной задачи
   }) {
     return Card(
       color: Colors.white,
@@ -468,7 +493,7 @@ class _QueueScreenState extends State<QueueScreen> {
               ),
             ],
             if (priority != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Text(
                 'Приоритет:',
                 style: Theme.of(context).textTheme.titleSmall,
@@ -487,31 +512,56 @@ class _QueueScreenState extends State<QueueScreen> {
             ],
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.orange, width: 1),
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              onPressed: () async {
+                final taskToUpdate = task ?? _currentTask;
+                final deadline = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        TaskCompletionPage(task: taskToUpdate),
+                  ),
+                );
+                if (deadline != null) {
+                  final taskProvider =
+                      Provider.of<TaskProvider>(context, listen: false);
+                  final updatedTask = taskToUpdate.copyWith(deadline: deadline);
+                  await taskProvider.updateTask(updatedTask);
+
+                  // Если обновляем текущую задачу, обновляем локальную копию
+                  if (taskToUpdate.id == _currentTask.id) {
+                    setState(() {
+                      _currentTask = updatedTask;
+                    });
+                  }
+
+                  // Перезагружаем список задач
+                  _loadQueuedTasks();
+                }
+              },
+              style: AppButtonStyles.primaryButton,
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(width: 8),
                   Text(
-                    'Изменить очередность',
+                    'Установить дедлайн',
                     style: TextStyle(
-                      color: Colors.black,
+                      color: Colors.white,
                       fontSize: 16,
                     ),
                   ),
                 ],
               ),
             ),
-          ],
+            const SizedBox(height: 16),
+            AppButtons.secondaryButton(
+                text: 'Изменить очередность',
+                onPressed: () {
+                  final currentPosition = int.tryParse(queueNumber ?? '0') ?? 0;
+                  _showPositionSelectionDialog(tasksCount,
+                      currentPosition: currentPosition);
+                })
+          ], //
         ),
       ),
     );

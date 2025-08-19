@@ -1,10 +1,10 @@
-import 'dart:developer';
 import 'dart:io';
 
-import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:task_tracker/services/task_categories.dart';
+import 'package:task_tracker/services/control_point_operations.dart';
 import 'package:task_tracker/services/file_service.dart';
+import 'package:task_tracker/services/task_categories.dart';
+import 'package:task_tracker/services/user_service.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/employee.dart';
@@ -121,7 +121,8 @@ class TaskService {
     };
   }
 
-  Future<List<Task>> getProjectTasksByStatus({required String projectId}) async {
+  Future<List<Task>> getProjectTasksByStatus(
+      {required String projectId}) async {
     try {
       final tasksResponse = await _client.from('task').select('''
       *,
@@ -151,7 +152,11 @@ class TaskService {
     }
   }
 
-  Future<List<Task>> getTasksByStatus({required String position, required TaskStatus status, required String employeeId,}) async {
+  Future<List<Task>> getTasksByStatus({
+    required String position,
+    required TaskStatus status,
+    required String employeeId,
+  }) async {
     try {
       final statusString = status.toString().substring(11);
 
@@ -164,7 +169,7 @@ class TaskService {
         if (taskIdsResponse.isEmpty) return [];
 
         final taskIds =
-        taskIdsResponse.map((item) => item['task_id'] as String).toList();
+            taskIdsResponse.map((item) => item['task_id'] as String).toList();
 
         // 2. Получаем полные данные задач с фильтрацией по статусу
         final tasksResponse = await _client.from('task').select('''
@@ -199,7 +204,7 @@ class TaskService {
         if (taskIdsResponse.isEmpty) return [];
 
         final taskIds =
-        taskIdsResponse.map((item) => item['task_id'] as String).toList();
+            taskIdsResponse.map((item) => item['task_id'] as String).toList();
 
         final tasksResponse = await _client.from('task').select('''
       *,
@@ -299,7 +304,10 @@ class TaskService {
     }
   }
 
-  Future<List<Task>> getTasksByPosition({required String position, required String employeeId,}) async {
+  Future<List<Task>> getTasksByPosition({
+    required String position,
+    required String employeeId,
+  }) async {
     try {
       if (position == 'Коммуникатор') {
         final taskIdsResponse = await _client
@@ -310,7 +318,7 @@ class TaskService {
         if (taskIdsResponse.isEmpty) return [];
 
         final taskIds =
-        taskIdsResponse.map((item) => item['task_id'] as String).toList();
+            taskIdsResponse.map((item) => item['task_id'] as String).toList();
 
         // 2. Получаем полные данные задач с фильтрацией по статусу
         final tasksResponse = await _client.from('task').select('''
@@ -345,7 +353,7 @@ class TaskService {
         if (taskIdsResponse.isEmpty) return [];
 
         final taskIds =
-        taskIdsResponse.map((item) => item['task_id'] as String).toList();
+            taskIdsResponse.map((item) => item['task_id'] as String).toList();
 
         final tasksResponse = await _client.from('task').select('''
       *,
@@ -414,7 +422,7 @@ class TaskService {
         if (taskIdsResponse.isEmpty) return [];
 
         final taskIds =
-        taskIdsResponse.map((item) => item['task_id'] as String).toList();
+            taskIdsResponse.map((item) => item['task_id'] as String).toList();
 
         final tasksResponse = await _client.from('task').select('''
       *,
@@ -448,7 +456,7 @@ class TaskService {
   Future<void> addNewTask(Task task) async {
     try {
       final fileService = FileService();
-      
+
       // Генерируем ID для задачи
       if (task.id.isEmpty) {
         task.id = const Uuid().v4();
@@ -457,30 +465,24 @@ class TaskService {
       // Загрузка вложений
       if (task.attachments.isNotEmpty) {
         final uploadedAttachments = await fileService.uploadFilesFromPaths(
-          task.attachments, 
-          'TaskAttachments', 
-          prefix: 'task_${task.id}'
-        );
+            task.attachments, 'TaskAttachments',
+            prefix: 'task_${task.id}');
         task.attachments = uploadedAttachments;
       }
 
       // Загрузка аудиофайла
       if (task.audioMessage != null && task.audioMessage!.isNotEmpty) {
         final uploadedAudio = await fileService.uploadFileFromPath(
-          task.audioMessage!, 
-          'TaskAttachments', 
-          prefix: 'audio_${task.id}'
-        );
+            task.audioMessage!, 'TaskAttachments',
+            prefix: 'audio_${task.id}');
         task.audioMessage = uploadedAudio;
       }
 
       // Загрузка видеофайлов
       if (task.videoMessage != null && task.videoMessage!.isNotEmpty) {
         final uploadedVideos = await fileService.uploadFilesFromPaths(
-          task.videoMessage!, 
-          'TaskAttachments', 
-          prefix: 'video_${task.id}'
-        );
+            task.videoMessage!, 'TaskAttachments',
+            prefix: 'video_${task.id}');
         task.videoMessage = uploadedVideos;
       }
 
@@ -497,6 +499,16 @@ class TaskService {
         await _client.from('team_members').insert(
             {'team_id': task.team.teamId, 'employee_id': member.userId});
       }
+
+      // Добавляем лог создания задачи
+      await TaskService.addLog(
+        task.id,
+        'created',
+        task.team.creatorId.userId,
+        task.team.creatorId.name,
+        'Постановщик',
+        task.companyId,
+      );
 
       print('Задача и команда успешно добавлены!');
     } catch (e) {
@@ -526,7 +538,7 @@ class TaskService {
   Future<List<Task>> getTasksByProjectId(String projectId) async {
     try {
       final List<Map<String, dynamic>> response =
-      await _client.from('task').select('''
+          await _client.from('task').select('''
       *,
       project:project_id(*,
         project_description_id:project_description_id(*),
@@ -555,7 +567,6 @@ class TaskService {
       return [];
     }
   }
-
 
   Future<List<Employee>> getUniqueEmployees(List<Task> tasks) async {
     final Set<Employee> uniqueEmployees = {};
@@ -642,7 +653,7 @@ class TaskService {
         if (statusStr != null) {
           try {
             final status = TaskStatus.values.firstWhere(
-                  (e) => e.toString().split('.').last == statusStr,
+              (e) => e.toString().split('.').last == statusStr,
             );
             counts[status] = (counts[status] ?? 0) + 1;
           } catch (_) {
@@ -675,6 +686,7 @@ class TaskService {
       throw Exception('Failed to batch update tasks: $e');
     }
   }
+
   Future<void> updateTask(Task task) async {
     await Supabase.instance.client
         .from('task')
@@ -682,17 +694,13 @@ class TaskService {
         .eq('id', task.id);
   }
 
-
   Future<Map<TaskStatus, int>> getTasksAsExecutor(String employeeId) async {
     try {
-      final response = await _client
-          .from('team_members')
-          .select('''
+      final response = await _client.from('team_members').select('''
           task_team:team_id(*,
             task:task_id(*)
           )
-        ''')
-          .eq('employee_id', employeeId);
+        ''').eq('employee_id', employeeId);
 
       // Извлекаем задачи из ответа
       final tasks = response
@@ -703,8 +711,8 @@ class TaskService {
       // Группируем задачи по статусам
       final Map<TaskStatus, int> taskCounts = {};
       // Await the result of getCategoriesList to get the actual List<TaskCategory>
-      final categories = await TaskCategories().getCategoriesList(
-          'Исполнитель');
+      final categories =
+          await TaskCategories().getCategoriesList('Исполнитель');
       for (var category in categories) {
         if (category.status == TaskStatus.completed) {
           continue; // Исключаем архив
@@ -714,7 +722,7 @@ class TaskService {
 
       for (var task in tasks) {
         final status = TaskStatus.values.firstWhere(
-              (e) => e.toString() == 'TaskStatus.${task['status']}',
+          (e) => e.toString() == 'TaskStatus.${task['status']}',
           orElse: () => TaskStatus.newTask,
         );
         if (status != TaskStatus.completed) {
@@ -746,10 +754,7 @@ class TaskService {
         .eq('team_id', task.team.teamId)
         .eq('employee_id', task.team.teamMembers.first.userId);
 
-    await _client
-        .from('task')
-        .update({'deadline': null})
-        .eq('id', task.id);
+    await _client.from('task').update({'deadline': null}).eq('id', task.id);
 
     for (var member in task.team.teamMembers) {
       await _client
@@ -759,11 +764,33 @@ class TaskService {
   }
 
   Future<TaskStatus> changeStatus(TaskStatus newStatus, String taskId) async {
-    // Обновляем в Supabase
-    await Supabase.instance.client.from('task').update(
-        {'status': newStatus.toString().substring(11)}).eq('id', taskId);
+    try {
+      // Получаем текущую задачу для получения старого статуса
+      final currentTask = await getTask(taskId);
+      final oldStatus = StatusHelper.displayName(currentTask.status);
+      final newStatusName = StatusHelper.displayName(newStatus);
 
-    return newStatus;
+      // Обновляем в Supabase
+      await Supabase.instance.client.from('task').update(
+          {'status': newStatus.toString().substring(11)}).eq('id', taskId);
+
+      // Добавляем лог изменения статуса
+      await TaskService.addLog(
+        taskId,
+        'status_changed',
+        UserService.to.currentUser!.userId,
+        UserService.to.currentUser!.name,
+        UserService.to.currentUser!.role,
+        currentTask.companyId,
+        oldValue: oldStatus,
+        newValue: newStatusName,
+      );
+
+      return newStatus;
+    } catch (e) {
+      print('Ошибка при изменении статуса задачи: $e');
+      rethrow;
+    }
   }
 
   String getTaskAttachment(String? fileName) {
@@ -777,5 +804,151 @@ class TaskService {
     if (fileName == null || fileName.isEmpty) return '';
     final fileService = FileService();
     return fileService.getPublicUrl(fileName, 'Avatars');
+  }
+
+  // Получение задач с учетом контрольных точек для коммуникатора
+  Future<Map<String, int>> getTasksWithControlPointsForCommunicator(
+      String employeeId) async {
+    try {
+      final controlPointService = ControlPointService();
+
+      // Получаем все задачи коммуникатора
+      final tasks = await getTasksByPosition(
+          position: 'Коммуникатор', employeeId: employeeId);
+
+      // Инициализируем карту статусов
+      final statusCounts = _initializeEmptyStatusMap();
+
+      for (final task in tasks) {
+        final statusName = StatusHelper.displayName(task.status);
+
+        // Если задача в статусе "В работе", проверяем контрольные точки
+        if (task.status == TaskStatus.atWork) {
+          final hasUnclosedControlPoints =
+              await controlPointService.hasUnclosedControlPoints(task.id);
+
+          if (hasUnclosedControlPoints) {
+            // Если есть незакрытые контрольные точки, считаем как "Контрольная точка"
+            statusCounts[StatusHelper.displayName(TaskStatus.controlPoint)] =
+                (statusCounts[StatusHelper.displayName(
+                            TaskStatus.controlPoint)] ??
+                        0) +
+                    1;
+            // НЕ добавляем в статус "В работе"
+          } else {
+            // Если нет незакрытых контрольных точек, считаем как "В работе"
+            statusCounts[statusName] = (statusCounts[statusName] ?? 0) + 1;
+          }
+        } else {
+          // Для остальных статусов считаем как обычно
+          statusCounts[statusName] = (statusCounts[statusName] ?? 0) + 1;
+        }
+      }
+
+      return statusCounts;
+    } catch (e) {
+      print('Error getting tasks with control points: $e');
+      return _initializeEmptyStatusMap();
+    }
+  }
+
+  // Получение задач по статусу с учетом контрольных точек для коммуникатора
+  Future<List<Task>> getTasksByStatusWithControlPoints(
+      {required String position,
+      required TaskStatus status,
+      required String employeeId}) async {
+    try {
+      if (position == 'Коммуникатор' && status == TaskStatus.controlPoint) {
+        // Для статуса "Контрольная точка" получаем задачи "В работе" с незакрытыми контрольными точками
+        final tasks = await getTasksByStatus(
+            position: position,
+            status: TaskStatus.atWork,
+            employeeId: employeeId);
+
+        final controlPointService = ControlPointService();
+        final tasksWithControlPoints = <Task>[];
+
+        for (final task in tasks) {
+          final hasUnclosedControlPoints =
+              await ControlPointService().hasUnclosedControlPoints(task.id);
+          if (hasUnclosedControlPoints) {
+            tasksWithControlPoints.add(task);
+          }
+        }
+
+        return tasksWithControlPoints;
+      } else {
+        // Для остальных статусов используем обычную логику
+        return await getTasksByStatus(
+            position: position, status: status, employeeId: employeeId);
+      }
+    } catch (e) {
+      print('Error getting tasks by status with control points: $e');
+      return [];
+    }
+  }
+
+  // Методы для работы с логами задач
+  static const String _logTableName = 'task_log';
+
+  // Добавление лога
+  static Future<void> addLog(
+    String taskId,
+    String action,
+    String userId,
+    String userName,
+    String userRole,
+    String companyId, {
+    String? targetUserId,
+    String? targetUserName,
+    String? oldValue,
+    String? newValue,
+  }) async {
+    try {
+      final supabase = Supabase.instance.client;
+      final uuid = Uuid();
+
+      final logData = {
+        'id': uuid.v4(),
+        'action': action,
+        'userId': userId,
+        'userName': userName,
+        'userRole': userRole,
+        'timestamp': DateTime.now().toIso8601String(),
+        'targetUserId': targetUserId,
+        'targetUserName': targetUserName,
+        'task_id': taskId,
+        'old_value': oldValue,
+        'new_value': newValue,
+        'company_id': companyId,
+      };
+
+      await supabase.from(_logTableName).insert(logData);
+    } catch (e) {
+      print('Ошибка при добавлении лога задачи: $e');
+      throw Exception('Не удалось добавить лог задачи: $e');
+    }
+  }
+
+  // Получение логов для конкретной задачи
+  Future<List<TaskLog>> getTaskLogs(String taskId) async {
+    try {
+      final response = await _client
+          .from(_logTableName)
+          .select()
+          .eq('task_id', taskId)
+          .order('timestamp', ascending: false);
+
+      if (response.isEmpty) {
+        return [];
+      }
+
+      return (response as List<dynamic>)
+          .map((log) => TaskLog.fromJson(log as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Ошибка при получении логов задачи: $e');
+      throw Exception('Не удалось получить логи задачи: $e');
+    }
   }
 }

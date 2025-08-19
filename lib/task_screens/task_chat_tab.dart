@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/models/chat_message.dart';
+import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:uuid/uuid.dart';
 
@@ -205,7 +206,7 @@ class _ChatTabState extends State<ChatTab> {
                         },
                       ),
                       const SizedBox(height: 4),
-                      // Display message with avatar
+                      // Display message with avatar//
                       Row(
                         mainAxisAlignment: isCurrentUser
                             ? MainAxisAlignment.end
@@ -222,7 +223,7 @@ class _ChatTabState extends State<ChatTab> {
                                 return CircleAvatar(
                                   radius: 16,
                                   backgroundImage: avatarUrl != null
-                                      ? NetworkImage(avatarUrl)
+                                      ? NetworkImage(EmployeeService().getAvatarUrl(avatarUrl))
                                       : null,
                                   child: avatarUrl == null
                                       ? const Icon(Icons.person, size: 16)
@@ -299,7 +300,7 @@ class _ChatTabState extends State<ChatTab> {
                                 return CircleAvatar(
                                   radius: 16,
                                   backgroundImage: avatarUrl != null
-                                      ? NetworkImage(avatarUrl)
+                                      ? NetworkImage(EmployeeService().getAvatarUrl(avatarUrl))
                                       : null,
                                   child: avatarUrl == null
                                       ? const Icon(Icons.person, size: 16)

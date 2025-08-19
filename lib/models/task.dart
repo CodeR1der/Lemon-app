@@ -22,21 +22,22 @@ class Task {
   TaskStatus status;
   String companyId;
 
-  Task({required this.id,
-    required this.taskName,
-    required this.description,
-    required this.project,
-    required this.team,
-    required this.startDate,
-    required this.endDate,
-    required this.attachments,
-    required this.companyId,
-    this.queuePosition,
-    this.deadline,
-    this.audioMessage,
-    this.videoMessage,
-    this.priority = Priority.low, // Значение по умолчанию
-    this.status = TaskStatus.newTask});
+  Task(
+      {required this.id,
+      required this.taskName,
+      required this.description,
+      required this.project,
+      required this.team,
+      required this.startDate,
+      required this.endDate,
+      required this.attachments,
+      required this.companyId,
+      this.queuePosition,
+      this.deadline,
+      this.audioMessage,
+      this.videoMessage,
+      this.priority = Priority.low, // Значение по умолчанию
+      this.status = TaskStatus.newTask});
 
   // Метод для преобразования строки из базы данных в Priority
   static Priority parsePriority(String priority) {
@@ -96,8 +97,9 @@ class Task {
       attachments: List<String>.from(json['attachments'] ?? []),
       audioMessage: json['audio_message'],
       companyId: json['company_id'],
-      queuePosition: json['queue_position']?.toString() ,
-      deadline: json['deadline'] != null ? DateTime.parse(json['deadline']) : null,
+      queuePosition: json['queue_position']?.toString(),
+      deadline:
+          json['deadline'] != null ? DateTime.parse(json['deadline']) : null,
       videoMessage: List<String>.from(json['video_message'] ?? []),
       status: StatusHelper.toTaskStatus(json['status']),
     );
@@ -134,39 +136,105 @@ class Task {
     videoMessage!.remove(filePath);
   }
 
-  Task copyWith({
-    String? id,
-    String? taskName,
-    String? description,
-    Project? project,
-    TaskTeam? team,
-    DateTime? startDate,
-    DateTime? endDate,
-    DateTime? deadline,
-    List<String>? attachments,
-    String? audioMessage,
-    List<String>? videoMessage,
-    String? queuePosition,
-    Priority? priority,
-    TaskStatus? status,
-    String? companyId
-  }) {
+  Task copyWith(
+      {String? id,
+      String? taskName,
+      String? description,
+      Project? project,
+      TaskTeam? team,
+      DateTime? startDate,
+      DateTime? endDate,
+      DateTime? deadline,
+      List<String>? attachments,
+      String? audioMessage,
+      List<String>? videoMessage,
+      String? queuePosition,
+      Priority? priority,
+      TaskStatus? status,
+      String? companyId}) {
     return Task(
-      id: id ?? this.id,
-      taskName: taskName ?? this.taskName,
-      description: description ?? this.description,
-      project: project ?? this.project,
-      team: team ?? this.team,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      deadline: deadline ?? this.deadline,
-      attachments: attachments ?? List.from(this.attachments),
-      audioMessage: audioMessage ?? this.audioMessage,
-      videoMessage: videoMessage ?? (this.videoMessage != null ? List.from(this.videoMessage!) : null),
-      queuePosition: queuePosition ?? this.queuePosition,
-      priority: priority ?? this.priority,
-      status: status ?? this.status,
-      companyId: companyId ?? this.companyId
+        id: id ?? this.id,
+        taskName: taskName ?? this.taskName,
+        description: description ?? this.description,
+        project: project ?? this.project,
+        team: team ?? this.team,
+        startDate: startDate ?? this.startDate,
+        endDate: endDate ?? this.endDate,
+        deadline: deadline ?? this.deadline,
+        attachments: attachments ?? List.from(this.attachments),
+        audioMessage: audioMessage ?? this.audioMessage,
+        videoMessage: videoMessage ??
+            (this.videoMessage != null ? List.from(this.videoMessage!) : null),
+        queuePosition: queuePosition ?? this.queuePosition,
+        priority: priority ?? this.priority,
+        status: status ?? this.status,
+        companyId: companyId ?? this.companyId);
+  }
+}
+
+// Модель для логов действий с задачами
+class TaskLog {
+  final String id;
+  final String
+      action; // 'created', 'status_changed', 'assigned', 'completed', 'reopened', 'deadline_changed', 'priority_changed'
+  final String userId;
+  final String userName;
+  final String userRole;
+  final DateTime timestamp;
+  final String? targetUserId; // ID сотрудника, для которого выполнено действие
+  final String?
+      targetUserName; // Имя сотрудника, для которого выполнено действие
+  final String? taskId; // ID задачи
+  final String? oldValue; // Старое значение (статус, приоритет и т.д.)
+  final String? newValue; // Новое значение (статус, приоритет и т.д.)
+  final String companyId;
+
+  TaskLog({
+    required this.id,
+    required this.action,
+    required this.userId,
+    required this.userName,
+    required this.userRole,
+    required this.timestamp,
+    required this.companyId,
+    this.targetUserId,
+    this.targetUserName,
+    this.taskId,
+    this.oldValue,
+    this.newValue,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'action': action,
+      'userId': userId,
+      'userName': userName,
+      'userRole': userRole,
+      'timestamp': timestamp.toIso8601String(),
+      'targetUserId': targetUserId,
+      'targetUserName': targetUserName,
+      'task_id': taskId,
+      'old_value': oldValue,
+      'new_value': newValue,
+      'company_id': companyId
+    };
+  }
+
+  factory TaskLog.fromJson(Map<String, dynamic> json) {
+    return TaskLog(
+      id: json['id'] as String,
+      action: json['action'] as String,
+      userId: json['userId'] as String,
+      userName: json['userName'] as String,
+      userRole: json['userRole'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      targetUserId: json['targetUserId'] as String?,
+      targetUserName: json['targetUserName'] as String?,
+      taskId: json['task_id'] as String?,
+      oldValue: json['old_value'] as String?,
+      newValue: json['new_value'] as String?,
+      companyId: json['company_id'] as String,
     );
   }
 }

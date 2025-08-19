@@ -13,7 +13,8 @@ class UserService extends GetxService {
   late RxBool isInitialized;
   late RxBool isLoggedIn;
   final Map<String, String> _userNamesCache = {}; // Кэш для имен пользователей
-  final Map<String, Map<String, String?>> _userDataCache = {}; // Кэш для данных пользователя
+  final Map<String, Map<String, String?>> _userDataCache =
+      {}; // Кэш для данных пользователя
   UserService(this._supabase) {
     isInitialized = false.obs;
     isLoggedIn = false.obs;
@@ -78,8 +79,8 @@ class UserService extends GetxService {
         final companyResponse = await _supabase
             .from('company')
             .insert({
-          'code': companyCode,
-        })
+              'code': companyCode,
+            })
             .select('id')
             .single();
         companyId = companyResponse['id'];
@@ -174,11 +175,12 @@ class UserService extends GetxService {
 
     try {
       // Запрашиваем данные из таблицы employee
-      final response = await Supabase.instance.client
-          .from('employee')
-          .select('name, avatar_url')
-          .eq('user_id', userId)
-          .single();
+      final response =
+          await Supabase.instance.client.from('employee').select('''
+      name, 
+      avatar_url,
+      user_id
+    ''').eq('user_id', userId).single();
 
       if (response.isNotEmpty) {
         final name = response['name'] as String?;
@@ -223,6 +225,7 @@ class UserService extends GetxService {
       return null;
     }
   }
+
   Future<void> initializeUser(String userId) async {
     try {
       isInitialized.value = false;

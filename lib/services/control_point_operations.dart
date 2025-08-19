@@ -146,4 +146,43 @@ class ControlPointService {
       return [];
     }
   }
+
+  // Проверка наличия незакрытых контрольных точек для задачи
+  Future<bool> hasUnclosedControlPoints(String taskId) async {
+    try {
+      print(
+          'ControlPointService: Проверяем незакрытые контрольные точки для задачи: $taskId');
+      final response = await _client
+          .from('control_points')
+          .select('id')
+          .eq('task_id', taskId)
+          .eq('is_completed', false)
+          .limit(1);
+
+      print(
+          'ControlPointService: Найдено незакрытых контрольных точек: ${response.length}');
+      return response.isNotEmpty;
+    } on PostgrestException catch (error) {
+      print(
+          'Ошибка при проверке незакрытых контрольных точек: ${error.message}');
+      return false;
+    }
+  }
+
+  // Получение количества незакрытых контрольных точек для задачи
+  Future<int> getUnclosedControlPointsCount(String taskId) async {
+    try {
+      final response = await _client
+          .from('control_points')
+          .select('id')
+          .eq('task_id', taskId)
+          .eq('is_completed', false);
+
+      return response.length;
+    } on PostgrestException catch (error) {
+      print(
+          'Ошибка при получении количества незакрытых контрольных точек: ${error.message}');
+      return 0;
+    }
+  }
 }

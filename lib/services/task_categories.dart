@@ -108,16 +108,24 @@ class TaskCategories {
     }
   }
 
-  Future<List<TaskCategory>> getCategories(
-      String position, String employeeId, {String? projectId}) async {
+  Future<List<TaskCategory>> getCategories(String position, String employeeId,
+      {String? projectId}) async {
     try {
       if (projectId != null) {
         return await getCategoriesProject(projectId);
       }
 
       // Получаем количество задач для каждого статуса
-      final tasksCount =
-      await TaskService().getCountOfTasksByStatus(position, employeeId);
+      Map<String, int> tasksCount;
+
+      // Для коммуникатора используем специальную логику с контрольными точками
+      if (position == "Коммуникатор") {
+        tasksCount = await TaskService()
+            .getTasksWithControlPointsForCommunicator(employeeId);
+      } else {
+        tasksCount =
+            await TaskService().getCountOfTasksByStatus(position, employeeId);
+      }
 
       // Выбираем соответствующий список категорий
       List<TaskCategory> categories = [];
@@ -169,8 +177,8 @@ class TaskCategories {
       }
     }
   }
-  Future<List<TaskCategory>> getCategoriesList(String position)
-  async {
+
+  Future<List<TaskCategory>> getCategoriesList(String position) async {
     switch (position) {
       case "Исполнитель":
         return List.of(_executerCategories);

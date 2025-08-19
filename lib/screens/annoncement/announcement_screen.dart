@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:task_tracker/models/employee.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/widgets/common/app_colors.dart';
 import 'package:task_tracker/widgets/common/app_common.dart';
 
 import '../../models/announcement.dart';
@@ -409,8 +410,10 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
         }
 
         return Card(
+          color: AppColors.counterGrey,
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
+
             leading: CircleAvatar(
               backgroundColor: actionColor.withOpacity(0.1),
               child: Icon(actionIcon, color: actionColor, size: 20),

@@ -31,17 +31,35 @@ class _QueueScreenState extends State<QueueScreen> {
   }
 
   Future<List<List<Task>>> _loadTasks() async {
-    final tasksInOrder = await TaskService().getTasksByStatus(
-      position: widget.position,
-      status: TaskStatus.inOrder,
-      employeeId: widget.userId,
-    );
+    List<Task> tasksInOrder;
+    List<Task> tasksQueue;
 
-    final tasksQueue = await TaskService().getTasksByStatus(
-      position: widget.position,
-      status: TaskStatus.queue,
-      employeeId: widget.userId,
-    );
+    // Для коммуникатора используем специальную логику с контрольными точками
+    if (widget.position == 'Коммуникатор') {
+      tasksInOrder = await TaskService().getTasksByStatusWithControlPoints(
+        position: widget.position,
+        status: TaskStatus.inOrder,
+        employeeId: widget.userId,
+      );
+
+      tasksQueue = await TaskService().getTasksByStatusWithControlPoints(
+        position: widget.position,
+        status: TaskStatus.queue,
+        employeeId: widget.userId,
+      );
+    } else {
+      tasksInOrder = await TaskService().getTasksByStatus(
+        position: widget.position,
+        status: TaskStatus.inOrder,
+        employeeId: widget.userId,
+      );
+
+      tasksQueue = await TaskService().getTasksByStatus(
+        position: widget.position,
+        status: TaskStatus.queue,
+        employeeId: widget.userId,
+      );
+    }
 
     return [tasksInOrder, tasksQueue];
   }

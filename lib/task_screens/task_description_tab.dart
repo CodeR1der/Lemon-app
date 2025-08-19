@@ -7,6 +7,7 @@ import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:task_tracker/services/control_point_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:video_player/video_player.dart';
@@ -17,11 +18,59 @@ import '../models/task_status.dart';
 import '../widgets/custom_player.dart';
 import '../widgets/task_layout/task_layout_builder.dart';
 
-class TaskDescriptionTab extends StatelessWidget {
+class TaskDescriptionTab extends StatefulWidget {
   final Task task;
-  final TaskService _database = TaskService();
 
-  TaskDescriptionTab({super.key, required this.task});
+  const TaskDescriptionTab({super.key, required this.task});
+
+  @override
+  State<TaskDescriptionTab> createState() => _TaskDescriptionTabState();
+}
+
+class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
+  final TaskService _database = TaskService();
+  TaskStatus? _displayStatus;
+  bool _isLoadingStatus = true; //
+
+  @override
+  void initState() {
+    super.initState();
+    _determineDisplayStatus();
+  }
+
+  Future<void> _determineDisplayStatus() async {
+    //
+    final position = _getPosition();
+    print('TaskDescriptionTab: Пользователь в роли: $position');
+    print('TaskDescriptionTab: Статус задачи: ${widget.task.status}');
+
+    if (position == "Коммуникатор" && widget.task.status == TaskStatus.atWork) {
+      print(
+          'TaskDescriptionTab: Проверяем контрольные точки для коммуникатора');
+      // Для коммуникатора проверяем, есть ли незакрытые контрольные точки
+      final controlPointService = ControlPointService();
+      final hasUnclosedControlPoints =
+          await controlPointService.hasUnclosedControlPoints(widget.task.id);
+      print(
+          'TaskDescriptionTab: Есть незакрытые контрольные точки: $hasUnclosedControlPoints');
+
+      setState(() {
+        _displayStatus = hasUnclosedControlPoints
+            ? TaskStatus.controlPoint
+            : TaskStatus.atWork;
+        _isLoadingStatus = false;
+      });
+      print('TaskDescriptionTab: Установлен статус: ${_displayStatus}');
+    } else {
+      print('TaskDescriptionTab: Используем реальный статус задачи');
+      // Для других ролей или статусов используем реальный статус
+      setState(() {
+        _displayStatus = widget.task.status;
+        _isLoadingStatus = false;
+      });
+      print('TaskDescriptionTab: Установлен статус: ${_displayStatus}');
+    }
+  }
 
   bool _isImage(String fileName) {
     return fileName.endsWith('.jpg') ||
@@ -43,13 +92,18 @@ class TaskDescriptionTab extends StatelessWidget {
   }
 
   String _getPosition() {
-    if (task.team.creatorId == UserService.to.currentUser!.userId) {
-      return "Постановщик";
-    } else if (task.team.communicatorId == UserService.to.currentUser!.userId) {
-      return "Коммуникатор";
-    } else if (task.team.teamMembers.first ==
+    if (widget.task.team.creatorId.userId ==
         UserService.to.currentUser!.userId) {
+      return "Постановщик";
+    } else if (widget.task.team.communicatorId.userId ==
+        UserService.to.currentUser!.userId) {
+      return "Коммуникатор";
+    } else if (widget.task.team.teamMembers
+        .any((member) => member.userId == UserService.to.currentUser!.userId)) {
       return "Исполнитель";
+    } else if (widget.task.team.observerId?.userId ==
+        UserService.to.currentUser!.userId) {
+      return "Наблюдатель";
     } else {
       return "Наблюдатель";
     }
@@ -66,33 +120,49 @@ class TaskDescriptionTab extends StatelessWidget {
           children: [
             Text('Статус', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEBEDF0),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    task.status == TaskStatus.controlPoint &&
-                            _getPosition() != "Коммуникатор"
-                        ? StatusHelper.getStatusIcon(TaskStatus.atWork)
-                        : StatusHelper.getStatusIcon(task.status),
-                    size: 16,
+            _isLoadingStatus
+                ? Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEBEDF0),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 6),
+                        Text('Загрузка...', style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  )
+                : Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEBEDF0),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          StatusHelper.getStatusIcon(_displayStatus!),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          StatusHelper.displayName(_displayStatus!),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    task.status == TaskStatus.controlPoint &&
-                            _getPosition() != "Коммуникатор"
-                        ? StatusHelper.displayName(TaskStatus.atWork)
-                        : StatusHelper.displayName(task.status),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16.0),
               // Добавляем отступы по бокам
@@ -102,7 +172,7 @@ class TaskDescriptionTab extends StatelessWidget {
             // Проект
             Text('Проект', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
-            Text(task.project?.name ?? 'Не указан',
+            Text(widget.task.project?.name ?? 'Не указан',
                 style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
 
@@ -110,14 +180,15 @@ class TaskDescriptionTab extends StatelessWidget {
             Text('Название задачи',
                 style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
-            Text(task.taskName, style: Theme.of(context).textTheme.bodyMedium),
+            Text(widget.task.taskName,
+                style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
 
             // Описание задачи
             Text('Описание задачи',
                 style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
-            Text(task.description,
+            Text(widget.task.description,
                 style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
             Row(
@@ -134,7 +205,7 @@ class TaskDescriptionTab extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    task.attachments.length.toString(),
+                    widget.task.attachments.length.toString(),
                     style: TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
@@ -146,7 +217,7 @@ class TaskDescriptionTab extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            task.attachments.where((file) => _isImage(file)).isNotEmpty
+            widget.task.attachments.where((file) => _isImage(file)).isNotEmpty
                 ? GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -156,17 +227,18 @@ class TaskDescriptionTab extends StatelessWidget {
                       crossAxisSpacing: 8.0,
                       mainAxisSpacing: 8.0,
                     ),
-                    itemCount:
-                        task.attachments.where((file) => _isImage(file)).length,
+                    itemCount: widget.task.attachments
+                        .where((file) => _isImage(file))
+                        .length,
                     itemBuilder: (context, index) {
-                      final photo = task.attachments
+                      final photo = widget.task.attachments
                           .where((file) => _isImage(file))
                           .toList()[index];
                       return GestureDetector(
                         onTap: () => _openPhotoGallery(
                           context,
                           index,
-                          task.attachments
+                          widget.task.attachments
                               .where((file) => _isImage(file))
                               .toList(),
                         ),
@@ -201,11 +273,12 @@ class TaskDescriptionTab extends StatelessWidget {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
-            if (task.audioMessage != null)
+            if (widget.task.audioMessage != null)
               Container(
                 color: Colors.white,
                 child: AudioPlayerWidget(
-                  audioUrl: _database.getTaskAttachment(task.audioMessage!),
+                  audioUrl:
+                      _database.getTaskAttachment(widget.task.audioMessage!),
                 ),
               )
             else
@@ -226,7 +299,7 @@ class TaskDescriptionTab extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    task.videoMessage!.length.toString(),
+                    widget.task.videoMessage!.length.toString(),
                     style: TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
@@ -237,7 +310,7 @@ class TaskDescriptionTab extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            task.videoMessage!.where((file) => _isVideo(file)).isNotEmpty
+            widget.task.videoMessage!.where((file) => _isVideo(file)).isNotEmpty
                 ? GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -247,11 +320,11 @@ class TaskDescriptionTab extends StatelessWidget {
                       crossAxisSpacing: 8.0,
                       mainAxisSpacing: 8.0,
                     ),
-                    itemCount: task.videoMessage!
+                    itemCount: widget.task.videoMessage!
                         .where((file) => _isVideo(file))
                         .length,
                     itemBuilder: (context, index) {
-                      final video = task.videoMessage!
+                      final video = widget.task.videoMessage!
                           .where((file) => _isVideo(file))
                           .toList()[index];
                       final videoUrl = _database.getTaskAttachment(video);
@@ -277,7 +350,7 @@ class TaskDescriptionTab extends StatelessWidget {
                             onTap: () => _openVideoGallery(
                               context,
                               index,
-                              task.videoMessage!
+                              widget.task.videoMessage!
                                   .where((file) => _isVideo(file))
                                   .toList(),
                             ),
@@ -314,10 +387,10 @@ class TaskDescriptionTab extends StatelessWidget {
             const Divider(),
 
             TaskLayoutBuilder(
-                task: task,
+                task: widget.task,
                 role: RoleHelper.determineUserRoleInTask(
                     currentUserId: UserService.to.currentUser!.userId,
-                    task: task)),
+                    task: widget.task)),
             SizedBox(height: MediaQuery.of(context).padding.bottom),
           ],
         ),
