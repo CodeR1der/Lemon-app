@@ -6,14 +6,14 @@ import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_validate.dart';
-import 'package:task_tracker/screens/correction_screen.dart';
 import 'package:task_tracker/widgets/custom_player.dart';
 
-import '../models/task.dart';
-import '../models/task_status.dart';
-import '../services/request_operation.dart';
-import '../services/task_provider.dart';
-import '../task_screens/task_description_tab.dart';
+import '../../models/task.dart';
+import '../../models/task_status.dart';
+import '../../services/request_operation.dart';
+import '../../services/task_provider.dart';
+import '../../task_screens/task_description_tab.dart';
+import 'correction_screen.dart';
 
 class TaskValidateDetailsScreen extends StatelessWidget {
   final TaskValidate validate;

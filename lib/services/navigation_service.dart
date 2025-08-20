@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:task_tracker/models/employee.dart';
+import 'package:task_tracker/models/project.dart';
+import 'package:task_tracker/models/task.dart';
+import 'package:task_tracker/screens/task/task_details_screen.dart';
+import 'package:task_tracker/task_screens/task_title_screen.dart';
 
 class NavigationService {
   static final NavigationService _instance = NavigationService._internal();
@@ -31,27 +36,69 @@ class NavigationService {
     }
   }
 
-  /// Навигация к экрану создания задачи с оптимизацией
-  Future<void> navigateToCreateTask({
-    dynamic employee,
-    dynamic project,
+  static const String createTaskStartRoute = '/createTaskStart';
+  static const String taskDetailsRoute = '/taskDetails';
+
+  /// Навигация к созданию задачи с возможностью передачи сотрудника или проекта
+  static Future<Task?> navigateToCreateTask({
+    Employee? employee,
+    Project? project,
+    BuildContext? context,
   }) async {
-    if (_isNavigating) return;
+    // Создаем экран создания задачи с переданными параметрами
+    final taskTitleScreen = TaskTitleScreen(
+      employee: employee,
+      project: project,
+    );
 
-    _isNavigating = true;
+    // Используем GetX для навигации
+    final result = await Get.to(() => taskTitleScreen);
 
-    try {
-      // Импортируем здесь для избежания циклических зависимостей
-      await Get.toNamed('/createTaskStart', arguments: {
-        'employee': employee,
-        'project': project,
-      });
-    } catch (e) {
-      debugPrint('Error navigating to create task: $e');
-    } finally {
-      await Future.delayed(const Duration(milliseconds: 150));
-      _isNavigating = false;
+    // Если задача была создана успешно, возвращаем её
+    if (result is Task) {
+      return result;
     }
+
+    return null;
+  }
+
+  /// Навигация к деталям задачи с очисткой стека навигации
+  static void navigateToTaskDetails(Task task) {
+    // Очищаем весь стек навигации до корня
+    Get.to(() => TaskDetailsScreen(task: task));
+  }
+
+  /// Навигация к созданию задачи с переходом на детали после создания
+  static Future<void> navigateToCreateTaskWithDetails({
+    Employee? employee,
+    Project? project,
+    BuildContext? context,
+  }) async {
+    final createdTask = await navigateToCreateTask(
+      employee: employee,
+      project: project,
+      context: context,
+    );
+
+    // Если задача была создана, переходим к её деталям
+    if (createdTask != null) {
+      navigateToTaskDetails(createdTask);
+    }
+  }
+
+  /// Навигация к созданию задачи из главного экрана
+  static Future<void> navigateToCreateTaskFromHome() async {
+    await navigateToCreateTaskWithDetails();
+  }
+
+  /// Навигация к созданию задачи для конкретного сотрудника
+  static Future<void> navigateToCreateTaskForEmployee(Employee employee) async {
+    await navigateToCreateTaskWithDetails(employee: employee);
+  }
+
+  /// Навигация к созданию задачи для конкретного проекта
+  static Future<void> navigateToCreateTaskForProject(Project project) async {
+    await navigateToCreateTaskWithDetails(project: project);
   }
 
   /// Навигация к деталям проекта

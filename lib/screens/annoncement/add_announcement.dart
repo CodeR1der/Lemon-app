@@ -2,15 +2,15 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/models/announcement.dart';
 import 'package:task_tracker/models/employee.dart';
+import 'package:task_tracker/services/announcement_provider.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/widgets/common/app_colors.dart';
 import 'package:task_tracker/widgets/common/app_common.dart';
 import 'package:task_tracker/widgets/employees_modal_sheet.dart';
-
-import '../../services/announcement_operations.dart';
 
 class CreateAnnouncementScreen extends StatefulWidget {
   static const routeName = '/create_announcement';
@@ -172,16 +172,12 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         id: '',
       );
 
-      await AnnouncementService().createAnnouncement(newAnnouncement);
+      // Используем AnnouncementProvider для создания объявления
+      final announcementProvider =
+          Provider.of<AnnouncementProvider>(context, listen: false);
+      await announcementProvider.createAnnouncement(newAnnouncement);
 
-      // Создаем лог создания объявления в отдельной таблице
-      await AnnouncementService.addLog(
-          newAnnouncement.id,
-          'created',
-          currentUser.userId,
-          currentUser.name,
-          currentUser.role,
-          newAnnouncement.companyId);
+
 
     } catch (e) {
       Get.snackbar('Ошибка', 'Не удалось создать объявление');
@@ -189,6 +185,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       setState(() {
         _isLoading = false;
       });
+      Get.snackbar('Успех', 'Объявление создано');
+      Navigator.of(context).pop(true);
     }
   }
 
@@ -378,7 +376,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-            ),//
+            ), //
             child: const Text(
               'Опубликовать',
               style: AppTextStyles.buttonText,

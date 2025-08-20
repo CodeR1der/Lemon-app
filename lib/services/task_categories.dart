@@ -1,4 +1,4 @@
-import 'package:task_tracker/services/project_operations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/services/task_operations.dart';
 
 import '../models/task_category.dart';
@@ -93,8 +93,8 @@ class TaskCategories {
       // Создаем копию списка категорий
       final categories = List<TaskCategory>.from(_communicatorCategories);
 
-      // Получаем задачи проекта
-      final tasksData = await ProjectService().getTasksByProject(projectId);
+      // Получаем задачи проекта в их реальном статусе из БД
+      final tasksData = await _getTasksByProjectRaw(projectId);
 
       // Обновляем категории с данными о количестве задач
       return categories.map((category) {
@@ -105,6 +105,40 @@ class TaskCategories {
       print('Error getting categories: $e');
       // В случае ошибки возвращаем пустые категории
       return List<TaskCategory>.from(_communicatorCategories);
+    }
+  }
+
+  // Новый метод для получения задач проекта в их реальном статусе из БД
+  Future<Map<String, int>> _getTasksByProjectRaw(String projectId) async {
+    try {
+      final tasksResponse = await Supabase.instance.client
+          .from('task')
+          .select('status')
+          .eq('project_id', projectId);
+
+      final statusCounts = <String, int>{};
+
+      // Инициализируем все возможные статусы с нулевым счетчиком
+      for (final status in TaskStatus.values) {
+        statusCounts[StatusHelper.displayName(status)] = 0;
+      }
+
+      // Считаем задачи по их реальным статусам из БД
+      for (final task in tasksResponse) {
+        if (task['status'] != null) {
+          final status = task['status'] as String;
+          final taskStatus = StatusHelper.toTaskStatus(status);
+
+          // Просто считаем по реальному статусу из БД
+          statusCounts[StatusHelper.displayName(taskStatus)] =
+              (statusCounts[StatusHelper.displayName(taskStatus)] ?? 0) + 1;
+        }
+      }
+
+      return statusCounts;
+    } catch (e) {
+      print('Error getting tasks by project raw: $e');
+      return {};
     }
   }
 

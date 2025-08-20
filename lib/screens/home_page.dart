@@ -7,7 +7,9 @@ import 'package:task_tracker/models/announcement.dart';
 import 'package:task_tracker/screens/project/project_details_screen.dart';
 import 'package:task_tracker/screens/task/tasks_list_screen.dart';
 import 'package:task_tracker/services/announcement_operations.dart';
+import 'package:task_tracker/services/announcement_provider.dart';
 import 'package:task_tracker/services/employee_operations.dart';
+import 'package:task_tracker/services/navigation_service.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 
@@ -35,7 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final RxList<ProjectInformation> _projects = <ProjectInformation>[].obs;
   final RxList<Employee> _employees = <Employee>[].obs;
   final RxBool _isLoading = true.obs;
-  final RxList<Announcement> _announcement = <Announcement>[].obs;
   String? _errorMessage;
 
   @override
@@ -69,6 +70,12 @@ class _HomeScreenState extends State<HomeScreen> {
         employeeId: UserService.to.currentUser!.userId,
       );
 
+      // Загружаем объявления через AnnouncementProvider
+      final announcementProvider =
+          Provider.of<AnnouncementProvider>(context, listen: false);
+      await announcementProvider.loadAnnouncements(
+          companyId: UserService.to.currentUser!.companyId);
+
       // Загружаем проекты
       final List<ProjectInformation> projectsWithCounts = [];
       final currentUser = UserService.to.currentUser!;
@@ -82,9 +89,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       _projects.assignAll(projectsWithCounts);
 
-      _announcement.assignAll(
-          await AnnouncementService().getAnnouncements(currentUser.companyId));
-
       // Загружаем сотрудников
       final employees = await EmployeeService().getAllEmployees();
       _employees.assignAll(employees
@@ -93,6 +97,11 @@ class _HomeScreenState extends State<HomeScreen> {
     } finally {
       _isLoading.value = false;
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Widget _buildShimmerSkeleton() {
@@ -356,10 +365,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildAddAnnouncementButton(),
                       AppSpacing.height16,
                     ],
-                    if (_announcement.isNotEmpty) ...[
-                      _buildAnnouncementCard(),
-                      AppSpacing.height16,
-                    ],
+                    _buildAnnouncementSection(),
                     _buildTasksSection(),
                     AppSpacing.height16,
                     _buildEmployeesSection(),
@@ -445,8 +451,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return AppButtons.primaryButton(
       text: 'Поставить задачу',
       icon: Iconsax.add_circle,
-      onPressed: () {
-        Get.toNamed('/createTaskStart');
+      onPressed: () async {
+        await NavigationService.navigateToCreateTaskFromHome();
       },
     );
   }
@@ -454,14 +460,41 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAddAnnouncementButton() {
     return AppButtons.secondaryButton(
       text: 'Написать объявление',
-      onPressed: () {
-        Get.toNamed('/create_announcement');
+      onPressed: () async {
+        final result = await Get.toNamed('/create_announcement');
+        if (result == true) {
+          // Объявление было создано, обновляем данные
+          final announcementProvider =
+              Provider.of<AnnouncementProvider>(context, listen: false);
+          await announcementProvider.loadAnnouncements(
+              companyId: UserService.to.currentUser!.companyId);
+        }
       },
     );
   }
 
-  Widget _buildAnnouncementCard() {
-    final announcement = _announcement.last; // Берем последнее объявление
+  Widget _buildAnnouncementSection() {
+    return Consumer<AnnouncementProvider>(
+      builder: (context, announcementProvider, child) {
+        final announcements = announcementProvider.getAnnouncements(
+          companyId: UserService.to.currentUser!.companyId,
+        );
+
+        if (announcements.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          children: [
+            _buildAnnouncementCard(announcements.last),
+            AppSpacing.height16,
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAnnouncementCard(Announcement announcement) {
     final userRole = UserService.to.currentUser!.role;
     final showReadCount = userRole == 'Директор' || userRole == 'Коммуникатор';
 

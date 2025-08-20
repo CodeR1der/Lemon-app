@@ -19,7 +19,7 @@ class CompletedLayoutStrategy extends BaseTaskLayoutStrategy {
       child: super.buildLayout(context, task, role, revisions, controlPoints),
     );
   }
-
+//
   @override
   List<Widget> buildSections(BuildContext context, Task task, TaskRole role,
       List<Correction> revisions, List<ControlPoint> controlPoints) {

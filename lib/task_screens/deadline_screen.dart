@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:task_tracker/models/priority.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
-import 'package:task_tracker/task_screens/task_title_screen.dart';
 import 'package:task_tracker/widgets/common/app_buttons.dart';
 import 'package:task_tracker/widgets/common/app_spacing.dart';
 import 'package:task_tracker/widgets/common/app_text_styles.dart';
 
 import '../models/employee.dart';
 import '../models/task.dart';
-import '../screens/task/task_details_screen.dart';
+import '../services/navigation_service.dart';
 import '../widgets/common/app_common_widgets.dart';
 import 'select_period_screen.dart';
 
@@ -208,20 +207,8 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
                           if (mounted) {
                             AppCommonWidgets.showSuccessAlert(
                                 onClose: () {
-                                  Navigator.of(context).pop();
-
-                                  Navigator.popUntil(
-                                      context,
-                                      ModalRoute.withName(
-                                          TaskTitleScreen.routeName));
-                                  Navigator.pop(context);
-
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => TaskDetailsScreen(
-                                            task: widget.taskData),
-                                      ));
+                                  NavigationService().clearNavigationStack();
+                                  NavigationService.navigateToTaskDetails(widget.taskData);
                                 },
                                 title: 'Задача поставлена',
                                 context: context,

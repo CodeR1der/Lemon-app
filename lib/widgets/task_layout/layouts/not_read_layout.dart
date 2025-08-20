@@ -7,8 +7,9 @@ import '../../../models/correction.dart';
 import '../../../models/task.dart';
 import '../../../models/task_role.dart';
 import '../../../models/task_status.dart';
-import '../../../screens/correction_screen.dart';
+import '../../../screens/corrections/correction_screen.dart';
 import '../../../services/task_provider.dart';
+import '../../common/app_buttons.dart';
 import '../base/base_task_layout_strategy.dart';
 
 // Concrete strategy implementation for not read status
@@ -36,7 +37,7 @@ class NotReadLayoutStrategy extends BaseTaskLayoutStrategy {
       const Divider(),
       buildHistorySection(context, revisions),
       const Divider(),
-      buildPrimaryButton(
+      AppButtons.primaryButton(
         text: 'Прочитал и понял',
         onPressed: () {
           context
@@ -44,7 +45,7 @@ class NotReadLayoutStrategy extends BaseTaskLayoutStrategy {
               .updateTaskStatus(task, TaskStatus.inOrder);
         },
       ),
-      buildSecondaryButton(
+      AppButtons.secondaryButton(
         text: 'Нужно разъяснение',
         onPressed: () {
           Navigator.push(

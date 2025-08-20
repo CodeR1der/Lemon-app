@@ -7,9 +7,11 @@ import '../../../models/control_point.dart';
 import '../../../models/correction.dart';
 import '../../../models/task.dart';
 import '../../../models/task_role.dart';
+import '../../../models/task_status.dart';
 import '../../../screens/task/add_control_point_screen.dart';
 import '../../../screens/task/task_history.dart';
 import '../../../services/control_point_operations.dart';
+import '../../../services/user_service.dart';
 import '../../../widgets/revision_section.dart';
 import '../interfaces/task_layout_strategy.dart';
 
@@ -126,23 +128,27 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
     return Column(
       children: [
         // Заголовок секции
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-          child: Row(
-            children: [
-              Icon(Iconsax.clock_copy, size: 24, color: Color(0xFF6D7885)),
-              SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  'Контрольные точки',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
+        Row(
+          children: [
+            Icon(Iconsax.clock_copy, size: 24, color: Color(0xFF6D7885)),
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                'Контрольные точки',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black,
                 ),
               ),
+            ),
+            if (role == TaskRole.communicator) ...[
+              IconButton(
+                onPressed: () => _addControlPoint(context, task),
+                icon: const Icon(Icons.add, color: Colors.orange),
+                iconSize: 20,
+              ),
             ],
-          ),
+          ],
         ),
         // Список контрольных точек
         ...controlPoints.asMap().entries.map((entry) {
@@ -151,37 +157,43 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
 
           return Column(
             children: [
-              _buildControlPointItem(controlPoint, role),
+              _buildControlPointItem(controlPoint, role, task),
               if (index < controlPoints.length - 1) const Divider(height: 1),
             ],
           );
-        }),
+        }),//
         // Кнопки для коммуникатора
         if (role == TaskRole.communicator && controlPoints.isNotEmpty) ...[
-          Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Column(
-                children: [
-                  AppButtons.primaryButton(
-                    onPressed: () => _showCheckProgressMenu(context, task),
-                    text: 'Проверить ход работы',
-                    icon: Icons.phone,
-                  ),
-                  AppSpacing.height16,
-                  AppButtons.secondaryButton(
-                    onPressed: () => _addControlPoint(context, task),
-                    text: 'Добавить контрольную точку',
-                    icon: Icons.add,
-                  ),
-                ],
-              )
-          )
+          Builder(
+            builder: (context) {
+              // Проверяем, есть ли незакрытые контрольные точки
+              final hasUnclosedControlPoints =
+                  controlPoints.any((cp) => !cp.isCompleted);
+
+              return hasUnclosedControlPoints
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Column(
+                        children: [
+                          AppButtons.primaryButton(
+                            onPressed: () =>
+                                _showCheckProgressMenu(context, task),
+                            text: 'Проверить ход работы',
+                            icon: Icons.phone,
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox.shrink();
+            },
+          ),
         ],
       ],
     );
   }
 
-  Widget _buildControlPointItem(ControlPoint controlPoint, TaskRole role) {
+  Widget _buildControlPointItem(
+      ControlPoint controlPoint, TaskRole role, Task task) {
     final isOverdue =
         !controlPoint.isCompleted && controlPoint.date.isBefore(DateTime.now());
 
@@ -213,7 +225,8 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
             ),
             if (role == TaskRole.communicator)
               InkWell(
-                onTap: () => _toggleControlPointStatus(context, controlPoint),
+                onTap: () =>
+                    _toggleControlPointStatus(context, controlPoint, task),
                 child: Icon(
                   controlPoint.isCompleted
                       ? Icons.check_circle
@@ -250,29 +263,67 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
   }
 
   void _toggleControlPointStatus(
-      BuildContext context, ControlPoint controlPoint) async {
+      BuildContext context, ControlPoint controlPoint, Task task) async {
     try {
+      // Сначала обновляем локальное состояние для мгновенного отображения
+      controlPoint.isCompleted = !controlPoint.isCompleted;
+
+      // Принудительно обновляем UI
+      if (context.mounted) {
+        // Находим ближайший StatefulWidget и вызываем setState
+        final state = context.findAncestorStateOfType<State>();
+        if (state != null && state.mounted) {
+          state.setState(() {});
+        }
+      }
+
+      // Выполняем запрос к серверу
       if (controlPoint.isCompleted) {
         await ControlPointService()
-            .markControlPointAsIncomplete(controlPoint.id!);
+            .markControlPointAsCompleted(controlPoint.id!);
       } else {
         await ControlPointService()
-            .markControlPointAsCompleted(controlPoint.id!);
+            .markControlPointAsIncomplete(controlPoint.id!);
       }
-      // Обновляем UI через setState в родительском виджете
+
+      // Показываем уведомление об успехе
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(controlPoint.isCompleted
-                ? 'Контрольная точка отмечена как невыполненная'
-                : 'Контрольная точка отмечена как выполненная'),
-          ),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text(controlPoint.isCompleted
+        //         ? 'Контрольная точка отмечена как выполненная'
+        //         : 'Контрольная точка отмечена как невыполненная'),
+        //     backgroundColor: Colors.green,
+        //   ),
+        // );
+      }
+
+      // Проверяем, нужно ли обновить статус задачи
+      await _checkAndUpdateTaskStatus(context, task);
+
+      // Дополнительно обновляем UI для отображения/скрытия кнопки "Проверить ход работы"
+      if (context.mounted) {
+        final state = context.findAncestorStateOfType<State>();
+        if (state != null && state.mounted) {
+          state.setState(() {});
+        }
       }
     } catch (e) {
+      // В случае ошибки возвращаем предыдущее состояние
+      controlPoint.isCompleted = !controlPoint.isCompleted;
+
+      // Принудительно обновляем UI
       if (context.mounted) {
+        final state = context.findAncestorStateOfType<State>();
+        if (state != null && state.mounted) {
+          state.setState(() {});
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: ${e.toString()}')),
+          SnackBar(
+            content: Text('Ошибка: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -452,5 +503,100 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
         ),
       ),
     );
+  }
+
+  // Метод для проверки и обновления статуса задачи
+  Future<void> _checkAndUpdateTaskStatus(
+      BuildContext context, Task task) async {
+    try {
+      // Получаем все контрольные точки для задачи
+      final controlPoints =
+          await ControlPointService().getControlPointsForTask(task.id);
+
+      // Проверяем, есть ли незакрытые контрольные точки
+      final hasUnclosedControlPoints = controlPoints.isNotEmpty &&
+          controlPoints.any((cp) => !cp.isCompleted);
+
+      // Проверяем, все ли контрольные точки выполнены
+      final allCompleted = controlPoints.isNotEmpty &&
+          controlPoints.every((cp) => cp.isCompleted);
+
+      // Определяем роль пользователя в задаче
+      final currentUserId = UserService.to.currentUser?.userId;
+      String? userRole;
+      if (currentUserId != null) {
+        if (task.team.communicatorId.userId == currentUserId) {
+          userRole = 'Коммуникатор';
+        } else if (task.team.teamMembers
+            .any((member) => member.userId == currentUserId)) {
+          userRole = 'Исполнитель';
+        } else if (task.team.creatorId.userId == currentUserId) {
+          userRole = 'Постановщик';
+        } else if (task.team.observerId?.userId == currentUserId) {
+          userRole = 'Наблюдатель';
+        }
+      }
+
+      // Логика обновления статуса в зависимости от роли
+      if (userRole == 'Коммуникатор') {
+        // Для коммуникатора: если есть незакрытые контрольные точки - статус "Контрольная точка"
+        // если все закрыты - статус "В работе"
+        if (hasUnclosedControlPoints && task.status == TaskStatus.atWork) {
+          await task.changeStatus(TaskStatus.controlPoint);
+
+          if (context.mounted) {
+            final state = context.findAncestorStateOfType<State>();
+            if (state != null && state.mounted) {
+              state.setState(() {});
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Статус задачи обновлен на "Контрольная точка"'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        } else if (allCompleted && task.status == TaskStatus.controlPoint) {
+          await task.changeStatus(TaskStatus.atWork);
+
+          if (context.mounted) {
+            final state = context.findAncestorStateOfType<State>();
+            if (state != null && state.mounted) {
+              state.setState(() {});
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Статус задачи обновлен на "В работе"'),
+                backgroundColor: Colors.blue,
+              ),
+            );
+          }
+        }
+      } else {
+        // Для других ролей: если все контрольные точки выполнены и задача в статусе "Контрольная точка",
+        // обновляем статус на "В работе"
+        if (allCompleted && task.status == TaskStatus.controlPoint) {
+          await task.changeStatus(TaskStatus.atWork);
+
+          if (context.mounted) {
+            final state = context.findAncestorStateOfType<State>();
+            if (state != null && state.mounted) {
+              state.setState(() {});
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Статус задачи обновлен на "В работе"'),
+                backgroundColor: Colors.blue,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Ошибка при обновлении статуса задачи: $e');
+    }
   }
 }

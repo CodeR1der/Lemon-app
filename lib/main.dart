@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/auth/auth_main_screen.dart';
 import 'package:task_tracker/models/announcement.dart';
+import 'package:task_tracker/models/task.dart';
 import 'package:task_tracker/screens/annoncement/add_announcement.dart';
 import 'package:task_tracker/screens/annoncement/announcement_screen.dart';
 import 'package:task_tracker/screens/employee/employees_screen.dart';
@@ -13,7 +14,9 @@ import 'package:task_tracker/screens/employee/profile_screen.dart';
 import 'package:task_tracker/screens/home_page.dart';
 import 'package:task_tracker/screens/project/projects_screen.dart';
 import 'package:task_tracker/screens/search_screen.dart';
+import 'package:task_tracker/screens/task/task_details_screen.dart';
 import 'package:task_tracker/screens/task/tasks_screen.dart';
+import 'package:task_tracker/services/announcement_provider.dart';
 import 'package:task_tracker/services/project_provider.dart';
 import 'package:task_tracker/services/task_provider.dart';
 import 'package:task_tracker/services/user_service.dart';
@@ -40,7 +43,7 @@ void main() async {
   await Supabase.initialize(
     url: 'https://xusyxtgdmtpupmroemzb.supabase.co',
     anonKey:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1c3l4dGdkbXRwdXBtcm9lbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0NDU2NTgsImV4cCI6MjA0ODAyMTY1OH0.Z7gU-A_s6ymY7-vTW4ObeHurvtbSIt4kWe-9EXF5j9M',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1c3l4dGdkbXRwdXBtcm9lbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0NDU2NTgsImV4cCI6MjA0ODAyMTY1OH0.Z7gU-A_s6ymY7-vTW4ObeHurvtbSIt4kWe-9EXF5j9M',
   );
 
   initializeDateFormatting().then((_) => runApp(const MyApp()));
@@ -62,6 +65,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => ProjectProvider()),
+        ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
       ],
       child: Builder(
         builder: (context) {
@@ -86,9 +90,7 @@ class MyApp extends StatelessWidget {
             },
             getPages: [
               GetPage(name: '/', page: () => const BottomNavigationMenu()),
-              GetPage(
-                  name: '/auth',
-                  page: () => const AuthMainScreen()),
+              GetPage(name: '/auth', page: () => const AuthMainScreen()),
               GetPage(
                   name: HomeScreen.routeName, page: () => const HomeScreen()),
               GetPage(
@@ -110,8 +112,13 @@ class MyApp extends StatelessWidget {
               GetPage(
                   name: '/announcement_detail',
                   page: () => AnnouncementDetailScreen(
-                    announcement: Get.arguments as Announcement,
-                  )),
+                        announcement: Get.arguments as Announcement,
+                      )),
+              GetPage(
+                  name: '/taskDetails',
+                  page: () => TaskDetailsScreen(
+                        task: Get.arguments as Task,
+                      )),
             ],
             initialBinding: InitialBindings(),
             theme: ThemeData(

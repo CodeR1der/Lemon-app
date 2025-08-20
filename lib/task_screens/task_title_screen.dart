@@ -15,6 +15,7 @@ import 'project_selection_screen.dart';
 
 class TaskTitleScreen extends StatefulWidget {
   static const routeName = '/createTaskStart';
+  static const screenName = '/TaskTitleScreen';
 
   final Employee? employee;
   final Project? project;

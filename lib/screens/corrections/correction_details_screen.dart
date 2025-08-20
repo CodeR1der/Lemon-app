@@ -7,14 +7,15 @@ import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task_role.dart';
 import 'package:task_tracker/screens/task/add_extra_time_screen.dart';
 import 'package:task_tracker/screens/task/change_executer_screen.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
 
-import '../models/correction.dart';
-import '../models/task.dart';
-import '../models/task_status.dart';
-import '../services/request_operation.dart';
-import '../services/task_provider.dart';
-import '../task_screens/task_description_tab.dart';
-import 'task/edit_task_details_screen.dart';
+import '../../models/correction.dart';
+import '../../models/task.dart';
+import '../../models/task_status.dart';
+import '../../services/request_operation.dart';
+import '../../services/task_provider.dart';
+import '../../task_screens/task_description_tab.dart';
+import '../task/edit_task_details_screen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {
   final Correction correction;
@@ -137,7 +138,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   Container(
                     padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF9F9F9),
                       borderRadius: BorderRadius.circular(10),
@@ -154,8 +155,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               if (correction.attachments
-                  ?.where((file) => _isImage(file))
-                  .isEmpty ??
+                      ?.where((file) => _isImage(file))
+                      .isEmpty ??
                   true)
                 const Text('Нет фотографий')
               else
@@ -193,9 +194,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
-                                    color: Colors.grey.shade200,
-                                    child: const Icon(Icons.broken_image, size: 32),
-                                  ),
+                                color: Colors.grey.shade200,
+                                child: const Icon(Icons.broken_image, size: 32),
+                              ),
                             ),
                           ),
                         ),
@@ -250,30 +251,20 @@ class CorrectionDetailsScreen extends StatelessWidget {
           if (task.status == TaskStatus.overdue) ...[
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButtons.primaryButton(
+                text: 'Ознакомился',
                 onPressed: () async {
                   Navigator.pop(context, task);
                 },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  'Ознакомился',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
               ),
             ),
           ] else ...[
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButtons.primaryButton(
                 onPressed: () async {
                   final taskProvider =
-                  Provider.of<TaskProvider>(context, listen: false);
+                      Provider.of<TaskProvider>(context, listen: false);
 
                   if (correction.status == TaskStatus.needTicket) {
                     await taskProvider.updateTaskStatus(
@@ -287,27 +278,17 @@ class CorrectionDetailsScreen extends StatelessWidget {
 
                   Navigator.pop(context, task);
                 },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  'Принять',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
+                text: 'Принять',
               ),
             ),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButtons.primaryButton(
                 onPressed: () {
                   if (correction.status == TaskStatus.needTicket) {
                     final taskProvider =
-                    Provider.of<TaskProvider>(context, listen: false);
+                        Provider.of<TaskProvider>(context, listen: false);
                     taskProvider.updateTaskStatus(
                         task, TaskStatus.needExplanation);
                     RequestService()
@@ -319,20 +300,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   }
                   Navigator.pop(context, task);
                 },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.grey,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(
-                  correction.status == TaskStatus.needTicket
-                      ? 'Не принять'
-                      : 'Отредактировать задачу',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w500),
-                ),
+                text: correction.status == TaskStatus.needTicket
+                    ? 'Не принять'
+                    : 'Отредактировать задачу',
               ),
             ),
             const SizedBox(height: 8),
@@ -355,7 +325,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
           if (task.status == TaskStatus.overdue) ...[
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButtons.primaryButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -372,23 +342,13 @@ class CorrectionDetailsScreen extends StatelessWidget {
                     }
                   });
                 },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  'Дать дополнительное время',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
+                text: 'Дать дополнительное время',
               ),
             ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButtons.primaryButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -405,81 +365,44 @@ class CorrectionDetailsScreen extends StatelessWidget {
                     }
                   });
                 },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.grey,
-                  side: const BorderSide(color: Colors.grey, width: 1),
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  "Заменить исполнителя",
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500),
-                ),
+                text: "Заменить исполнителя",
               ),
             ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButtons.primaryButton(
                 onPressed: () {
                   final taskProvider =
-                  Provider.of<TaskProvider>(context, listen: false);
+                      Provider.of<TaskProvider>(context, listen: false);
                   taskProvider.updateTaskStatus(task, TaskStatus.completed);
                   RequestService().updateCorrection(correction..isDone = true);
                   Navigator.pop(context, task);
                 },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.grey,
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  "Завершить задачу и сдать в архив",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500),
-                ),
+                text: "Завершить задачу и сдать в архив",
               ),
             ),
           ] else ...[
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButtons.primaryButton(
                 onPressed: () {
                   final taskProvider =
-                  Provider.of<TaskProvider>(context, listen: false);
+                      Provider.of<TaskProvider>(context, listen: false);
                   taskProvider.updateTaskStatus(task, TaskStatus.notRead);
                   RequestService().updateCorrection(correction..isDone = true);
                   Navigator.pop(context, task);
                 },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  'Принять',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
+                text: 'Принять',
               ),
             ),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButtons.primaryButton(
                 onPressed: () {
                   final taskProvider =
-                  Provider.of<TaskProvider>(context, listen: false);
+                      Provider.of<TaskProvider>(context, listen: false);
                   if (correction.status == TaskStatus.needTicket) {
                     taskProvider.updateTaskStatus(
                         task, TaskStatus.needExplanation);
@@ -492,23 +415,9 @@ class CorrectionDetailsScreen extends StatelessWidget {
                   }
                   Navigator.pop(context, task);
                 },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.grey,
-                  side: const BorderSide(color: Colors.grey, width: 1),
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(
-                  correction.status == TaskStatus.needTicket
-                      ? "Не принять"
-                      : 'Правки выполнены некорректно',
-                  style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500),
-                ),
+                text: correction.status == TaskStatus.needTicket
+                    ? "Не принять"
+                    : 'Правки выполнены некорректно',
               ),
             ),
             const SizedBox(height: 8),

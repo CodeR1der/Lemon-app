@@ -559,7 +559,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: const Text('Отправить'),
+          child: const Text('Создать'),
         ),
       ),
     );

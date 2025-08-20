@@ -5,6 +5,7 @@ import '../../../models/control_point.dart';
 import '../../../models/correction.dart';
 import '../../../models/task.dart';
 import '../../../models/task_role.dart';
+import '../../common/app_buttons.dart';
 import '../base/base_task_layout_strategy.dart';
 
 // Control Point Layout Strategy
@@ -41,7 +42,7 @@ class ControlPointLayoutStrategy extends BaseTaskLayoutStrategy {
       buildControlPointsSection(
           context, task, TaskRole.communicator, controlPoints),
       const SizedBox(height: 20),
-      buildPrimaryButton(
+      AppButtons.primaryButton(
         text: 'Проверить ход работы',
         onPressed: () {},
       ),
@@ -72,8 +73,6 @@ class ControlPointLayoutStrategy extends BaseTaskLayoutStrategy {
 
   List<Widget> _buildNoneRoleLayout(BuildContext context, Task task,
       List<Correction> revisions, List<ControlPoint> controlPoints) {
-    return [
-      buildHistorySection(context, revisions)
-    ];
+    return [buildHistorySection(context, revisions)];
   }
 }

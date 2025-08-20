@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
 
 import '../../../models/control_point.dart';
 import '../../../models/correction.dart';
 import '../../../models/task.dart';
 import '../../../models/task_role.dart';
 import '../../../models/task_status.dart';
-import '../../../screens/correction_screen.dart';
+import '../../../screens/corrections/correction_screen.dart';
 import '../../../services/task_provider.dart';
 import '../base/base_task_layout_strategy.dart';
 
@@ -46,7 +47,7 @@ class NewTaskLayoutStrategy extends BaseTaskLayoutStrategy {
         buildRevisionsSection(context, task, TaskRole.communicator, revisions)
       else ...[
         buildSectionItem(icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
-        buildPrimaryButton(
+        AppButtons.primaryButton(
           text: 'Задача поставлена плохо / некорректно',
           onPressed: () {
             Navigator.push(

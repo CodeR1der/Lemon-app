@@ -27,6 +27,7 @@ class PositionTasksTab extends StatefulWidget {
 
 class _PositionTasksTabState extends State<PositionTasksTab> {
   bool _initialized = false;
+  late Provider provider;
 
   @override
   void didChangeDependencies() {
@@ -47,6 +48,14 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
       }
       _initialized = true;
     }
+  }
+
+  @override
+  void dispose() {
+    // Отписываемся от Realtime подписок при закрытии экрана
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    taskProvider.disposeRealtimeSubscriptions();
+    super.dispose();
   }
 
   @override
@@ -152,7 +161,6 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
           );
         }
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 }

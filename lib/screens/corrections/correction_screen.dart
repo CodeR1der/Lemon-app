@@ -9,11 +9,13 @@ import 'package:provider/provider.dart';
 import 'package:record/record.dart';
 import 'package:task_tracker/models/task_validate.dart';
 import 'package:task_tracker/services/request_operation.dart';
+import 'package:task_tracker/widgets/common/app_button_styles.dart';
 
-import '../models/correction.dart';
-import '../models/task.dart';
-import '../models/task_status.dart';
-import '../services/task_provider.dart';
+import '../../models/correction.dart';
+import '../../models/task.dart';
+import '../../models/task_status.dart';
+import '../../services/task_provider.dart';
+import '../../widgets/common/app_buttons.dart';
 
 class CorrectionScreen extends StatefulWidget {
   final Task task;
@@ -206,8 +208,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
       );
 
       Navigator.pop(context);
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   @override
@@ -287,24 +288,10 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
-              OutlinedButton(
-                onPressed: pickFile,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  side: const BorderSide(color: Colors.orange),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Iconsax.add_circle_copy),
-                    SizedBox(width: 8),
-                    Text('Добавить файл'),
-                  ],
-                ),
-              ),
+              AppButtons.secondaryButton(
+                  onPressed: pickFile,
+                  icon: Iconsax.add_circle_copy,
+                  text: 'Добавить файл'),
               const SizedBox(height: 16),
               if (_attachments.isNotEmpty ||
                   videoMessage.isNotEmpty ||
@@ -382,13 +369,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
         width: double.infinity,
         child: ElevatedButton(
           onPressed: _canSubmit ? _submitCorrection : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _canSubmit ? Colors.orange : Colors.grey,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+          style: AppButtonStyles.primaryButton,
           child: const Text('Отправить'),
         ),
       ),

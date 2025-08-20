@@ -151,13 +151,14 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
           IconButton(
             icon: const Icon(Icons.add, color: Colors.orange),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      TaskTitleScreen(project: widget.project),
-                ),
-              );
+              Get.to(() => TaskTitleScreen(project: widget.project));
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(
+              //     builder: (context) =>
+              //         TaskTitleScreen(project: widget.project),
+              //   ),
+              // );
             },
           ),
         ],
@@ -235,9 +236,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
       builder: (context) {
         final contentHeight = _isLoadingEmployees
             ? 200.0 // Высота для индикатора загрузки
-            : headerHeight + (_allEmployees.length * itemHeight) + paddingBottom;
+            : headerHeight +
+                (_allEmployees.length * itemHeight) +
+                paddingBottom;
 
-        final actualHeight = contentHeight ;
+        final actualHeight = contentHeight;
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Container(
@@ -268,101 +271,106 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
                     child: _isLoadingEmployees
                         ? const Center(child: CircularProgressIndicator())
                         : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _allEmployees.length,
-                      itemBuilder: (context, index) {
-                        final employee = _allEmployees[index];
-                        final isInProject =
-                            _tempSelectedEmployees.firstWhereOrNull(
-                                    (e) => e.userId == employee.userId) !=
-                                null;
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  setModalState(() {
-                                    if (isInProject) {
-                                      _tempSelectedEmployees.remove(employee);
-                                    } else {
-                                      _tempSelectedEmployees.add(employee);
-                                    }
-                                  });
-                                },
-                                child: Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color: isInProject
-                                        ? Colors.blue
-                                        : Colors.white,
-                                    border: Border.all(
-                                      color: isInProject
-                                          ? Colors.blue
-                                          : Colors.grey[400]!,
-                                      width: 2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: isInProject
-                                      ? const Icon(
-                                    Icons.check,
-                                    color: Colors.white,
-                                    size: 16,
-                                  )
-                                      : null,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              // Avatar
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundImage:
-                                employee.avatarUrl != null &&
-                                    employee.avatarUrl!.isNotEmpty
-                                    ? NetworkImage(
-                                    _employeeService.getAvatarUrl(
-                                        employee.avatarUrl!))
-                                    : null,
-                                child: employee.avatarUrl == null ||
-                                    employee.avatarUrl!.isEmpty
-                                    ? Text(
-                                  employee.name?.isNotEmpty == true
-                                      ? employee.name![0].toUpperCase()
-                                      : 'N',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                )
-                                    : null,
-                              ),
-                              const SizedBox(width: 12),
-                              // Employee details
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: _allEmployees.length,
+                            itemBuilder: (context, index) {
+                              final employee = _allEmployees[index];
+                              final isInProject =
+                                  _tempSelectedEmployees.firstWhereOrNull(
+                                          (e) => e.userId == employee.userId) !=
+                                      null;
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      employee.name ?? 'Без имени',
-                                      style: AppTextStyles.bodySmall,
+                                    GestureDetector(
+                                      onTap: () {
+                                        setModalState(() {
+                                          if (isInProject) {
+                                            _tempSelectedEmployees
+                                                .remove(employee);
+                                          } else {
+                                            _tempSelectedEmployees
+                                                .add(employee);
+                                          }
+                                        });
+                                      },
+                                      child: Container(
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                          color: isInProject
+                                              ? Colors.blue
+                                              : Colors.white,
+                                          border: Border.all(
+                                            color: isInProject
+                                                ? Colors.blue
+                                                : Colors.grey[400]!,
+                                            width: 2,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                        ),
+                                        child: isInProject
+                                            ? const Icon(
+                                                Icons.check,
+                                                color: Colors.white,
+                                                size: 16,
+                                              )
+                                            : null,
+                                      ),
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      employee.position ?? 'Без должности',
-                                      style: AppTextStyles.caption,
+                                    const SizedBox(width: 12),
+                                    // Avatar
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundImage:
+                                          employee.avatarUrl != null &&
+                                                  employee.avatarUrl!.isNotEmpty
+                                              ? NetworkImage(
+                                                  _employeeService.getAvatarUrl(
+                                                      employee.avatarUrl!))
+                                              : null,
+                                      child: employee.avatarUrl == null ||
+                                              employee.avatarUrl!.isEmpty
+                                          ? Text(
+                                              employee.name?.isNotEmpty == true
+                                                  ? employee.name![0]
+                                                      .toUpperCase()
+                                                  : 'N',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    // Employee details
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            employee.name ?? 'Без имени',
+                                            style: AppTextStyles.bodySmall,
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            employee.position ??
+                                                'Без должности',
+                                            style: AppTextStyles.caption,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ),
                 ],
               ),
@@ -371,26 +379,25 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
         );
       },
     ).then((_) async {
-        await ProjectService().updateProjectTeam(
-          widget.project.projectId,
-          _tempSelectedEmployees.map((e) => e.userId).toList(),
-        );
-        setState(() {
-          _projectEmployees = List.from(_tempSelectedEmployees);
-          _communicators = _projectEmployees
-              .where((e) =>
-          e.role == 'Коммуникатор' ||
-              _taskList.any((task) =>
-              task.team.communicatorId.userId == e.userId))
-              .toList();
-          _otherEmployees = _projectEmployees
-              .where((e) =>
-          e.role != 'Коммуникатор' &&
-              !_communicators.any((c) => c.userId == e.userId))
-              .toList();
-        });
-      }
-    );
+      await ProjectService().updateProjectTeam(
+        widget.project.projectId,
+        _tempSelectedEmployees.map((e) => e.userId).toList(),
+      );
+      setState(() {
+        _projectEmployees = List.from(_tempSelectedEmployees);
+        _communicators = _projectEmployees
+            .where((e) =>
+                e.role == 'Коммуникатор' ||
+                _taskList
+                    .any((task) => task.team.communicatorId.userId == e.userId))
+            .toList();
+        _otherEmployees = _projectEmployees
+            .where((e) =>
+                e.role != 'Коммуникатор' &&
+                !_communicators.any((c) => c.userId == e.userId))
+            .toList();
+      });
+    });
   }
 
   Widget _buildDescriptionTab() {

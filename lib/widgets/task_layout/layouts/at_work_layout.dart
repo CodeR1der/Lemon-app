@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
 
 import '../../../models/control_point.dart';
 import '../../../models/correction.dart';
 import '../../../models/task.dart';
 import '../../../models/task_role.dart';
 import '../../../models/task_status.dart';
-import '../../../screens/correction_screen.dart';
-import '../../../screens/task_validate_screen.dart';
+import '../../../screens/corrections/correction_screen.dart';
+import '../../../screens/corrections/task_validate_screen.dart';
 import '../base/base_task_layout_strategy.dart';
 
 class AtWorkLayoutStrategy extends BaseTaskLayoutStrategy {
@@ -41,7 +42,7 @@ class AtWorkLayoutStrategy extends BaseTaskLayoutStrategy {
       buildHistorySection(context, revisions),
       const Divider(),
       const SizedBox(height: 12),
-      buildPrimaryButton(
+      AppButtons.primaryButton(
         text: 'Сдать задачу на проверку',
         onPressed: () {
           Navigator.push(
@@ -52,7 +53,7 @@ class AtWorkLayoutStrategy extends BaseTaskLayoutStrategy {
         },
       ),
       const SizedBox(height: 16),
-      buildSecondaryButton(
+      AppButtons.secondaryButton(
         text: 'Запросить дополнительное время',
         onPressed: () {
           Navigator.push(
@@ -92,8 +93,6 @@ class AtWorkLayoutStrategy extends BaseTaskLayoutStrategy {
 
   List<Widget> _buildNoneRoleLayout(BuildContext context, Task task,
       List<Correction> revisions, List<ControlPoint> controlPoints) {
-    return [
-      buildHistorySection(context, revisions)
-    ];
+    return [buildHistorySection(context, revisions)];
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/models/employee.dart';
+import 'package:task_tracker/services/announcement_provider.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/widgets/common/app_colors.dart';
@@ -20,6 +23,7 @@ class AnnouncementDetailScreen extends StatefulWidget {
       _AnnouncementDetailScreenState();
 }
 
+//
 class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -29,13 +33,69 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
   bool _isLoadingLogs = true;
   final AnnouncementService _database = AnnouncementService();
   final currentUser = UserService.to.currentUser!;
+  RealtimeChannel? _announcementChannel;
+  late Announcement _currentAnnouncement;
 
   @override
   void initState() {
     super.initState();
+    _currentAnnouncement = widget.announcement;
     _tabController = TabController(length: 3, vsync: this);
     _loadEmployees();
     _loadLogs();
+    _setupRealtimeSubscription();
+  }
+
+  void _setupRealtimeSubscription() {
+    final client = Supabase.instance.client;
+
+    print(
+        'AnnouncementDetailScreen: Настраиваем Realtime подписку для объявления: ${_currentAnnouncement.id}');
+
+    _announcementChannel = client
+        .channel('announcement_detail_${_currentAnnouncement.id}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'announcement',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: _currentAnnouncement.id,
+          ),
+          callback: (payload) {
+            print(
+                'AnnouncementDetailScreen: Получено изменение объявления: ${payload.eventType}');
+            _handleAnnouncementChange(payload);
+          },
+        )
+        .subscribe();
+  }
+
+  void _handleAnnouncementChange(PostgresChangePayload payload) {
+    final eventType = payload.eventType.name;
+    final newRecord = payload.newRecord;
+
+    print('AnnouncementDetailScreen: Обработка изменения: $eventType');
+
+    if (eventType == 'UPDATE' && newRecord != null) {
+      try {
+        // Обновляем данные объявления
+        final updatedAnnouncement = Announcement.fromJson(newRecord);
+        // Обновляем данные в виджете
+        setState(() {
+          // Обновляем _currentAnnouncement с новыми данными
+          _currentAnnouncement = updatedAnnouncement;
+        });
+        print(
+            'AnnouncementDetailScreen: Объявление обновлено: ${updatedAnnouncement.id}');
+      } catch (e) {
+        print('AnnouncementDetailScreen: Ошибка при обновлении объявления: $e');
+      }
+    } else if (eventType == 'DELETE') {
+      // Если объявление удалено, возвращаемся назад
+      Get.back();
+    }
   }
 
   bool _isImage(String fileName) {
@@ -52,7 +112,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
     try {
       // Получаем выбранных сотрудников из новой таблицы
       final selectedEmployeeIds = await AnnouncementService()
-          .getSelectedEmployees(widget.announcement.id);
+          .getSelectedEmployees(_currentAnnouncement.id);
 
       if (selectedEmployeeIds.isEmpty) {
         setState(() {
@@ -80,7 +140,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
 
   Future<void> _loadLogs() async {
     try {
-      final logs = await _database.getAnnouncementLogs(widget.announcement.id);
+      final logs = await _database.getAnnouncementLogs(_currentAnnouncement.id);
       setState(() {
         _logs = logs;
         _isLoadingLogs = false;
@@ -96,6 +156,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _announcementChannel?.unsubscribe();
     super.dispose();
   }
 
@@ -112,7 +173,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
         ),
         actions: [
           // Кнопка закрытия объявления для директоров и коммуникаторов
-          if (showTabs && widget.announcement.status == 'active')
+          if (showTabs && _currentAnnouncement.status == 'active')
             IconButton(
               icon: const Icon(Icons.close),
               onPressed: _closeAnnouncement,
@@ -156,7 +217,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Статус объявления
-                if (widget.announcement.status == 'closed') ...[
+                if (_currentAnnouncement.status == 'closed') ...[
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -182,21 +243,21 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
                   const SizedBox(height: 16),
                 ],
                 Text(
-                  widget.announcement.title,
+                  _currentAnnouncement.title,
                   style: AppTextStyles.titleAnnouncement,
                 ),
                 AppSpacing.height24,
                 Text(
-                  widget.announcement.fullText,
+                  _currentAnnouncement.fullText,
                   style: AppTextStyles.bodyMedium,
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Дата: ${widget.announcement.date.toLocal().toString().split(' ')[0]}',
+                  'Дата: ${_currentAnnouncement.date.toLocal().toString().split(' ')[0]}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 20),
-                if (widget.announcement.attachments.isNotEmpty) ...[
+                if (_currentAnnouncement.attachments.isNotEmpty) ...[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
@@ -210,7 +271,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          widget.announcement.attachments.length.toString(),
+                          _currentAnnouncement.attachments.length.toString(),
                           style: TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.bold,
@@ -221,7 +282,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
                     ],
                   ),
                   const SizedBox(height: 12),
-                  widget.announcement.attachments
+                  _currentAnnouncement.attachments
                           .where((file) => _isImage(file))
                           .isNotEmpty
                       ? GridView.builder(
@@ -233,18 +294,18 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
                             crossAxisSpacing: 8.0,
                             mainAxisSpacing: 8.0,
                           ),
-                          itemCount: widget.announcement.attachments
+                          itemCount: _currentAnnouncement.attachments
                               .where((file) => _isImage(file))
                               .length,
                           itemBuilder: (context, index) {
-                            final photo = widget.announcement.attachments
+                            final photo = _currentAnnouncement.attachments
                                 .where((file) => _isImage(file))
                                 .toList()[index];
                             return GestureDetector(
                               onTap: () => _openPhotoGallery(
                                 context,
                                 index,
-                                widget.announcement.attachments
+                                _currentAnnouncement.attachments
                                     .where((file) => _isImage(file))
                                     .toList(),
                               ),
@@ -278,33 +339,23 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
           ),
         ),
         if (UserService.to.currentUser!.role != 'Директор' &&
-            widget.announcement.status == 'active')
+            _currentAnnouncement.status == 'active')
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButtons.primaryButton(
                 onPressed: () async {
                   try {
                     await AnnouncementService.markAsRead(
                         UserService.to.currentUser!.userId,
-                        widget.announcement);
+                        _currentAnnouncement);
                     Get.snackbar(
                         'Успех', 'Объявление отмечено как прочитанное');
                     setState(() {}); // Обновляем UI
                   } catch (e) {}
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  'Прочитал',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                text: 'Прочитал',
               ),
             ),
           ),
@@ -326,7 +377,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
       itemCount: _employees.length,
       itemBuilder: (context, index) {
         final employee = _employees[index];
-        final hasRead = widget.announcement.readBy.contains(employee.userId);
+        final hasRead = _currentAnnouncement.readBy.contains(employee.userId);
         // Все сотрудники в _employees уже являются выбранными для этого объявления
         final isSelected = true;
 
@@ -413,7 +464,6 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
           color: AppColors.counterGrey,
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
-
             leading: CircleAvatar(
               backgroundColor: actionColor.withOpacity(0.1),
               child: Icon(actionIcon, color: actionColor, size: 20),
@@ -441,13 +491,13 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
       await AnnouncementService.markAsReadForEmployee(
         employee.userId,
         employee.name,
-        widget.announcement,
+        _currentAnnouncement,
         currentUser.userId,
         currentUser.name,
         currentUser.role,
       );
       Get.snackbar('Успех', '${employee.name} отмечен как прочитавший');
-      setState(() {}); // Обновляем UI
+      // UI обновится автоматически через Realtime
     } catch (e) {
       print('Ошибка Не удалось отметить как прочитанное: $e');
     }
@@ -468,15 +518,13 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
             onPressed: () async {
               Navigator.pop(context, true);
               try {
-                final currentUser = UserService.to.currentUser!;
-                await AnnouncementService.closeAnnouncement(
-                  widget.announcement,
-                  currentUser.userId,
-                  currentUser.name,
-                  currentUser.role,
-                );
+                // Используем AnnouncementProvider для закрытия объявления
+                final announcementProvider =
+                    Provider.of<AnnouncementProvider>(context, listen: false);
+                await announcementProvider
+                    .closeAnnouncement(_currentAnnouncement);
                 Get.snackbar('Успех', 'Объявление закрыто');
-                setState(() {}); // Обновляем UI
+                // UI обновится автоматически через Realtime
               } catch (e) {
                 print('Ошибка Не удалось закрыть объявление: $e');
               }

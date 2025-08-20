@@ -6,8 +6,9 @@ import '../../../models/correction.dart';
 import '../../../models/task.dart';
 import '../../../models/task_role.dart';
 import '../../../models/task_validate.dart';
-import '../../../screens/task_validate_details_screen.dart';
+import '../../../screens/corrections/task_validate_details_screen.dart';
 import '../../../services/request_operation.dart';
+import '../../common/app_buttons.dart';
 import '../base/base_task_layout_strategy.dart';
 
 // Completed Under Review Layout Strategy
@@ -55,7 +56,7 @@ class CompletedUnderReviewLayoutStrategy extends BaseTaskLayoutStrategy {
                 const Divider(),
                 buildHistorySection(context, revisions),
                 const Divider(),
-                buildSecondaryButton(
+                AppButtons.primaryButton(
                   text: 'Проверить задачу',
                   onPressed: () {
                     Navigator.push(

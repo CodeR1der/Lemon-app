@@ -6,6 +6,7 @@ import '../../../models/correction.dart';
 import '../../../models/task.dart';
 import '../../../models/task_role.dart';
 import '../../../screens/task/queue_screen.dart';
+import '../../common/app_buttons.dart';
 import '../base/base_task_layout_strategy.dart';
 
 class InOrderLayoutStrategy extends BaseTaskLayoutStrategy {
@@ -41,7 +42,7 @@ class InOrderLayoutStrategy extends BaseTaskLayoutStrategy {
       const Divider(),
       buildHistorySection(context, revisions),
       const Divider(),
-      buildPrimaryButton(
+      AppButtons.primaryButton(
         text: 'Выставить в очередь',
         onPressed: () {
           Navigator.push(

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/services/control_point_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
 
@@ -13,6 +14,13 @@ class TaskProvider with ChangeNotifier {
   String? _error;
   bool _isLoading = false;
 
+  // Realtime подписки
+  RealtimeChannel? _taskChannel;
+  RealtimeChannel? _controlPointChannel;
+  String? _currentProjectId;
+  String? _currentPosition;
+  String? _currentEmployeeId;
+
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -20,6 +28,7 @@ class TaskProvider with ChangeNotifier {
 
   List<TaskCategory> getCategories(String position, String employeeId,
       {String? projectId}) {
+    //
     if (projectId != null) {
       return _categories['project:$projectId'] ?? [];
     }
@@ -64,9 +73,15 @@ class TaskProvider with ChangeNotifier {
         final categories =
             await taskCategories.getCategories(position, employeeId);
         _categories['$position:$employeeId'] = categories;
-      }
-
+      }//
       _error = null;
+
+      // Настраиваем Realtime подписки
+      _setupRealtimeSubscriptions(
+        projectId: projectId,
+        position: position,
+        employeeId: employeeId,
+      );
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -80,16 +95,19 @@ class TaskProvider with ChangeNotifier {
     return _tasks.values.where((task) {
       bool matches = task.status == status;
 
-      // Специальная логика для контрольных точек коммуникатора
+      // Для проектов используем реальный статус из БД без учета контрольных точек
+      if (projectId != null) {
+        matches &= task.project?.projectId == projectId;
+        return matches; // Возвращаем задачи в их реальном статусе
+      }
+
+      // Специальная логика для контрольных точек коммуникатора (только для личных задач)
       if (status == TaskStatus.controlPoint && position == 'Коммуникатор') {
         // Для статуса "Контрольная точка" ищем задачи "В работе" с незакрытыми контрольными точками
         matches = task.status == TaskStatus.atWork;
         // Примечание: проверка контрольных точек будет происходить асинхронно в UI
       }
 
-      if (projectId != null) {
-        matches &= task.project?.projectId == projectId;
-      }
       if (userId != null && position != null) {
         switch (position) {
           case 'Коммуникатор':
@@ -220,5 +238,156 @@ class TaskProvider with ChangeNotifier {
       }
     }
     notifyListeners();
+  }
+
+  // Методы для управления Realtime подписками
+  void _setupRealtimeSubscriptions({
+    String? projectId,
+    String? position,
+    String? employeeId,
+  }) {
+    // Отписываемся от предыдущих подписок
+    disposeRealtimeSubscriptions();
+
+    _currentProjectId = projectId;
+    _currentPosition = position;
+    _currentEmployeeId = employeeId;
+
+    final client = Supabase.instance.client;
+//
+    // Подписываемся на изменения задач
+    if (projectId != null) {
+      // Для проектов подписываемся на все задачи проекта
+      _taskChannel = client
+          .channel('task_changes_project_$projectId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'task',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'project_id',
+              value: projectId,
+            ),
+            callback: (payload) {
+              print(
+                  'TaskProvider: Получено изменение задачи в проекте: $payload');
+              _handleTaskChange(payload);
+            },
+          )
+          .subscribe();
+    } else if (position != null && employeeId != null) {
+      // Для личных задач подписываемся на задачи пользователя
+      _taskChannel = client
+          .channel('task_changes_user_${position}_$employeeId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'task',
+            callback: (payload) {
+              print(
+                  'TaskProvider: Получено изменение задачи пользователя: $payload');
+              _handleTaskChange(payload);
+            },
+          )
+          .subscribe();
+    }
+
+    // Подписываемся на изменения контрольных точек
+    _controlPointChannel = client
+        .channel('control_point_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'control_point',
+          callback: (payload) {
+            print(
+                'TaskProvider: Получено изменение контрольной точки: $payload');
+            _handleControlPointChange(payload);
+          },
+        )
+        .subscribe();
+  }
+
+  void disposeRealtimeSubscriptions() {
+    _taskChannel?.unsubscribe();
+    _controlPointChannel?.unsubscribe();
+    _taskChannel = null;
+    _controlPointChannel = null;
+  }
+
+  void _handleTaskChange(PostgresChangePayload payload) {
+    final eventType = payload.eventType.name;
+    final record = payload.newRecord;
+    final oldRecord = payload.oldRecord;
+
+    print('TaskProvider: Обработка изменения задачи: $eventType');
+
+    switch (eventType) {
+      case 'INSERT':
+        if (record != null) {
+          _addTask(record);
+        }
+        break;
+      case 'UPDATE':
+        if (record != null) {
+          _updateTask(record);
+        }
+        break;
+      case 'DELETE':
+        if (oldRecord != null) {
+          _removeTask(oldRecord['id'] as String);
+        }
+        break;
+    }
+
+    // Обновляем категории и уведомляем слушателей
+    _refreshCategories();
+    notifyListeners();
+  }
+
+  void _handleControlPointChange(PostgresChangePayload payload) {
+    final eventType = payload.eventType.name;
+
+    print('TaskProvider: Обработка изменения контрольной точки: $eventType');
+
+    // При изменении контрольных точек обновляем категории и уведомляем слушателей
+    if (eventType == 'INSERT' ||
+        eventType == 'UPDATE' ||
+        eventType == 'DELETE') {
+      _refreshCategories();
+      notifyListeners();
+    }
+  }
+
+  void _addTask(Map<String, dynamic> taskData) {
+    try {
+      final task = Task.fromJson(taskData);
+      _tasks[task.id] = task;
+      print('TaskProvider: Добавлена новая задача: ${task.id}');
+    } catch (e) {
+      print('TaskProvider: Ошибка при добавлении задачи: $e');
+    }
+  }
+
+  void _updateTask(Map<String, dynamic> taskData) {
+    try {
+      final task = Task.fromJson(taskData);
+      _tasks[task.id] = task;
+      print('TaskProvider: Обновлена задача: ${task.id}');
+    } catch (e) {
+      print('TaskProvider: Ошибка при обновлении задачи: $e');
+    }
+  }
+
+  void _removeTask(String taskId) {
+    _tasks.remove(taskId);
+    print('TaskProvider: Удалена задача: $taskId');
+  }
+
+  @override
+  void dispose() {
+    disposeRealtimeSubscriptions();
+    super.dispose();
   }
 }

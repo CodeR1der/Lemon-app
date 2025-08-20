@@ -4,10 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:task_tracker/models/correction.dart';
 import 'package:task_tracker/models/task_role.dart';
 import 'package:task_tracker/models/task_status.dart';
-import 'package:task_tracker/screens/correction_details_screen.dart';
-import 'package:task_tracker/screens/correction_screen.dart';
+import 'package:task_tracker/screens/corrections/correction_details_screen.dart';
 
 import '../models/task.dart';
+import '../screens/corrections/correction_screen.dart';
 import '../screens/task/add_extra_time_screen.dart';
 
 class RevisionsCard extends StatelessWidget {

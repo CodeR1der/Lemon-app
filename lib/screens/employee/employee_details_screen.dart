@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/screens/task/position_tasks_tab.dart';
-import 'package:task_tracker/task_screens/task_title_screen.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/employee.dart';
@@ -9,6 +10,7 @@ import '../../models/project.dart';
 import '../../models/task.dart';
 import '../../models/task_category.dart';
 import '../../services/employee_operations.dart';
+import '../../services/navigation_service.dart';
 import '../../services/task_categories.dart';
 import '../../services/user_service.dart';
 
@@ -145,7 +147,8 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
     );
   }
 
-  Widget _buildSliverAppBar(String shortName, bool boxIsScrolled) {//
+  Widget _buildSliverAppBar(String shortName, bool boxIsScrolled) {
+    //
     return SliverAppBar(
       pinned: true,
       floating: true,
@@ -191,7 +194,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
         TabBar(
           tabAlignment: TabAlignment.center,
           controller: _tabController!,
-          isScrollable: _projects.length > 2,
+          isScrollable: true,
           labelColor: _primaryColor,
           unselectedLabelColor: Colors.grey,
           indicatorColor: _primaryColor,
@@ -360,11 +363,15 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
 
   Widget _buildProjectTab(String projectName, int taskCount) {
     return Tab(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(projectName),
-        ],//
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 120),
+        child: Text(
+          projectName,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -443,44 +450,17 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
 
   Widget _buildCreateTaskButton() {
     return Positioned(
-      left: _padding,
-      right: _padding,
-      bottom: _padding,
-      child: ElevatedButton(
-        onPressed: _navigateToCreateTask,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _accentColor,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add_circle, color: Colors.white, size: 24),
-            SizedBox(width: 8),
-            Text(
-              'Поставить задачу',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+        left: _padding,
+        right: _padding,
+        bottom: _padding,
+        child: AppButtons.primaryButton(
+            text: 'Поставить задачу',
+            icon: Iconsax.add_circle,
+            onPressed: _navigateToCreateTask));
   }
 
-  void _navigateToCreateTask() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TaskTitleScreen(employee: widget.employee),
-      ),
-    );
+  void _navigateToCreateTask() async {
+    await NavigationService.navigateToCreateTaskForEmployee(widget.employee);
   }
 
   String _getShortName(String fullName) {

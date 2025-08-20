@@ -112,9 +112,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   code: widget.companyCode,
                   position: position);
 
-              Navigator.of(context).pop();
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (_) => const BottomNavigationMenu()));
+              Get.offAll(() => const BottomNavigationMenu());
             },
           ),
         ),
@@ -161,15 +159,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       'lemon_${phone.replaceAll(RegExp(r'[-\s]'), '')}@lemon.ru',
                   password: 'lemon_app');
 
-              Navigator.of(context).pop();
-
-              // Переходим к экрану ввода кода для входа
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const BottomNavigationMenu(),
-                ),
-              );
+              Get.offAll(() => const BottomNavigationMenu());
             },
           ),
         ),
