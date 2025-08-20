@@ -1,12 +1,10 @@
 // auth_service.dart
 import 'dart:math';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   // Генерация OTP (4 цифры)
   String _generateOtp() => (100000 + Random().nextInt(900000)).toString();
@@ -45,6 +43,7 @@ class AuthService {
         'otp_code': null,
         'otp_expires_at': null,
         'otp_attempts': 0,
+        'is_verificated' : true,
       }).eq('phone', phone);
 
       return true;
@@ -69,13 +68,21 @@ class AuthService {
     return (response['otp_attempts'] ?? 0) >= 3; // Лимит 3 попытки
   }
 
-  Future<bool> isPhoneExist(String phone) async {
+  Future<bool> isPhoneExist(String phone, bool isAuth) async {
     final response = await _supabase
         .from('users')
-        .select()
+        .select('is_verificated')
         .eq('phone', phone)
-        .single();
+        .maybeSingle();
 
-    return response.isNotEmpty;
+    if (response == null) {
+      return false;
+    }
+
+    if ((response['is_verificated'] == true && isAuth) || (response['is_verificated'] == false && !isAuth)) {
+      return true;
+    }
+
+    return false;
   }
 }

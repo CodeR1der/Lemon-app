@@ -2,18 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
 
 import '../services/user_service.dart';
-import '../widgets/common/app_buttons.dart';
-import '../widgets/common/app_spacing.dart';
 import '../widgets/navigation_panel.dart';
 import 'auth_service.dart';
 import 'otp_verification_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   final SupabaseClient supabase;
+  bool isSignUp = true;
+  bool? isEmployee = false;
+  String? companyCode;
 
-  const AuthScreen({required this.supabase, super.key});
+  AuthScreen(
+      {required this.supabase,
+      required this.isSignUp,
+      this.isEmployee,
+      this.companyCode,
+      super.key});
 
   @override
   _AuthScreenState createState() => _AuthScreenState();
@@ -28,7 +35,6 @@ class _AuthScreenState extends State<AuthScreen> {
   final _phoneController = TextEditingController();
 
   bool _isOtpSent = false;
-  bool _isSignUp = true; // зарегистрироваться либо авторизоваться
   bool _isLoading = false; // загрузка данных в бд
   bool _isButtonEnabled = false; // все ли поля заполнены
 
@@ -54,10 +60,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _updateButtonState() {
     setState(() {
-      if (_isSignUp) {
+      if (widget.isSignUp!) {
         _isButtonEnabled = _surnameController.text.isNotEmpty &&
             _nameController.text.isNotEmpty &&
-            //_patronymicController.text.isNotEmpty &&
             _phoneController.text.isNotEmpty;
       } else {
         _isButtonEnabled = _phoneController.text.isNotEmpty;
@@ -75,7 +80,8 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
-      if (await AuthService().isPhoneExist(_phoneController.text) == true) {
+      if (await AuthService().isPhoneExist(_phoneController.text, false) ==
+          false) {
         throw ArgumentError('Данный номер уже зарегистрирован!');
       }
 
@@ -88,18 +94,27 @@ class _AuthScreenState extends State<AuthScreen> {
           builder: (_) => OtpVerificationScreen(
             phone: _phoneController.text,
             onVerified: (phone) async {
+              final role = widget.isEmployee == true
+                  ? 'Исполнитель / Постановщик'
+                  : 'Директор';
+              final position = widget.isEmployee == true
+                  ? _positionController.text
+                  : 'Директор';
+
               // Переходим к экрану завершения регистрации
               UserService.to.signUp(
-                  email: 'lemon_${phone.replaceAll(RegExp(r'[-\s]'), '')}@lemon.ru',
+                  email:
+                      'lemon_${phone.replaceAll(RegExp(r'[-\s]'), '')}@lemon.ru',
                   password: 'lemon_app',
                   name: _nameController.text,
                   phone: _phoneController.text,
-                  role: 'Директор',
-                  position: 'Директор');
+                  role: role,
+                  code: widget.companyCode,
+                  position: position);
 
               Navigator.of(context).pop();
               Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (_) => BottomNavigationMenu()));
+                  MaterialPageRoute(builder: (_) => const BottomNavigationMenu()));
             },
           ),
         ),
@@ -108,7 +123,6 @@ class _AuthScreenState extends State<AuthScreen> {
       Get.snackbar('Ошибка!', e.message);
     } catch (e) {
       Get.snackbar('Ошибка!', 'Ошибка при отправке смс-кода');
-      return;
     }
 
     setState(() {
@@ -126,31 +140,45 @@ class _AuthScreenState extends State<AuthScreen> {
       _isLoading = true;
     });
 
-    // Отправляем OTP для входа
-    await AuthService().sendOtp(_phoneController.text);
+    try {
+      if (await AuthService().isPhoneExist(_phoneController.text, true) ==
+          false) {
+        throw ArgumentError('Аккаунт не зарегистрирован!');
+      }
 
-    // Показываем экран ввода OTP для входа
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => OtpVerificationScreen(
-          phone: _phoneController.text,
-          onVerified: (phone) async {
-            UserService.to.signIn(email: 'lemon_${phone.replaceAll(RegExp(r'[-\s]'), '')}@lemon.ru', password: 'lemon_app');
+      // Отправляем OTP для входа
+      await AuthService().sendOtp(_phoneController.text);
 
-            Navigator.of(context).pop();
+      // Показываем экран ввода OTP для входа
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OtpVerificationScreen(
+            phone: _phoneController.text,
+            onVerified: (phone) async {
+              UserService.to.signIn(
+                  email:
+                      'lemon_${phone.replaceAll(RegExp(r'[-\s]'), '')}@lemon.ru',
+                  password: 'lemon_app');
 
-            // Переходим к экрану ввода кода для входа
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => BottomNavigationMenu(),
-              ),
-            );
-          },
+              Navigator.of(context).pop();
+
+              // Переходим к экрану ввода кода для входа
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const BottomNavigationMenu(),
+                ),
+              );
+            },
+          ),
         ),
-      ),
-    );
+      );
+    } on ArgumentError catch (e) {
+      Get.snackbar('Ошибка!', e.message);
+    } catch (e) {
+      Get.snackbar('Ошибка!', 'Ошибка при отправке смс-кода');
+    }
 
     setState(() {
       _isLoading = false;
@@ -161,16 +189,16 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isSignUp ? 'Регистрация' : 'Вход'),
+        title: Text(widget.isSignUp ? 'Регистрация' : 'Вход'),
         actions: [
           TextButton(
             onPressed: () {
               setState(() {
-                _isSignUp = !_isSignUp;
+                widget.isSignUp = !widget.isSignUp;
                 _updateButtonState();
               });
             },
-            child: Text(_isSignUp ? 'Войти' : 'Регистрация'),
+            child: Text(widget.isSignUp ? 'Войти' : 'Регистрация'),
           ),
         ],
       ),
@@ -178,7 +206,9 @@ class _AuthScreenState extends State<AuthScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: _isSignUp ? _buildRegistrationScreen() : _buildLoginScreen(),
+          child: widget.isSignUp
+              ? _buildRegistrationScreen()
+              : _buildLoginScreen(),
         ),
       ),
     );
@@ -187,6 +217,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget _buildRegistrationScreen() {
     return Column(
       children: [
+        AppSpacing.height24,
         _buildRegistrationSection('Фамилия', _surnameController),
         AppSpacing.height16,
         _buildRegistrationSection(
@@ -196,6 +227,10 @@ class _AuthScreenState extends State<AuthScreen> {
         AppSpacing.height16,
         _buildRegistrationSection('Отчество', _patronymicController,
             isPatronymic: true),
+        if (widget.isEmployee == true) ...[
+          AppSpacing.height16,
+          _buildRegistrationSection('Должность', _positionController),
+        ],
         AppSpacing.height16,
         _buildPhoneField(),
         AppSpacing.height16,
@@ -213,21 +248,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget _buildLoginScreen() {
     return Column(
       children: [
-        const SizedBox(height: 20),
-        Text(
-          'Вход в приложение',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Введите номер телефона для получения кода',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-        ),
-        const SizedBox(height: 32),
+        AppSpacing.height24,
         _buildPhoneField(),
         const SizedBox(height: 24),
         _isLoading
@@ -250,18 +271,14 @@ class _AuthScreenState extends State<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleSmall),
+        Text(title, style: AppTextStyles.titleSmall),
         const SizedBox(height: 6),
         SizedBox(
           height: 44,
           child: TextFormField(
             controller: controller,
             obscureText: obscureText,
-            style: const TextStyle(
-              fontSize: 18,
-              fontFamily: 'Roboto',
-              color: Colors.black,
-            ),
+            style: AppTextStyles.bodySmall,
             decoration: InputDecoration(
               isCollapsed: true,
               filled: true,
@@ -299,9 +316,9 @@ class _AuthScreenState extends State<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Телефон',
-          style: Theme.of(context).textTheme.titleSmall,
+          style: AppTextStyles.titleSmall,
         ),
         const SizedBox(height: 6),
         SizedBox(
@@ -311,11 +328,7 @@ class _AuthScreenState extends State<AuthScreen> {
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
               prefixText: '+7 ',
-              prefixStyle: const TextStyle(
-                fontSize: 18,
-                fontFamily: 'Roboto',
-                color: Colors.black,
-              ),
+              prefixStyle: AppTextStyles.bodySmall,
               isCollapsed: true,
               filled: true,
               fillColor: Colors.white,
@@ -334,17 +347,9 @@ class _AuthScreenState extends State<AuthScreen> {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               hintText: 'XXX XXX-XX-XX',
-              hintStyle: const TextStyle(
-                fontSize: 18,
-                fontFamily: 'Roboto',
-                color: Colors.grey,
-              ),
+              hintStyle: AppTextStyles.titleSmall,
             ),
-            style: const TextStyle(
-              fontSize: 18,
-              fontFamily: 'Roboto',
-              color: Colors.black,
-            ),
+            style: AppTextStyles.bodySmall,
             onChanged: (value) {
               _updateButtonState();
             },

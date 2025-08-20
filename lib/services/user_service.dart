@@ -69,14 +69,12 @@ class UserService extends GetxService {
       isInitialized.value = false;
       String? companyId;
       bool companyCreated = false;
+      bool userCreated = false;
 
       // Проверка роли
       if (role != 'Директор' && role != 'Исполнитель / Постановщик') {
         throw Exception('Недопустимая роль: $role');
       }
-
-      // Транзакция для отката изменений
-      await _supabase.rpc('begin_transaction');
 
       try {
         if (role == 'Директор') {
@@ -115,6 +113,7 @@ class UserService extends GetxService {
         if (response.user == null) {
           throw Exception('Ошибка регистрации пользователя');
         }
+        userCreated = true;
 
         // Добавление сотрудника
         await _supabase.rpc('insert_employee', params: {
@@ -125,9 +124,6 @@ class UserService extends GetxService {
           'p_role': role,
           'p_phone': '+7 $phone',
         });
-
-        // Фиксация транзакции
-        await _supabase.rpc('commit_transaction');
 
         // Уведомление об успехе
         Get.snackbar(
@@ -141,9 +137,6 @@ class UserService extends GetxService {
         isLoggedIn.value = _currentUser.value != null;
         return true;
       } catch (e) {
-        // Откат транзакции при ошибке
-        await _supabase.rpc('rollback_transaction');
-
         // Дополнительная очистка для созданной компании
         if (companyCreated && companyId != null) {
           await _supabase.from('company').delete().eq('id', companyId);

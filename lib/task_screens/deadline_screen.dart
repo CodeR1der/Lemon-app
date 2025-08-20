@@ -3,12 +3,14 @@ import 'package:task_tracker/models/priority.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/task_screens/task_title_screen.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
 import 'package:task_tracker/widgets/common/app_spacing.dart';
 import 'package:task_tracker/widgets/common/app_text_styles.dart';
 
 import '../models/employee.dart';
 import '../models/task.dart';
 import '../screens/task/task_details_screen.dart';
+import '../widgets/common/app_common_widgets.dart';
 import 'select_period_screen.dart';
 
 class DeadlineScreen extends StatefulWidget {
@@ -160,116 +162,132 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
               _buildPriorityDropdown(),
               const Spacer(),
               SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    // Сохраняем данные в объекте задачи
-                    widget.taskData.startDate = selectedStartDate;
-                    widget.taskData.endDate = selectedEndDate;
-                    widget.taskData.priority = selectedPriority;
+                  width: double.infinity,
+                  child: AppButtons.primaryButton(
+                      text: 'Создать задачу',
+                      onPressed: () async {
+                        // Сохраняем данные в объекте задачи
+                        widget.taskData.startDate = selectedStartDate;
+                        widget.taskData.endDate = selectedEndDate;
+                        widget.taskData.priority = selectedPriority;
 
-                    // Показываем индикатор загрузки
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) {
-                        return const AlertDialog(
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 16),
-                              Text('Сохранение задачи...'),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-
-                    try {
-                      if (!widget.taskData.project!.team.contains(widget.taskData.team.teamMembers.first)) {
-                        _addEmployeeToProjectIfNeeded(widget.taskData.team.teamMembers.first);
-                      }
-
-                      // Дожидаемся завершения сохранения
-                      await _database.addNewTask(widget.taskData);
-
-                      // Закрываем индикатор загрузки
-                      if (mounted) {
-                        Navigator.of(context).pop();
-                      }
-
-                      // Показываем успешное сообщение
-                      if (mounted) {
                         showDialog(
                           context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Успех'),
-                              content: const Text('Задача успешно сохранена!'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-
-                                    Navigator.popUntil(
-                                        context,
-                                        ModalRoute.withName(
-                                            TaskTitleScreen.routeName));
-                                    Navigator.pop(context);
-
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              TaskDetailsScreen(
-                                                  task: widget.taskData),
-                                        ));
-                                  },
-                                  child: const Text('Принять'),
-                                ),
-                              ],
+                          barrierDismissible: false,
+                          builder: (context) {
+                            return const AlertDialog(
+                              backgroundColor: Colors.white,
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(),
+                                  SizedBox(height: 16),
+                                  Text('Сохранение задачи...'),
+                                ],
+                              ),
                             );
                           },
                         );
-                      }
-                    } catch (e) {
-                      // Закрываем индикатор загрузки
-                      if (mounted) {
-                        Navigator.of(context).pop();
-                      }
 
-                      // Показываем сообщение об ошибке
-                      if (mounted) {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Ошибка'),
-                              content: Text('Не удалось сохранить задачу: $e'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text('ОК'),
-                                ),
-                              ],
+                        try {
+                          if (!widget.taskData.project!.team.contains(
+                              widget.taskData.team.teamMembers.first)) {
+                            _addEmployeeToProjectIfNeeded(
+                                widget.taskData.team.teamMembers.first);
+                          }
+
+                          // Дожидаемся завершения сохранения
+                          await _database.addNewTask(widget.taskData);
+
+                          // Закрываем индикатор загрузки
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                          }
+
+                          // Показываем успешное сообщение
+                          if (mounted) {
+                            AppCommonWidgets.showSuccessAlert(
+                                onClose: () {
+                                  Navigator.of(context).pop();
+
+                                  Navigator.popUntil(
+                                      context,
+                                      ModalRoute.withName(
+                                          TaskTitleScreen.routeName));
+                                  Navigator.pop(context);
+
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => TaskDetailsScreen(
+                                            task: widget.taskData),
+                                      ));
+                                },
+                                title: 'Задача поставлена',
+                                context: context,
+                                message:
+                                    'Вы можете ознакомиться с задачей которую поставили');
+                            // showDialog(
+                            //   context: context,
+                            //   builder: (BuildContext context) {
+                            //     return AlertDialog(
+                            //       backgroundColor: AppColors.alertGreen,
+                            //       title: const Text('Задача поставлена'),
+                            //       content: const Text('Задача успешно сохранена!'),
+                            //       actions: [
+                            //         TextButton(
+                            //           onPressed: () {
+                            //             Navigator.of(context).pop();
+                            //
+                            //             Navigator.popUntil(
+                            //                 context,
+                            //                 ModalRoute.withName(
+                            //                     TaskTitleScreen.routeName));
+                            //             Navigator.pop(context);
+                            //
+                            //             Navigator.push(
+                            //                 context,
+                            //                 MaterialPageRoute(
+                            //                   builder: (context) =>
+                            //                       TaskDetailsScreen(
+                            //                           task: widget.taskData),
+                            //                 ));
+                            //           },
+                            //           child: const Text('Принять'),
+                            //         ),
+                            //       ],
+                            //     );
+                            //   },
+                            // );
+                          }
+                        } catch (e) {
+                          // Закрываем индикатор загрузки
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                          }
+
+                          // Показываем сообщение об ошибке
+                          if (mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Ошибка'),
+                                  content:
+                                      Text('Не удалось сохранить задачу: $e'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                      child: const Text('ОК'),
+                                    ),
+                                  ],
+                                );
+                              },
                             );
-                          },
-                        );
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('Создать задачу'),
-                ),
-              ),
+                          }
+                        }
+                      })),
               SizedBox(height: MediaQuery.of(context).padding.bottom),
             ],
           ),
@@ -305,9 +323,7 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
     } catch (e) {
       print('Ошибка при добавлении сотрудника в проект: $e');
       // Показываем уведомление пользователю
-      if (mounted) {
-
-      }
+      if (mounted) {}
     }
   }
 }

@@ -11,4 +11,5 @@ class AppColors{
   static const Color counterGrey = Color(0xffbE9E9E9);
   static const Color appPrimary = Color(0xffbFECB00); //Color(0xffbFECB00)
   static const Color bottomOnboardingWhite = Color(0xffbFFFFFF);
+  static const Color alertGreen = Color(0xffbF2FFE2);
 }

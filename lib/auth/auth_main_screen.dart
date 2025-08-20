@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:task_tracker/auth/qr_scanner_screen.dart';
 
 import '../widgets/common/app_buttons.dart';
 import '../widgets/common/app_spacing.dart';
 import 'auth_screen.dart';
-import 'login_screen.dart';
 
 class AuthMainScreen extends StatelessWidget {
   const AuthMainScreen({super.key});
@@ -19,26 +19,22 @@ class AuthMainScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Логотип или заголовок
-              const SizedBox(height: 60),
-              Icon(
-                Icons.task_alt,
-                size: 80,
-                color: Theme.of(context).primaryColor,
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Task Tracker',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                    ),
+              const SizedBox(height: 150),
+              Image.asset(
+                'assets/lemon_app_logo.webp',
+                height: 54,
+                width: 282,
               ),
               const SizedBox(height: 8),
               Text(
                 'Управление задачами и проектами',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(
+                  color: Colors.grey[600],
+                ),
                 textAlign: TextAlign.center,
               ),
               const Spacer(),
@@ -51,7 +47,7 @@ class AuthMainScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
-                          AuthScreen(supabase: Supabase.instance.client),
+                          AuthScreen(supabase: Supabase.instance.client, isSignUp: true),
                     ),
                   );
                 },
@@ -65,11 +61,34 @@ class AuthMainScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const LoginScreen(),
+                      builder: (_) => AuthScreen(supabase: Supabase.instance.client, isSignUp: false),
                     ),
                   );
                 },
                 icon: Icons.login,
+              ),
+
+              AppSpacing.height16,
+
+
+              AppButtons.secondaryButton(
+                text: 'Сканнировать QR-код',
+                onPressed: () async {
+                  final code = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const QRScannerScreen(),
+                    ),
+                  );
+
+                  if (code != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => AuthScreen(supabase: Supabase.instance.client, isSignUp: true, isEmployee: true, companyCode: code.toString()))
+                    );
+                  }
+                },
+                icon: Icons.qr_code,
               ),
 
               const SizedBox(height: 40),
