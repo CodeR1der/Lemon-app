@@ -29,8 +29,6 @@ class OverdueLayoutStrategy extends BaseTaskLayoutStrategy {
   List<Widget> _buildExecutorLayout(BuildContext context, Task task,
       List<Correction> revisions, List<ControlPoint> controlPoints) {
     return [
-      buildControlPointsSection(
-          context, task, TaskRole.executor, controlPoints),
       if (revisions.isNotEmpty && revisions.any((revision) => !revision.isDone))
         buildRevisionsSection(context, task, TaskRole.executor, revisions),
       const Divider(),
@@ -65,7 +63,6 @@ class OverdueLayoutStrategy extends BaseTaskLayoutStrategy {
   List<Widget> _buildCreatorLayout(BuildContext context, Task task,
       List<Correction> revisions, List<ControlPoint> controlPoints) {
     return [
-      buildControlPointsSection(context, task, TaskRole.creator, controlPoints),
       buildSectionItem(icon: Iconsax.edit_copy, title: 'Доработки и запросы'),
       const Divider(),
       buildHistorySection(context, revisions),
@@ -76,7 +73,6 @@ class OverdueLayoutStrategy extends BaseTaskLayoutStrategy {
   List<Widget> _buildNoneRoleLayout(BuildContext context, Task task,
       List<Correction> revisions, List<ControlPoint> controlPoints) {
     return [
-      buildControlPointsSection(context, task, TaskRole.none, controlPoints),
       buildHistorySection(context, revisions)
     ];
   }

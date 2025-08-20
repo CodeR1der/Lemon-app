@@ -25,9 +25,7 @@ class CompletedLayoutStrategy extends BaseTaskLayoutStrategy {
       List<Correction> revisions, List<ControlPoint> controlPoints) {
     // Implement completed task layout
     return [
-      buildControlPointsSection(
-          context, task, TaskRole.executor, controlPoints),
-      buildHistorySection(context, revisions),
+       buildHistorySection(context, revisions),
     ];
   }
 }

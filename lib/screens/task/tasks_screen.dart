@@ -1,7 +1,6 @@
 // tasks_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:task_tracker/services/user_service.dart';
 
 import '../../models/employee.dart';
 import '../../services/task_provider.dart';
@@ -30,7 +29,8 @@ class _TasksScreenState extends State<TasksScreen> {
             isScrollable: true,
             tabAlignment: TabAlignment.center,
             tabs: [
-              if (user.role == "Коммуникатор") const Tab(text: 'Я коммуникатор'),
+              if (user.role == "Коммуникатор")
+                const Tab(text: 'Я коммуникатор'),
               const Tab(text: 'Я исполнитель'),
               const Tab(text: 'Я постановщик'),
               const Tab(text: 'Я наблюдатель'),

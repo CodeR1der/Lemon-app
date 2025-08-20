@@ -101,20 +101,23 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
+          AppSpacing.height16,
           _buildShimmerUserInfo(),
-          const SizedBox(height: 20),
+          AppSpacing.height16,
           _buildShimmerSearchBox(),
-          const SizedBox(height: 20),
+          AppSpacing.height16,
           _buildShimmerButton(),
-          const SizedBox(height: 20),
-          _buildShimmerAnnouncement(),
-          const SizedBox(height: 20),
+          AppSpacing.height16,
+          if (UserService.to.currentUser!.role == 'Директор' ||
+              UserService.to.currentUser!.role == 'Коммуникатор') ...[
+            _buildShimmerAnnouncement()
+          ],
+          AppSpacing.height16,
           _buildShimmerSection(title: 'Мои задачи', itemCount: 4),
-          const SizedBox(height: 20),
+          AppSpacing.height16,
           _buildShimmerSection(
               title: 'Сотрудники', itemCount: 3, isHorizontal: true),
-          const SizedBox(height: 20),
+          AppSpacing.height16,
           _buildShimmerSection(
               title: 'Проекты', itemCount: 2, isHorizontal: true),
         ],

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:task_tracker/screens/employee/employee_details_screen.dart';
 
 import '../models/employee.dart';
 import '../models/task.dart';
@@ -119,6 +119,12 @@ class _TaskTeamTab extends State<TaskTeamTab> {
                     color: Colors.grey.shade600,
                   ),
             ),
+            onTap: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => EmployeeDetailScreen(employee: employee))
+              )
+            },
           ),
       ],
     );

@@ -28,7 +28,7 @@ class RevisionLayoutStrategy extends BaseTaskLayoutStrategy {
 
   List<Widget> _buildExecutorLayout(BuildContext context, Task task,
       List<Correction> revisions, List<ControlPoint> controlPoints) {
-    return _buildCommunicatorLayout(context, task, revisions, controlPoints);
+    return [];
   }
 
   List<Widget> _buildCommunicatorLayout(BuildContext context, Task task,

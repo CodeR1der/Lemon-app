@@ -14,7 +14,8 @@ enum TaskStatus {
   extraTime, // Запросы на дополнительное время
   overdue, // Просроченная задача
   completedUnderReview, // Завершенная задача на проверке
-  completed // завершенная
+  completed, // завершенная
+  closed // закрытая
 }
 
 class StatusHelper {
@@ -46,6 +47,8 @@ class StatusHelper {
         return 'Завершенная задача на проверке';
       case TaskStatus.completed:
         return 'Архив задач';
+      case TaskStatus.closed:
+        return 'Закрытая';
     }
   }
 
@@ -116,6 +119,11 @@ class StatusHelper {
       case 'completed':
         return TaskStatus.completed;
 
+      case 'Закрытая':
+        return TaskStatus.closed;
+      case 'closed':
+        return TaskStatus.closed;
+
       default:
         throw ArgumentError('Неизвестный статус задачи: $status');
     }
@@ -148,6 +156,8 @@ class StatusHelper {
       case TaskStatus.completedUnderReview:
         return Iconsax.search_normal_copy;
       case TaskStatus.completed:
+        return Iconsax.folder_open_copy;
+      case TaskStatus.closed:
         return Iconsax.folder_open_copy;
     }
   }
