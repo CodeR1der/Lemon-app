@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:task_tracker/auth/auth_main_screen.dart';
 
 import '../services/user_service.dart';
-import 'auth_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
   final Widget homeScreen;
@@ -46,7 +46,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
       }
       return userService.isLoggedIn.value
           ? widget.homeScreen
-          : AuthScreen(supabase: widget.supabase);
+          : const AuthMainScreen();
     });
   }
 }

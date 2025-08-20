@@ -71,37 +71,39 @@ class UserService extends GetxService {
 
       String? companyId;
       bool companyCreated = false;
+      bool userCreated = false;
 
       // Проверка роли
       if (role != 'Директор' && role != 'Исполнитель / Постановщик') {
         throw Exception('Недопустимая роль: $role');
       }
 
-      if (role == 'Директор') {
-        final companyCode = await _generateUniqueCode();
-        final companyResponse = await _supabase
-            .from('company')
-            .insert({
-              'code': companyCode,
-            })
-            .select('id')
-            .single();
-        companyId = companyResponse['id'];
-      } else if (role == 'Исполнитель / Постановщик') {
-        if (code == null || !RegExp(r'^[A-Z0-9]{6}$').hasMatch(code)) {
-          throw Exception(
-              'Код компании должен состоять из 6 заглавных букв или цифр');
+      try {
+        if (role == 'Директор') {
+          // Создание компании
+          final companyCode = await _generateUniqueCode();
+          final companyResponse = await _supabase
+              .from('company')
+              .insert({'code': companyCode})
+              .select('id')
+              .single();
+          companyId = companyResponse['id'];
+          companyCreated = true;
+        } else if (role == 'Исполнитель / Постановщик') {
+          // Проверка кода компании
+          if (code == null || !RegExp(r'^[A-Z0-9]{6}$').hasMatch(code)) {
+            throw Exception('Код компании должен состоять из 6 заглавных букв или цифр');
+          }
+          final company = await _supabase
+              .from('company')
+              .select('id')
+              .eq('code', code.toUpperCase())
+              .single();
+          if (company.isEmpty) {
+            throw Exception('Компания с кодом $code не найдена');
+          }
+          companyId = company['id'];
         }
-        final company = await _supabase
-            .from('company')
-            .select('id')
-            .eq('code', code.toUpperCase())
-            .single();
-        if (company.isEmpty) {
-          throw Exception('Компания с кодом $code не найдена');
-        }
-        companyId = company['id'];
-      }
 
         // Регистрация пользователя
         final response = await _supabase.auth.signUp(
@@ -113,6 +115,7 @@ class UserService extends GetxService {
         if (response.user == null) {
           throw Exception('Ошибка регистрации пользователя');
         }
+        userCreated = true;
 
         // Добавление сотрудника
         await _supabase.rpc('insert_employee', params: {
@@ -123,9 +126,6 @@ class UserService extends GetxService {
           'p_role': role,
           'p_phone': '+7 $phone',
         });
-
-        // Фиксация транзакции
-        await _supabase.rpc('commit_transaction');
 
         // Уведомление об успехе
         Get.snackbar(
@@ -138,8 +138,14 @@ class UserService extends GetxService {
         await initializeUser(response.user!.id);
         isLoggedIn.value = _currentUser.value != null;
         return true;
+      } catch (e) {
+        // Дополнительная очистка для созданной компании
+        if (companyCreated && companyId != null) {
+          await _supabase.from('company').delete().eq('id', companyId);
+        }
+
+        rethrow;
       }
-      return false;
     } catch (e) {
       print(e);
       Get.snackbar(

@@ -81,7 +81,7 @@ class AppTextStyles {
   static const TextStyle buttonText = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w400,
-    color: Colors.white,
+    color: Colors.black,
     fontFamily: 'Roboto',
   );
 

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:task_tracker/auth/auth_main_screen.dart';
 import 'package:task_tracker/models/announcement.dart';
 import 'package:task_tracker/screens/annoncement/add_announcement.dart';
 import 'package:task_tracker/screens/annoncement/announcement_screen.dart';
@@ -20,7 +21,6 @@ import 'package:task_tracker/task_screens/task_title_screen.dart';
 import 'package:task_tracker/widgets/navigation_panel.dart';
 
 import 'auth/auth.dart';
-import 'auth/auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -88,7 +88,7 @@ class MyApp extends StatelessWidget {
               GetPage(name: '/', page: () => const BottomNavigationMenu()),
               GetPage(
                   name: '/auth',
-                  page: () => AuthScreen(supabase: Supabase.instance.client)),
+                  page: () => const AuthMainScreen()),
               GetPage(
                   name: HomeScreen.routeName, page: () => const HomeScreen()),
               GetPage(

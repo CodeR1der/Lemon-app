@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '/models/project.dart';
 import '/services/user_service.dart';
 import '../../services/project_provider.dart';
+import '../../widgets/common/app_buttons.dart';
 import 'add_project_screen.dart';
 import 'project_details_screen.dart';
 
@@ -114,38 +115,13 @@ class ProjectScreen extends StatelessWidget {
               ),
             ),
             bottomSheet: isDirector
-                ? Container(
+                ?
+                    Container(
                     color: Colors.white,
                     padding: const EdgeInsets.symmetric(
                         vertical: 24, horizontal: 16),
                     width: double.infinity,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => {_openAddProjectScreen(context)},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          elevation: 4,
-                          shadowColor: Colors.blue.withOpacity(0.3),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Iconsax.box_add, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Добавить проект',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    child: AppButtons.primaryButton(text: 'Добавить проект', icon: Iconsax.box_add ,  onPressed: () => _openAddProjectScreen(context))
                   )
                 : null,
           );

@@ -189,6 +189,24 @@ class ProjectService {
     }
   }
 
+  /// Удаление сотрудника из команды проекта
+  Future<bool> removeEmployeeFromProject(
+      String projectId, String employeeId) async {
+    try {
+      final response = await _client
+          .from('project_team')
+          .delete()
+          .eq('project_id', projectId)
+          .eq('employee_id', employeeId);
+
+      print('Сотрудник успешно удален из команды проекта');
+      return true;
+    } catch (e) {
+      print('Ошибка при удалении сотрудника из команды проекта: $e');
+      return false;
+    }
+  }
+
   // Получение списка всех проектов
   Future<List<Project>> getAllProjects() async {
     try {
@@ -206,6 +224,52 @@ class ProjectService {
       return projectList;
     } on PostgrestException catch (error) {
       print('Ошибка при получении списка проектов: ${error.message}');
+      return [];
+    }
+  }
+
+  // Получение списка проектов компании
+  Future<List<Project>> getProjectsByCompany(String companyId) async {
+    try {
+      final response = await _client.from('project').select('''*,
+      project_description_id:project_description_id(*),
+      project_team:project_team(
+        *,
+        employee:employee_id(*)
+      )
+    ''').eq('company_id', companyId);
+
+      List<Project> projectList = (response as List<dynamic>).map((data) {
+        return Project.fromJson(data as Map<String, dynamic>);
+      }).toList();
+      return projectList;
+    } on PostgrestException catch (error) {
+      print('Ошибка при получении проектов компании: ${error.message}');
+      return [];
+    }
+  }
+
+  // Получение проектов, в которых участвует сотрудник
+  Future<List<Project>> getProjectsByEmployee(String employeeId) async {
+    try {
+      final response = await _client.from('project_team').select('''*,
+        project:project_id(
+          *,
+          project_description_id:project_description_id(*),
+          project_team:project_team(
+            *,
+            employee:employee_id(*)
+          )
+        )
+      ''').eq('employee_id', employeeId);
+
+      List<Project> projectList = (response as List<dynamic>).map((data) {
+        final projectData = data['project'] as Map<String, dynamic>;
+        return Project.fromJson(projectData);
+      }).toList();
+      return projectList;
+    } on PostgrestException catch (error) {
+      print('Ошибка при получении проектов сотрудника: ${error.message}');
       return [];
     }
   }

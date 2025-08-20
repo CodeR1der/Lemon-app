@@ -406,8 +406,8 @@ class AppCommonWidgets {
     final employeeService = EmployeeService();
 
     return ListTile(
-      contentPadding: contentPadding ??
-          const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      contentPadding:
+          contentPadding ?? const EdgeInsets.symmetric(vertical: 4.0),
       leading: CircleAvatar(
         radius: avatarRadius,
         backgroundImage: employee.avatarUrl != null &&
@@ -564,6 +564,29 @@ class AppCommonWidgets {
           ),
         ),
       ),
+    );
+  }
+
+  /// Показать алерт успеха
+  static Future<void> showSuccessAlert({
+    required BuildContext context,
+    required String title,
+    required String message,
+    String buttonText = 'Закрыть',
+    VoidCallback? onClose,
+    bool dismissible = true,
+  }) {
+    return showDialog(
+      context: context,
+      barrierDismissible: dismissible,
+      builder: (BuildContext context) {
+        return _SuccessAlertDialog(
+          title: title,
+          message: message,
+          buttonText: buttonText,
+          onClose: onClose,
+        );
+      },
     );
   }
 }
@@ -998,5 +1021,116 @@ class _CalendarWidgetState extends State<_CalendarWidget> {
   @override
   Widget build(BuildContext context) {
     return _buildCalendar();
+  }
+}
+
+/// Приватный виджет алерта успеха
+class _SuccessAlertDialog extends StatelessWidget {
+  final String title;
+  final String message;
+  final String buttonText;
+  final VoidCallback? onClose;
+
+  const _SuccessAlertDialog({
+    required this.title,
+    required this.message,
+    required this.buttonText,
+    this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // Закрываем диалог при нажатии вне его области
+        Navigator.of(context).pop();
+        // Выполняем ожидаемое действие
+        onClose?.call();
+      },
+      child: Container(
+        color: Colors.black.withOpacity(0.3),
+        child: Center(
+          child: GestureDetector(
+            onTap: () {
+              // Предотвращаем закрытие при нажатии на сам диалог
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 32),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5E8), // Светло-зеленый фон
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Иконка успеха
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF4CAF50), // Зеленый цвет
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Заголовок
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  // Сообщение
+                  Text(
+                    message,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black54,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  // Кнопка закрытия
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        onClose?.call();
+                      },
+                      child: Text(
+                        buttonText,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF4CAF50), // Зеленый цвет
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

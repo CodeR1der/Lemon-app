@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
+import 'package:task_tracker/widgets/common/app_colors.dart';
 import 'package:task_tracker/widgets/common/app_common_widgets.dart';
 import 'package:task_tracker/widgets/common/app_spacing.dart';
 import 'package:task_tracker/widgets/common/app_text_styles.dart';
@@ -75,10 +77,15 @@ class _SelectPeriodScreenState extends State<SelectPeriodScreen> {
                     _rangeEnd = date;
                   });
                 },
-                rangeColor: Colors.blue[50]!,
-                rangeStartColor: Colors.blue[400]!,
-                rangeEndColor: Colors.blue[400]!,
-                selectedColor: Colors.grey[600],
+                rangeColor: Colors
+                    .transparent, // Прозрачный цвет для дней между началом и концом
+                rangeStartColor:
+                    AppColors.primaryGrey, // Цвет приложения для дня начала
+                rangeEndColor: AppColors.primaryGrey, // Цвет приложения для дня конца
+                selectedColor:
+                AppColors.primaryGrey, // Цвет приложения для выбранных дней
+                showNavigation: true,
+                showTodayIndicator: true,
               ),
               AppSpacing.height24,
               // Информация о выбранном периоде
@@ -119,7 +126,6 @@ class _SelectPeriodScreenState extends State<SelectPeriodScreen> {
                                       .split(' ')[0],
                                   style: AppTextStyles.bodyLarge.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.blue[700],
                                   ),
                                 ),
                               ],
@@ -142,8 +148,7 @@ class _SelectPeriodScreenState extends State<SelectPeriodScreen> {
                                         .toString()
                                         .split(' ')[0],
                                     style: AppTextStyles.bodyLarge.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.blue[700],
+                                      fontWeight: FontWeight.w600
                                     ),
                                   ),
                                 ],
@@ -157,7 +162,7 @@ class _SelectPeriodScreenState extends State<SelectPeriodScreen> {
               const Spacer(),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: AppButtons.primaryButton(
                   onPressed: (_rangeStart != null &&
                           _rangeEnd != null &&
                           _rangeStart?.compareTo(DateTime.now()
@@ -169,16 +174,8 @@ class _SelectPeriodScreenState extends State<SelectPeriodScreen> {
                       ? () {
                           Navigator.of(context).pop([_rangeStart!, _rangeEnd!]);
                         }
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('Сохранить'),
+                      : () {},
+                  text: 'Сохранить',
                 ),
               ),
               SizedBox(height: MediaQuery.of(context).padding.bottom),
