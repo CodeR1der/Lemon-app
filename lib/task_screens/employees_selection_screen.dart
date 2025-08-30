@@ -273,7 +273,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            employee.name,
+                            employee.fullName,
                             style: const TextStyle(fontSize: 15),
                             overflow: TextOverflow.ellipsis,
                           ),

@@ -115,7 +115,6 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final shortName = _getShortName(widget.employee.name);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -123,7 +122,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
         top: false,
         child: Stack(
           children: [
-            _buildNestedScrollView(shortName),
+            _buildNestedScrollView(widget.employee.shortName),
             if (_shouldShowCreateTaskButton) _buildCreateTaskButton(),
           ],
         ),
@@ -168,7 +167,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildAvatar(),
-            _buildProfileSection('ФИО', widget.employee.name),
+            _buildProfileSection('ФИО', widget.employee.fullName),
             const Divider(),
             _buildProfileSection('Роль', widget.employee.role),
             const Divider(),
@@ -463,10 +462,6 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
     await NavigationService.navigateToCreateTaskForEmployee(widget.employee);
   }
 
-  String _getShortName(String fullName) {
-    final nameParts = fullName.split(' ');
-    return nameParts.take(2).join(' ');
-  }
 
   bool get _shouldShowCreateTaskButton {
     final currentUser = UserService.to.currentUser;

@@ -92,7 +92,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                               final isSelected =
                                   _selectedEmployees.contains(employee);
                               return CheckboxListTile(
-                                title: Text(employee.name),
+                                title: Text(employee.fullName),
                                 subtitle: Text(employee.role),
                                 value: isSelected,
                                 onChanged: (bool? value) {
@@ -521,9 +521,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                         ),
                         ..._selectedEmployees.map((employee) => ListTile(
                               leading: CircleAvatar(
-                                child: Text(employee.name[0]),
+                                child: Text(employee.firstName),
                               ),
-                              title: Text(employee.name),
+                              title: Text(employee.fullName),
                               subtitle: Text(employee.role),
                               trailing: employee.userId != UserService.to.currentUser!.userId ? IconButton(
                                 icon: const Icon(Iconsax.trash,

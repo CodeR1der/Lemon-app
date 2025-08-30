@@ -28,6 +28,25 @@ class AnnouncementProvider with ChangeNotifier {
     return _announcements.values.toList();
   }
 
+  List<Announcement> getAnnouncementsForUser({
+    required String companyId,
+    required String userId,
+    required String userRole,
+  }) {
+    final allAnnouncements = getAnnouncements(companyId: companyId);
+
+    // Директоры и коммуникаторы видят все объявления
+    if (userRole == 'Директор' || userRole == 'Коммуникатор') {
+      return allAnnouncements;
+    }
+
+    // Обычные сотрудники видят только объявления, предназначенные для них
+    return allAnnouncements
+        .where(
+            (announcement) => announcement.selectedEmployees.contains(userId))
+        .toList();
+  }
+
   Future<void> loadAnnouncements({required String companyId}) async {
     try {
       _isLoading = true;
@@ -160,7 +179,7 @@ class AnnouncementProvider with ChangeNotifier {
         announcement.id,
         'created',
         currentUser.userId,
-        currentUser.name,
+        currentUser.fullName,
         currentUser.role,
         announcement.companyId,
       );
@@ -185,7 +204,7 @@ class AnnouncementProvider with ChangeNotifier {
       await AnnouncementService.closeAnnouncement(
         announcement,
         currentUser.userId,
-        currentUser.name,
+        currentUser.fullName,
         currentUser.role,
       );
 

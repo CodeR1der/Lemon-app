@@ -15,6 +15,7 @@ import '../../models/task_status.dart';
 import '../../services/request_operation.dart';
 import '../../services/task_provider.dart';
 import '../../task_screens/task_description_tab.dart';
+import '../../widgets/common/app_text_styles.dart';
 import '../task/edit_task_details_screen.dart';
 
 class CorrectionDetailsScreen extends StatelessWidget {
@@ -48,8 +49,8 @@ class CorrectionDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToEditDescriptionScreen(BuildContext context) {
-    Navigator.push(
+  void _navigateToEditDescriptionScreen(BuildContext context) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => EditTaskDetailsScreen(task: task),
@@ -284,7 +285,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
-              child: AppButtons.primaryButton(
+              child: AppButtons.secondaryButton(
                 onPressed: () {
                   if (correction.status == TaskStatus.needTicket) {
                     final taskProvider =
@@ -295,10 +296,11 @@ class CorrectionDetailsScreen extends StatelessWidget {
                         .updateCorrection(correction..isDone = true);
                     RequestService()
                         .updateCorrectionByStatus(task.id, TaskStatus.notRead);
+
+                    Navigator.pop(context, task);
                   } else {
                     _navigateToEditDescriptionScreen(context);
                   }
-                  Navigator.pop(context, task);
                 },
                 text: correction.status == TaskStatus.needTicket
                     ? 'Не принять'
@@ -348,7 +350,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: AppButtons.primaryButton(
+              child: AppButtons.secondaryButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -370,18 +372,32 @@ class CorrectionDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              width: double.infinity,
-              child: AppButtons.primaryButton(
-                onPressed: () {
-                  final taskProvider =
-                      Provider.of<TaskProvider>(context, listen: false);
-                  taskProvider.updateTaskStatus(task, TaskStatus.completed);
-                  RequestService().updateCorrection(correction..isDone = true);
-                  Navigator.pop(context, task);
-                },
-                text: "Завершить задачу и сдать в архив",
-              ),
-            ),
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final taskProvider =
+                        Provider.of<TaskProvider>(context, listen: false);
+                    taskProvider.updateTaskStatus(task, TaskStatus.completed);
+                    RequestService()
+                        .updateCorrection(correction..isDone = true);
+                    Navigator.pop(context, task);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xffbD73C3C),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                    shadowColor: Colors.blue.withOpacity(0.3),
+                  ),
+                  child: const Text("Завершить задачу и сдать в архив",
+                      style: TextStyle( fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: 'Roboto',)),
+                ))
           ] else ...[
             SizedBox(
               width: double.infinity,
@@ -399,7 +415,7 @@ class CorrectionDetailsScreen extends StatelessWidget {
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
-              child: AppButtons.primaryButton(
+              child: AppButtons.secondaryButton(
                 onPressed: () {
                   final taskProvider =
                       Provider.of<TaskProvider>(context, listen: false);

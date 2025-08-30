@@ -153,7 +153,7 @@ class OnboardingContentPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final translation =
-        OnboardingLoader.getTranslationForLocale(content, locale);
+        OnboardingLoader.getTranslationForLocale(content, 'ru');
 
     return Container(
       color: Colors.white,

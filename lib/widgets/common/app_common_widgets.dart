@@ -198,6 +198,7 @@ class AppCommonWidgets {
     required TextEditingController controller,
     required String hintText,
     bool isMultiline = false,
+    int? maxLines,
     TextInputType? keyboardType,
     ValueChanged<String>? onChanged,
     String? Function(String?)? validator,
@@ -207,7 +208,7 @@ class AppCommonWidgets {
       child: TextField(
         controller: controller,
         expands: isMultiline,
-        maxLines: null,
+        maxLines:  maxLines,
         keyboardType: keyboardType ??
             (isMultiline ? TextInputType.multiline : TextInputType.text),
         onChanged: onChanged,
@@ -406,8 +407,8 @@ class AppCommonWidgets {
     final employeeService = EmployeeService();
 
     return ListTile(
-      contentPadding:
-          contentPadding ?? const EdgeInsets.symmetric(vertical: 4.0),
+      contentPadding: contentPadding ??
+          const EdgeInsets.symmetric(vertical: 4.0),
       leading: CircleAvatar(
         radius: avatarRadius,
         backgroundImage: employee.avatarUrl != null &&
@@ -419,26 +420,29 @@ class AppCommonWidgets {
             : null,
       ),
       title: Text(
-        employee.name,
+        employee.fullName,
         style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 16),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: subtitle ??
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                employee.position,
-                style: const TextStyle(
-                  color: Colors.black38,
-                  fontSize: 12,
-                  fontFamily: 'Roboto',
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  employee.position,
+                  style: const TextStyle(
+                    color: Colors.black38,
+                    fontSize: 12,
+                    fontFamily: 'Roboto',
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+              ],
+            ),
           ),
       trailing: trailing,
       onTap: onTap ??
@@ -482,7 +486,7 @@ class AppCommonWidgets {
               : null,
         ),
         title: Text(
-          employee.name,
+          employee.fullName,
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
         subtitle: Text(employee.position),
@@ -543,7 +547,7 @@ class AppCommonWidgets {
               SizedBox(
                 height: 38,
                 child: Text(
-                  employee.name.split(' ').take(2).join(' '),
+                  employee.fullName.split(' ').take(2).join(' '),
                   style: AppTextStyles.bodySmall,
                   textAlign: TextAlign.center,
                   maxLines: 2,

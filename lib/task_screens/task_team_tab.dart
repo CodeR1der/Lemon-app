@@ -110,7 +110,7 @@ class _TaskTeamTab extends State<TaskTeamTab> {
               radius: 20,
             ),
             title: Text(
-              employee.name,
+              employee.fullName,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             subtitle: Text(
@@ -162,7 +162,7 @@ class _TaskTeamTab extends State<TaskTeamTab> {
                               final isSelected =
                                   _selectedEmployees.contains(employee);
                               return CheckboxListTile(
-                                title: Text(employee.name ?? 'Без имени'),
+                                title: Text(employee.fullName ?? 'Без имени'),
                                 subtitle: Text(employee.role ?? 'Без роли'),
                                 value: isSelected,
                                 onChanged: (bool? value) {
@@ -177,7 +177,7 @@ class _TaskTeamTab extends State<TaskTeamTab> {
                                   });
                                 },
                                 secondary: CircleAvatar(
-                                  child: Text(employee.name[0] ?? 'N'),
+                                  child: Text(employee.fullName ?? 'N'),
                                 ),
                               );
                             },

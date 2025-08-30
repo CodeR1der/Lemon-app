@@ -133,7 +133,7 @@ class AnnouncementService {
       final currentUser = UserService.to.currentUser;
       if (currentUser != null) {
         // Добавляем лог
-        await _addLogEntry(announcement.id, 'read', userId, currentUser.name,
+        await _addLogEntry(announcement.id, 'read', userId, currentUser.fullName,
             currentUser.role, announcement.companyId);
       }
     } catch (e) {

@@ -205,7 +205,7 @@ class _EmployeesModalSheetState extends State<EmployeesModalSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              employee.name,
+                              employee.fullName,
                               style: AppTextStyles.bodySmall,
                             ),
                             Text(

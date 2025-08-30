@@ -14,9 +14,11 @@ import 'package:task_tracker/screens/employee/profile_screen.dart';
 import 'package:task_tracker/screens/home_page.dart';
 import 'package:task_tracker/screens/project/projects_screen.dart';
 import 'package:task_tracker/screens/search_screen.dart';
+import 'package:task_tracker/screens/splash_screen.dart';
 import 'package:task_tracker/screens/task/task_details_screen.dart';
 import 'package:task_tracker/screens/task/tasks_screen.dart';
 import 'package:task_tracker/services/announcement_provider.dart';
+import 'package:task_tracker/services/onboarding_service.dart';
 import 'package:task_tracker/services/project_provider.dart';
 import 'package:task_tracker/services/task_provider.dart';
 import 'package:task_tracker/services/user_service.dart';
@@ -53,6 +55,7 @@ class InitialBindings extends Bindings {
   @override
   void dependencies() {
     Get.put(UserService(Supabase.instance.client));
+    Get.put(OnboardingService());
   }
 }
 
@@ -131,37 +134,10 @@ class MyApp extends StatelessWidget {
               fontFamily: 'Roboto',
             ),
             debugShowCheckedModeBanner: false,
-            home: FutureBuilder(
-              future: _initializeApp(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasError) {
-                    return Scaffold(
-                      body: Center(
-                          child: Text('Ошибка запуска: ${snapshot.error}')),
-                    );
-                  }
-                  return const BottomNavigationMenu();
-                }
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              },
-            ),
+            home:  const SplashScreen(),
           );
         },
       ),
     );
-  }
-
-  Future<void> _initializeApp() async {
-    try {
-      AuthWrapper(
-          supabase: Supabase.instance.client,
-          homeScreen: const BottomNavigationMenu());
-    } catch (e) {
-      print('Ошибка инициализации приложения: $e');
-      rethrow;
-    }
   }
 }

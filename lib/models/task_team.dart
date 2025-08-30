@@ -52,23 +52,21 @@ class TaskTeam {
     taskId = '';
     communicatorId = Employee(
       userId: '',
-      name: '',
       position: '',
       phone: '',
       telegramId: '',
       vkId: '',
       role: '',
-      companyId: '',
+      companyId: '', firstName: '', lastName: '',
     );
     creatorId = Employee(
       userId: '',
-      name: '',
       position: '',
       phone: '',
       telegramId: '',
       vkId: '',
       role: '',
-      companyId: '',
+      companyId: '', firstName: '', lastName: '',
     );
     observerId = null;
     teamMembers = [];

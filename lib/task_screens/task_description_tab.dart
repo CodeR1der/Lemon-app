@@ -7,6 +7,7 @@ import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/services/control_point_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
@@ -15,6 +16,7 @@ import 'package:video_player/video_player.dart';
 import '../models/task.dart';
 import '../models/task_role.dart';
 import '../models/task_status.dart';
+import '../services/task_provider.dart';
 import '../widgets/custom_player.dart';
 import '../widgets/task_layout/task_layout_builder.dart';
 
@@ -31,26 +33,49 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
   final TaskService _database = TaskService();
   TaskStatus? _displayStatus;
   bool _isLoadingStatus = true; //
+  late Task _currentTask;
 
   @override
   void initState() {
     super.initState();
+    _currentTask = widget.task;
     _determineDisplayStatus();
   }
 
+  @override
+  void dispose() {
+    // Очистка ресурсов если нужно
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Подписываемся на изменения задачи из провайдера
+    final taskProvider = Provider.of<TaskProvider>(context, listen: true);
+    final updatedTask = taskProvider.getTask(widget.task.id);
+
+    if (updatedTask != null && updatedTask != _currentTask) {
+      setState(() {
+        _currentTask = updatedTask;
+        // Переопределяем статус если задача обновилась
+        _determineDisplayStatus();
+      });
+    }
+  }
+
   Future<void> _determineDisplayStatus() async {
-    //
     final position = _getPosition();
     print('TaskDescriptionTab: Пользователь в роли: $position');
-    print('TaskDescriptionTab: Статус задачи: ${widget.task.status}');
+    print('TaskDescriptionTab: Статус задачи: ${_currentTask?.status}');
 
-    if (position == "Коммуникатор" && widget.task.status == TaskStatus.atWork) {
+    if (position == "Коммуникатор" &&
+        _currentTask?.status == TaskStatus.atWork) {
       print(
           'TaskDescriptionTab: Проверяем контрольные точки для коммуникатора');
-      // Для коммуникатора проверяем, есть ли незакрытые контрольные точки
       final controlPointService = ControlPointService();
       final hasUnclosedControlPoints =
-          await controlPointService.hasUnclosedControlPoints(widget.task.id);
+          await controlPointService.hasUnclosedControlPoints(_currentTask!.id);
       print(
           'TaskDescriptionTab: Есть незакрытые контрольные точки: $hasUnclosedControlPoints');
 
@@ -60,15 +85,12 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
             : TaskStatus.atWork;
         _isLoadingStatus = false;
       });
-      print('TaskDescriptionTab: Установлен статус: ${_displayStatus}');
     } else {
       print('TaskDescriptionTab: Используем реальный статус задачи');
-      // Для других ролей или статусов используем реальный статус
       setState(() {
-        _displayStatus = widget.task.status;
+        _displayStatus = _currentTask?.status;
         _isLoadingStatus = false;
       });
-      print('TaskDescriptionTab: Установлен статус: ${_displayStatus}');
     }
   }
 
@@ -92,16 +114,16 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
   }
 
   String _getPosition() {
-    if (widget.task.team.creatorId.userId ==
+    if (_currentTask.team.creatorId.userId ==
         UserService.to.currentUser!.userId) {
       return "Постановщик";
-    } else if (widget.task.team.communicatorId.userId ==
+    } else if (_currentTask.team.communicatorId.userId ==
         UserService.to.currentUser!.userId) {
       return "Коммуникатор";
-    } else if (widget.task.team.teamMembers
+    } else if (_currentTask.team.teamMembers
         .any((member) => member.userId == UserService.to.currentUser!.userId)) {
       return "Исполнитель";
-    } else if (widget.task.team.observerId?.userId ==
+    } else if (_currentTask.team.observerId?.userId ==
         UserService.to.currentUser!.userId) {
       return "Наблюдатель";
     } else {
@@ -111,6 +133,9 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
 
   @override
   Widget build(BuildContext context) {
+    final taskProvider = Provider.of<TaskProvider>(context, listen: true);
+    final currentTask = taskProvider.getTask(widget.task.id) ?? _currentTask;
+
     return Container(
       color: Colors.white,
       child: SingleChildScrollView(
@@ -172,7 +197,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
             // Проект
             Text('Проект', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
-            Text(widget.task.project?.name ?? 'Не указан',
+            Text(_currentTask.project?.name ?? 'Не указан',
                 style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
 
@@ -180,7 +205,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
             Text('Название задачи',
                 style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
-            Text(widget.task.taskName,
+            Text(_currentTask.taskName,
                 style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
 
@@ -188,7 +213,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
             Text('Описание задачи',
                 style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
-            Text(widget.task.description,
+            Text(_currentTask.description,
                 style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
             Row(
@@ -205,7 +230,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    widget.task.attachments.length.toString(),
+                    _currentTask.attachments.length.toString(),
                     style: TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
@@ -217,7 +242,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
             ),
             const SizedBox(height: 12),
 
-            widget.task.attachments.where((file) => _isImage(file)).isNotEmpty
+            _currentTask.attachments.where((file) => _isImage(file)).isNotEmpty
                 ? GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -227,18 +252,18 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                       crossAxisSpacing: 8.0,
                       mainAxisSpacing: 8.0,
                     ),
-                    itemCount: widget.task.attachments
+                    itemCount: _currentTask.attachments
                         .where((file) => _isImage(file))
                         .length,
                     itemBuilder: (context, index) {
-                      final photo = widget.task.attachments
+                      final photo = _currentTask.attachments
                           .where((file) => _isImage(file))
                           .toList()[index];
                       return GestureDetector(
                         onTap: () => _openPhotoGallery(
                           context,
                           index,
-                          widget.task.attachments
+                          _currentTask.attachments
                               .where((file) => _isImage(file))
                               .toList(),
                         ),
@@ -273,12 +298,12 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
-            if (widget.task.audioMessage != null)
+            if (_currentTask.audioMessage != null)
               Container(
                 color: Colors.white,
                 child: AudioPlayerWidget(
                   audioUrl:
-                      _database.getTaskAttachment(widget.task.audioMessage!),
+                      _database.getTaskAttachment(_currentTask.audioMessage!),
                 ),
               )
             else
@@ -299,7 +324,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    widget.task.videoMessage!.length.toString(),
+                    _currentTask.videoMessage!.length.toString(),
                     style: TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
@@ -310,7 +335,9 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
               ],
             ),
             const SizedBox(height: 8),
-            widget.task.videoMessage!.where((file) => _isVideo(file)).isNotEmpty
+            _currentTask.videoMessage!
+                    .where((file) => _isVideo(file))
+                    .isNotEmpty
                 ? GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -320,11 +347,11 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                       crossAxisSpacing: 8.0,
                       mainAxisSpacing: 8.0,
                     ),
-                    itemCount: widget.task.videoMessage!
+                    itemCount: _currentTask.videoMessage!
                         .where((file) => _isVideo(file))
                         .length,
                     itemBuilder: (context, index) {
-                      final video = widget.task.videoMessage!
+                      final video = _currentTask.videoMessage!
                           .where((file) => _isVideo(file))
                           .toList()[index];
                       final videoUrl = _database.getTaskAttachment(video);
@@ -350,7 +377,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                             onTap: () => _openVideoGallery(
                               context,
                               index,
-                              widget.task.videoMessage!
+                              _currentTask.videoMessage!
                                   .where((file) => _isVideo(file))
                                   .toList(),
                             ),
@@ -387,10 +414,12 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
             const Divider(),
 
             TaskLayoutBuilder(
-                task: widget.task,
-                role: RoleHelper.determineUserRoleInTask(
-                    currentUserId: UserService.to.currentUser!.userId,
-                    task: widget.task)),
+              task: currentTask ?? widget.task, // Используем обновленную задачу
+              role: RoleHelper.determineUserRoleInTask(
+                currentUserId: UserService.to.currentUser!.userId,
+                task: currentTask ?? widget.task,
+              ),
+            ),
             SizedBox(height: MediaQuery.of(context).padding.bottom),
           ],
         ),

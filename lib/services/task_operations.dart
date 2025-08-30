@@ -25,10 +25,10 @@ class TaskService {
   *,
       project:project_id(*,
         project_description_id:project_description_id(*),
-        project_observers:project_observers(
-          *,
-          employee:employee_id(*)
-        )
+        project_team:project_team(
+        *,
+        employee:employee_id(*)
+      )
       ),
       task_team: task_team!task_team_task_id_fkey(*,
         creator_id:creator_id(*),
@@ -505,7 +505,7 @@ class TaskService {
         task.id,
         'created',
         task.team.creatorId.userId,
-        task.team.creatorId.name,
+        task.team.creatorId.fullName,
         'Постановщик',
         task.companyId,
       );
@@ -736,10 +736,10 @@ class TaskService {
     }
   }
 
-  Future<void> updateDeadline(DateTime deadline, String taskId) async {
+  Future<void> updateDeadline(DateTime? deadline, String taskId) async {
     try {
       await Supabase.instance.client.from('task').update({
-        'deadline': deadline.toUtc().toIso8601String()
+        'deadline': deadline?.toUtc().toIso8601String()
         // Конвертируем в UTC строку
       }).eq('id', taskId);
     } catch (e) {
@@ -779,7 +779,7 @@ class TaskService {
         taskId,
         'status_changed',
         UserService.to.currentUser!.userId,
-        UserService.to.currentUser!.name,
+        UserService.to.currentUser!.fullName,
         UserService.to.currentUser!.role,
         currentTask.companyId,
         oldValue: oldStatus,

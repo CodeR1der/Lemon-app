@@ -66,7 +66,7 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
 
   Widget buildHistorySection(BuildContext context, List<Correction> revisions) {
     return buildSectionItem(
-      icon: Iconsax.clock_copy,
+      icon: Iconsax.task_square_copy,
       title: 'История задачи',
       onTap: () {
         Navigator.push(
@@ -100,6 +100,7 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
         children: [
           Row(
             children: [
+              const SizedBox(width: 8),
               const Icon(Iconsax.clock_copy,
                   size: 24, color: Color(0xFF6D7885)),
               const SizedBox(width: 16),
@@ -130,6 +131,7 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
         // Заголовок секции
         Row(
           children: [
+            const SizedBox(width: 8),
             Icon(Iconsax.clock_copy, size: 24, color: Color(0xFF6D7885)),
             SizedBox(width: 16),
             Expanded(
@@ -410,11 +412,11 @@ abstract class BaseTaskLayoutStrategy implements TaskLayoutStrategy {
   String _getExecutorName(Task task) {
     // Сначала проверяем teamMembers (исполнители)
     if (task.team.teamMembers.isNotEmpty) {
-      return task.team.teamMembers.first.name;
+      return task.team.teamMembers.first.fullName;
     }
 
     // Если нет исполнителей, возвращаем имя создателя
-    return task.team.creatorId.name;
+    return task.team.creatorId.fullName;
   }
 
   // Вспомогательный метод для получения телефона исполнителя

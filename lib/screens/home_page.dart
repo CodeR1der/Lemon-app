@@ -387,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              user.name.split(' ').take(2).join(' '),
+              user.fullName.split(' ').take(2).join(' '),
               style:
                   const TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
             ),
@@ -444,7 +444,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () {
         Get.toNamed('/search');
       },
-    );
+    ); //
   }
 
   Widget _buildAddTaskButton() {
@@ -476,8 +476,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAnnouncementSection() {
     return Consumer<AnnouncementProvider>(
       builder: (context, announcementProvider, child) {
-        final announcements = announcementProvider.getAnnouncements(
-          companyId: UserService.to.currentUser!.companyId,
+        final currentUser = UserService.to.currentUser!;
+        final announcements = announcementProvider.getAnnouncementsForUser(
+          companyId: currentUser.companyId,
+          userId: currentUser.userId,
+          userRole: currentUser.role,
         );
 
         if (announcements.isEmpty) {
@@ -500,7 +503,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return GestureDetector(
       onTap: () {
-        Get.toNamed('/announcement_detail', arguments: announcement);
+        // Проверяем доступ к объявлению перед переходом
+        final currentUser = UserService.to.currentUser!;
+        final hasAccess = currentUser.role == 'Директор' ||
+            currentUser.role == 'Коммуникатор' ||
+            announcement.selectedEmployees.contains(currentUser.userId);
+
+        if (hasAccess) {
+          Get.toNamed('/announcement_detail', arguments: announcement);
+        } else {
+          Get.snackbar(
+            'Ошибка доступа',
+            'У вас нет доступа к этому объявлению',
+            snackPosition: SnackPosition.TOP,
+          );
+        }
       },
       child: AppCommonWidgets.card(
         child: Padding(

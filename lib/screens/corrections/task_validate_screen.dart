@@ -11,9 +11,11 @@ import 'package:record/record.dart';
 import 'package:task_tracker/models/task_validate.dart';
 import 'package:task_tracker/services/request_operation.dart';
 import 'package:task_tracker/services/task_provider.dart';
+import 'package:task_tracker/widgets/common/app_button_styles.dart';
 
 import '../../models/task.dart';
 import '../../models/task_status.dart';
+import '../../widgets/common/app_buttons.dart';
 
 class TaskValidateScreen extends StatefulWidget {
   final Task task;
@@ -36,16 +38,14 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
   String? audioMessage;
   List<String> videoMessage = [];
   bool isRecording = false;
+  bool _isSubmitting = false;
 
   final AudioRecorder _audioRecorder = AudioRecorder();
   final ImagePicker _imagePicker = ImagePicker();
   final player = AudioPlayer();
 
   bool get _canSubmit {
-    return _descriptionController.text.isNotEmpty ||
-        attachments.isNotEmpty ||
-        audioMessage != null ||
-        videoMessage.isNotEmpty;
+    return _descriptionController.text.isNotEmpty;
   }
 
   Future<void> pickFile() async {
@@ -177,7 +177,11 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
   }
 
   void _submitCorrection() async {
-    if (!_canSubmit) return;
+    if (!_canSubmit || _isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
 
     try {
       final validate = _createValidate();
@@ -187,12 +191,14 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
       await taskProvider.updateTaskStatus(
           widget.task, TaskStatus.completedUnderReview);
 
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Задача отправлена на проверку')),
       );
-
-      Navigator.pop(context, TaskStatus.completedUnderReview);
     } catch (e) {
+      setState(() {
+        _isSubmitting = false;
+      });
     }
   }
 
@@ -452,15 +458,18 @@ class _TaskValidateScreenState extends State<TaskValidateScreen> {
         ),
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: _canSubmit ? _submitCorrection : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _canSubmit ? Colors.orange : Colors.grey,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          child: const Text('Отправить'),
+          onPressed: (_canSubmit && !_isSubmitting) ? _submitCorrection : null,
+          style: AppButtonStyles.primaryButton,
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Text('Отправить'),
         ),
       ),
     );

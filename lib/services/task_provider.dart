@@ -185,6 +185,23 @@ class TaskProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateTaskFields(Task task) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await TaskService().updateTask(task);
+      _tasks[task.id] = task;
+      await _refreshCategories();
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> updateTask(Task task) async {
     try {
       _isLoading = true;
@@ -204,7 +221,7 @@ class TaskProvider with ChangeNotifier {
 
   Future<void> updateTaskStatus(Task task, TaskStatus status) async {
     try {
-      _isLoading = true;
+       _isLoading = true;
       notifyListeners();
 
       final updatedTask = task.copyWith(status: status);

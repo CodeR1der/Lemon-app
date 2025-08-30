@@ -10,6 +10,7 @@ import '../../models/task.dart';
 import '../../services/request_operation.dart';
 import '../../services/task_provider.dart';
 import '../../services/user_service.dart';
+import '../../widgets/common/app_buttons.dart';
 
 class ChangeExecuterScreen extends StatefulWidget {
   final Task task;
@@ -59,7 +60,7 @@ class _ChangeExecuterScreen extends State<ChangeExecuterScreen> {
                 return const Center(child: Text('Нет доступных сотрудников'));
               }
 
-              final employees = snapshot.data!;
+              var employees = snapshot.data!;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,13 +80,21 @@ class _ChangeExecuterScreen extends State<ChangeExecuterScreen> {
                         });
                       }
                     },
-                    employees: employees,
+                    employees: employees
+                        .where((e) =>
+                            e.userId != widget.task.team.creatorId.userId &&
+                            e.userId !=
+                                widget.task.team.communicatorId.userId &&
+                            e.userId !=
+                                widget.task.team.teamMembers.first.userId &&
+                            widget.task.project!.team.any((el) => el.userId == e.userId))
+                        .toList(),
                   ),
                   const Spacer(),
                   Consumer<TaskProvider>(
                     builder: (context, taskProvider, child) => SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
+                      child: AppButtons.primaryButton(
                         onPressed: () {
                           if (selectedPerformer != null) {
                             // Создаем новую команду или обновляем существующую
@@ -93,6 +102,7 @@ class _ChangeExecuterScreen extends State<ChangeExecuterScreen> {
                                 widget.correction..isDone = true);
                             TaskService().updateExecuter(
                                 widget.task, selectedPerformer!);
+                            TaskService().updateDeadline(null, widget.task.id);
                             widget.task.team.teamMembers.first =
                                 selectedPerformer!;
                             taskProvider.updateTaskStatus(
@@ -100,11 +110,7 @@ class _ChangeExecuterScreen extends State<ChangeExecuterScreen> {
                             Navigator.pop(context);
                           }
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('Заменить исполнителя'),
+                        text: ('Заменить исполнителя'),
                       ),
                     ),
                   ),
@@ -184,7 +190,7 @@ class _ChangeExecuterScreen extends State<ChangeExecuterScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            employee.name,
+                            employee.fullName,
                             style: const TextStyle(fontSize: 15),
                             overflow: TextOverflow.ellipsis,
                           ),

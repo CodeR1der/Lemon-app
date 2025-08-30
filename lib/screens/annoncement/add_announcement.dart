@@ -105,11 +105,6 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     });
   }
 
-  String _getLastName(String fullName) {
-    final nameParts = fullName.trim().split(' ');
-    return nameParts.isNotEmpty ? nameParts.first : fullName;
-  }
-
   void _showEmployeesModal() {
     showModalBottomSheet(
       context: context,
@@ -265,8 +260,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                                               .contains(employee
                                                                   .userId))
                                                       .map((employee) =>
-                                                          _getLastName(
-                                                              employee.name))
+                                                          employee.shortName)
                                                       .join(', '),
                                                   style:
                                                       AppTextStyles.bodyLarge,

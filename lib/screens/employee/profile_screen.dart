@@ -14,6 +14,7 @@ import '../../services/user_service.dart';
 // Абстрактное состояние профиля
 abstract class ProfileState {
   Widget buildBody(_ProfileScreenState screen);
+
   Widget buildFloatingActionButton(_ProfileScreenState screen);
 }
 
@@ -163,7 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (url.isNotEmpty) {
       try {
         final Uri uri = Uri.parse(url);
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
       } catch (e) {
         Get.snackbar('Ошибка', 'Неверный формат ссылки');
       }
@@ -214,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserProfile() async {
     try {
       setState(() {
-        name = widget.user.name;
+        name = widget.user.fullName;
         position = widget.user.position;
         _phoneController.text = widget.user.phone ?? '';
         _telegramController.text = widget.user.telegramId ?? '';
@@ -235,7 +236,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await _employeeService.updateEmployee(Employee(
         userId: widget.user.userId,
-        name: name,
         position: position,
         phone: _phoneController.text,
         telegramId: _telegramController.text,
@@ -243,6 +243,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         avatarUrl: avatarUrl,
         role: role,
         companyId: widget.user.companyId,
+        firstName: widget.user.firstName,
+        lastName: widget.user.lastName,
+        middleName: widget.user.middleName ?? ''
       ));
       Get.snackbar('Успех', 'Профиль обновлен');
     } catch (e) {
@@ -306,8 +309,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
+
   Widget _buildLogOutButton() {
-    return AppButtons.greyButton(text: 'Выйти из аккаунта', icon: Icons.logout, iconColor: Colors.red, onPressed: _logout);
+    return AppButtons.greyButton(
+        text: 'Выйти из аккаунта',
+        icon: Icons.logout,
+        iconColor: Colors.red,
+        onPressed: _logout);
   }
 
   Widget _buildProfileSection(String title, String content) {
@@ -398,10 +406,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 13),
-        Text(
-          title,
-          style: AppTextStyles.titleSmall
-        ),
+        Text(title, style: AppTextStyles.titleSmall),
         const SizedBox(height: 8),
         if (isEditing)
           SizedBox(

@@ -112,7 +112,7 @@ class RequestService {
     try {
       final statusString = status.toString().substring(11);
       final correctionResponse =
-          await _client.from('correction').select('*').eq('task_id', taskId);
+          await _client.from('correction').select('*').eq('task_id', taskId).eq('is_done', false);
       //.eq('status', statusString);
 
       return correctionResponse

@@ -104,7 +104,7 @@ class _SearchScreenState extends State<SearchScreen> {
       }).toList();
 
       _filteredEmployees = _employees.where((employee) {
-        return employee.name.toLowerCase().contains(query) ||
+        return employee.fullName.toLowerCase().contains(query) ||
             employee.position.toLowerCase().contains(query);
       }).toList();
 

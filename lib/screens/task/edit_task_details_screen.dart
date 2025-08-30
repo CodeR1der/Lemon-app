@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:task_tracker/models/task.dart';
 import 'package:task_tracker/services/task_provider.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
+
+import '../../widgets/common/app_buttons.dart';
 
 class EditTaskDetailsScreen extends StatefulWidget {
   final Task task;
@@ -9,7 +12,7 @@ class EditTaskDetailsScreen extends StatefulWidget {
   const EditTaskDetailsScreen({super.key, required this.task});
 
   @override
-  _EditTaskDetailsScreenState createState() => _EditTaskDetailsScreenState();
+  State<EditTaskDetailsScreen> createState() => _EditTaskDetailsScreenState();
 }
 
 class _EditTaskDetailsScreenState extends State<EditTaskDetailsScreen> {
@@ -41,7 +44,7 @@ class _EditTaskDetailsScreenState extends State<EditTaskDetailsScreen> {
         );
 
         final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-        await taskProvider.updateTask(updatedTask);
+        await taskProvider.updateTaskFields(updatedTask);
 
         if (mounted) {
           Navigator.pop(context, updatedTask);
@@ -50,8 +53,7 @@ class _EditTaskDetailsScreenState extends State<EditTaskDetailsScreen> {
           );
         }
       } catch (e) {
-        if (mounted) {
-        }
+        if (mounted) {}
       }
     }
   }
@@ -75,42 +77,33 @@ class _EditTaskDetailsScreenState extends State<EditTaskDetailsScreen> {
             children: [
               Text(
                 'Название задачи',
-                style: Theme.of(context).textTheme.titleSmall,
+                style: AppTextStyles.titleSmall,
               ),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Введите название задачи',
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Название не может быть пустым';
-                  }
-                  return null;
-                },
-              ),
+              AppCommonWidgets.inputField(controller: _nameController, hintText: 'Введите название задачи'),//
+
               const SizedBox(height: 16),
               Text(
                 'Описание задачи',
-                style: Theme.of(context).textTheme.titleSmall,
+                style: AppTextStyles.titleSmall,
               ),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _descriptionController,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Введите описание задачи',
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Описание не может быть пустым';
-                  }
-                  return null;
-                },
-              ),
+              AppCommonWidgets.inputField(controller: _descriptionController,maxLines: 5, hintText: 'Введите описание задачи'),//
+
+              // TextFormField(
+              //   controller: _descriptionController,
+              //   maxLines: 5,
+              //   decoration: const InputDecoration(
+              //     border: OutlineInputBorder(),
+              //     hintText: 'Введите описание задачи',
+              //   ),
+              //   validator: (value) {
+              //     if (value == null || value.trim().isEmpty) {
+              //       return 'Описание не может быть пустым';
+              //     }
+              //     return null;
+              //   },
+              // ),
             ],
           ),
         ),
@@ -129,43 +122,10 @@ class _EditTaskDetailsScreenState extends State<EditTaskDetailsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Отмена',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black),
-                ),
-              ),
-            ),
+            AppButtons.secondaryButton(
+                text: 'Отмена', onPressed: () => Navigator.pop(context)),
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _saveTask,
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  'Сохранить',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
+            AppButtons.primaryButton(text: 'Сохранить', onPressed: _saveTask)
           ],
         ),
       ),

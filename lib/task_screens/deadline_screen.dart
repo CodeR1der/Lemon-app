@@ -207,8 +207,10 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
                           if (mounted) {
                             AppCommonWidgets.showSuccessAlert(
                                 onClose: () {
-                                  NavigationService().clearNavigationStack();
-                                  NavigationService.navigateToTaskDetails(widget.taskData);
+                                  NavigationService
+                                      .clearNavigationStackStatic();
+                                  NavigationService.navigateToTaskDetails(
+                                      widget.taskData);
                                 },
                                 title: 'Задача поставлена',
                                 context: context,
@@ -294,13 +296,13 @@ class _DeadlinescreenState extends State<DeadlineScreen> {
             widget.taskData.project!.projectId, employee.userId);
 
         if (added) {
-          print('Сотрудник ${employee.name} добавлен в команду проекта');
+          print('Сотрудник ${employee.fullName} добавлен в команду проекта');
           // Показываем уведомление пользователю об успешном добавлении
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                    'Сотрудник ${employee.name} добавлен в команду проекта'),
+                    'Сотрудник ${employee.fullName} добавлен в команду проекта'),
                 backgroundColor: Colors.green,
               ),
             );

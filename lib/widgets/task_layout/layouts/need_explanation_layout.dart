@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
 
 import '../../../models/control_point.dart';
 import '../../../models/correction.dart';
@@ -43,70 +44,30 @@ class NeedExplanationLayoutStrategy extends BaseTaskLayoutStrategy {
           revisions.any((revision) => !revision.isDone)) ...[
         buildRevisionsSection(context, task, TaskRole.communicator, revisions),
         Column(children: [
-          ElevatedButton(
-            onPressed: () {
-              RequestService().updateCorrection(notDoneRevision..isDone = true);
+          AppButtons.primaryButton(
+              text: 'Прислать письмо-решение',
+              onPressed: () {
+                RequestService()
+                    .updateCorrection(notDoneRevision..isDone = true);
 
-              RequestService().addCorrection(Correction(
-                  date: DateTime.now(),
-                  taskId: task.id,
-                  status: TaskStatus.needExplanation,
-                  description: 'Прислать письмо-решение'));
+                RequestService().addCorrection(Correction(
+                    date: DateTime.now(),
+                    taskId: task.id,
+                    status: TaskStatus.needExplanation,
+                    description: 'Прислать письмо-решение'));
 
-              task.changeStatus(TaskStatus.needTicket);
+                task.changeStatus(TaskStatus.needTicket);
 
-              print('Жалоба на некорректную постановку задачи');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(width: 8),
-                Text(
-                  'Прислать письмо-решение',
-                  style: TextStyle(
-                    color: Colors.white, // Белый текст
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
+                print('Жалоба на некорректную постановку задачи');
+              }),
           const SizedBox(height: 16),
-          ElevatedButton(
+          AppButtons.secondaryButton(
             onPressed: () {
-              RequestService().updateCorrection(notDoneRevision..isDone = true);
+              //RequestService().updateCorrection(notDoneRevision..isDone = true);
               task.changeStatus(TaskStatus.revision);
               print('Жалоба на некорректную постановку задачи');
             },
-            style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
-              side: const BorderSide(color: Colors.orange, width: 1),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(width: 8),
-                Text(
-                  'Отправить на доработку',
-                  style: TextStyle(
-                    color: Colors.black, // Белый текст
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
+            text: 'Отправить на доработку',
           ),
         ]),
       ] else

@@ -10,6 +10,7 @@ import '../../../models/task_status.dart';
 import '../../../screens/corrections/correction_screen.dart';
 import '../../../services/task_provider.dart';
 import '../../common/app_buttons.dart';
+import '../../common/app_spacing.dart';
 import '../base/base_task_layout_strategy.dart';
 
 // Concrete strategy implementation for not read status
@@ -45,6 +46,7 @@ class NotReadLayoutStrategy extends BaseTaskLayoutStrategy {
               .updateTaskStatus(task, TaskStatus.inOrder);
         },
       ),
+      AppSpacing.height16,
       AppButtons.secondaryButton(
         text: 'Нужно разъяснение',
         onPressed: () {

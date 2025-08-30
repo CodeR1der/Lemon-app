@@ -383,32 +383,11 @@ class _QueueScreenState extends State<QueueScreen> {
             style: const TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              _showPositionSelectionDialog(count);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(width: 8),
-                Text(
-                  'Выставить в очередь',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          AppButtons.primaryButton(
+              text: 'Выставить в очередь',
+              onPressed: () {
+                _showPositionSelectionDialog(count);
+              })
         ]),
       ),
     );

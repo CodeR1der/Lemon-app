@@ -1,9 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:provider/provider.dart';
+import 'package:task_tracker/services/navigation_service.dart';
 import 'package:task_tracker/services/task_operations.dart';
+import 'package:task_tracker/services/task_provider.dart';
+import 'package:task_tracker/widgets/common/app_colors.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
 
 import '../../models/task.dart';
+import '../../models/task_status.dart';
 
 class TaskCompletionPage extends StatefulWidget {
   final Task task;
@@ -15,11 +20,11 @@ class TaskCompletionPage extends StatefulWidget {
 }
 
 class _TaskCompletionPageState extends State<TaskCompletionPage> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   TimeOfDay? _selectedTime;
   DateTime _initialDateTime = DateTime.now();
+
 
   @override
   Widget build(BuildContext context) {
@@ -48,69 +53,37 @@ class _TaskCompletionPageState extends State<TaskCompletionPage> {
               const SizedBox(height: 24),
 
               // Календарь
-              TableCalendar(
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2030, 12, 31),
-                focusedDay: _focusedDay,
-                startingDayOfWeek: StartingDayOfWeek.monday,
-                calendarFormat: _calendarFormat,
-                selectedDayPredicate: (day) {
-                  return isSameDay(_selectedDay, day);
-                },
-                onDaySelected: (selectedDay, focusedDay) {
+              AppCommonWidgets.calendar(
+                focusedDate: _focusedDay,
+                selectedDate: _selectedDay,
+                onDateSelected: (selectedDay) {
                   setState(() {
                     _selectedDay = selectedDay;
+                    _focusedDay = selectedDay;
+                  });
+                },
+                onMonthChanged: (focusedDay) {
+                  setState(() {
                     _focusedDay = focusedDay;
                   });
                 },
-                onFormatChanged: (format) {
+                onYearChanged: (focusedDay) {
                   setState(() {
-                    _calendarFormat = format;
+                    _focusedDay = focusedDay;
                   });
                 },
-                onPageChanged: (focusedDay) {
-                  _focusedDay = focusedDay;
-                },
-                locale: 'ru_Ru',
-                headerStyle: const HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                ),
-                calendarStyle: const CalendarStyle(
-                  outsideDaysVisible: false,
-                ),
-                daysOfWeekStyle: const DaysOfWeekStyle(
-                  weekdayStyle: TextStyle(fontWeight: FontWeight.bold),
-                  weekendStyle: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                showNavigation: true,
+                showTodayIndicator: true,
+                selectedColor: AppColors.primaryGrey,
+                todayColor: Colors.blue,
+                textColor: Colors.black,
+                disabledTextColor: Colors.grey,
               ),
               const SizedBox(height: 24),
-
-              ElevatedButton(
-                onPressed: () => _showCustomTimePicker(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(width: 8),
-                    Text(
-                      'Назначить время сдачи',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              AppButtons.primaryButton(
+                  text: 'Назначить время сдачи',
+                  onPressed: () => _showCustomTimePicker(context))
+             ],
           ),
         ),
       ),
@@ -134,9 +107,10 @@ class _TaskCompletionPageState extends State<TaskCompletionPage> {
                     child: const Text('Отмена', style: TextStyle(fontSize: 18)),
                   ),
                   TextButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_selectedTime != null) {
                         setState(() {
+                          //
                           _selectedDay = DateTime(
                               _selectedDay.year,
                               _selectedDay.month,
@@ -145,9 +119,20 @@ class _TaskCompletionPageState extends State<TaskCompletionPage> {
                               _selectedTime!.minute);
                         });
                       }
-                      TaskService()
+
+                      // Обновляем дедлайн задачи
+                      await TaskService()
                           .updateDeadline(_selectedDay, widget.task.id);
-                      Navigator.pop(context, _selectedDay);
+
+                      // Закрываем модальное окно
+                      Navigator.pop(context);
+                      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+
+                      await taskProvider.updateTaskStatus(widget.task, TaskStatus.queue);
+
+                      // Очищаем стек навигации и переходим к деталям задачи
+                      NavigationService.clearNavigationStackStatic();
+                      NavigationService.navigateToTaskDetails(widget.task);
                     },
                     child: const Text('Готово', style: TextStyle(fontSize: 18)),
                   ),

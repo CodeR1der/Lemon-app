@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:task_tracker/models/task.dart';
 import 'package:task_tracker/services/task_operations.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
 
 class TaskLogsTab extends StatefulWidget {
   final Task task;
@@ -150,31 +152,22 @@ class _TaskLogsTabState extends State<TaskLogsTab> {
         final log = _logs[index];
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5), // Светло-серый фон как на картинке
-            borderRadius: BorderRadius.circular(8),
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text('Дата измнения', style: AppTextStyles.titleSmall,),
               // Дата изменения с иконкой календаря
               Row(
                 children: [
                   Icon(
-                    Icons.calendar_today,
-                    size: 16,
+                    Iconsax.calendar,//
+                    size: 18,
                     color: Colors.grey[600],
                   ),
                   const SizedBox(width: 8),
                   Text(
                     '${log.timestamp.day.toString().padLeft(2, '0')}.${log.timestamp.month.toString().padLeft(2, '0')}.${log.timestamp.year}, ${log.timestamp.hour.toString().padLeft(2, '0')}:${log.timestamp.minute.toString().padLeft(2, '0')}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: AppTextStyles.bodyMedium
                   ),
                 ],
               ),
@@ -186,28 +179,16 @@ class _TaskLogsTabState extends State<TaskLogsTab> {
                 children: [
                   Text(
                     'Пользователь',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w400,
-                    ),
+                    style: AppTextStyles.titleSmall
                   ),
                   const SizedBox(height: 4),
                   Text(
                     log.userName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
+                    style: AppTextStyles.bodyMedium
                   ),
                   Text(
                     log.userRole,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w400,
-                    ),
+                    style: AppTextStyles.caption
                   ),
                 ],
               ),
@@ -219,20 +200,12 @@ class _TaskLogsTabState extends State<TaskLogsTab> {
                 children: [
                   Text(
                     'Тип действия',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w400,
-                    ),
+                    style: AppTextStyles.titleSmall
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _getActionText(log),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
+                    style: AppTextStyles.bodyMedium
                   ),
                 ],
               ),
@@ -245,23 +218,16 @@ class _TaskLogsTabState extends State<TaskLogsTab> {
                   children: [
                     Text(
                       'Сущность',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w400,
-                      ),
+                      style: AppTextStyles.titleSmall
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _getEntityText(log),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
+                      style: AppTextStyles.bodyMedium
                     ),
                   ],
                 ),
+              const Divider()
             ],
           ),
         );

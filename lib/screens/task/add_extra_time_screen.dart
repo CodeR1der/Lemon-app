@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:provider/provider.dart';
 import 'package:task_tracker/models/correction.dart';
 import 'package:task_tracker/services/task_operations.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
 
 import '../../models/task.dart';
 import '../../models/task_status.dart';
 import '../../services/request_operation.dart';
+import '../../services/task_provider.dart';
 
 class AddExtraTimeScreen extends StatefulWidget {
   final Task task;
@@ -20,7 +23,6 @@ class AddExtraTimeScreen extends StatefulWidget {
 }
 
 class _AddExtraTimeScreen extends State<AddExtraTimeScreen> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
 
@@ -28,8 +30,8 @@ class _AddExtraTimeScreen extends State<AddExtraTimeScreen> {
   void initState() {
     super.initState();
     // Устанавливаем текущий дедлайн как начальную дату, если он есть
-    _selectedDay = widget.task.deadline!.day as DateTime;
-    _focusedDay = widget.task.deadline!.day as DateTime;
+    _selectedDay = widget.task.deadline!;
+    _focusedDay = widget.task.deadline!;
   }
 
   String _formatDeadline(DateTime? dateTime) {
@@ -50,7 +52,7 @@ class _AddExtraTimeScreen extends State<AddExtraTimeScreen> {
       body: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),//
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -91,103 +93,72 @@ class _AddExtraTimeScreen extends State<AddExtraTimeScreen> {
               const SizedBox(height: 16),
 
               // Календарь
-              TableCalendar(
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2030, 12, 31),
-                focusedDay: _focusedDay,
-                startingDayOfWeek: StartingDayOfWeek.monday,
-                calendarFormat: _calendarFormat,
-                selectedDayPredicate: (day) {
-                  return isSameDay(_selectedDay, day);
-                },
-                onDaySelected: (selectedDay, focusedDay) {
+              AppCommonWidgets.calendar(
+                focusedDate: _focusedDay,
+                selectedDate: _selectedDay,
+                onDateSelected: (selectedDay) {
                   setState(() {
                     _selectedDay = selectedDay;
+                    _focusedDay = selectedDay;
+                  });
+                },
+                onMonthChanged: (focusedDay) {
+                  setState(() {
                     _focusedDay = focusedDay;
                   });
                 },
-                onFormatChanged: (format) {
+                onYearChanged: (focusedDay) {
                   setState(() {
-                    _calendarFormat = format;
+                    _focusedDay = focusedDay;
                   });
                 },
-                onPageChanged: (focusedDay) {
-                  _focusedDay = focusedDay;
-                },
-                locale: 'ru_Ru',
-                headerStyle: const HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                ),
-                calendarStyle: const CalendarStyle(
-                  outsideDaysVisible: false,
-                ),
-                daysOfWeekStyle: const DaysOfWeekStyle(
-                  weekdayStyle: TextStyle(fontWeight: FontWeight.bold),
-                  weekendStyle: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                showNavigation: true,
+                showTodayIndicator: true,
+                selectedColor: Colors.blue[100],
+                todayColor: Colors.blue,
+                textColor: Colors.black,
+                disabledTextColor: Colors.grey,
               ),
               const SizedBox(height: 24),
+              AppButtons.primaryButton(
+                  text: 'Продлить срок',
+                  onPressed: () {
+                    // Сохраняем время из текущего дедлайна, если он есть
+                    final currentDeadline = widget.task.endDate;
+                    DateTime newDeadline;
+                    if (currentDeadline != null) {
+                      newDeadline = DateTime(
+                        _selectedDay.year,
+                        _selectedDay.month,
+                        _selectedDay.day,
+                        currentDeadline.hour,
+                        currentDeadline.minute,
+                      );
+                    } else {
+                      // Если дедлайна не было, используем текущее время
+                      final now = DateTime.now();
+                      newDeadline = DateTime(
+                        _selectedDay.year,
+                        _selectedDay.month,
+                        _selectedDay.day,
+                        now.hour,
+                        now.minute,
+                      );
+                    }
 
-              // Кнопка подтверждения
-              ElevatedButton(
-                onPressed: () {
-                  // Сохраняем время из текущего дедлайна, если он есть
-                  final currentDeadline = widget.task.endDate;
-                  DateTime newDeadline;
-                  if (currentDeadline != null) {
-                    newDeadline = DateTime(
-                      _selectedDay.year,
-                      _selectedDay.month,
-                      _selectedDay.day,
-                      currentDeadline.hour,
-                      currentDeadline.minute,
-                    );
-                  } else {
-                    // Если дедлайна не было, используем текущее время
-                    final now = DateTime.now();
-                    newDeadline = DateTime(
-                      _selectedDay.year,
-                      _selectedDay.month,
-                      _selectedDay.day,
-                      now.hour,
-                      now.minute,
-                    );
-                  }
+                    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
 
-                  // Обновляем дедлайн в базе данных
-                  TaskService().updateDeadline(newDeadline, widget.task.id);
-                  TaskService().changeStatus(TaskStatus.atWork, widget.task.id);
-                  RequestService()
-                      .updateCorrection(widget.correction..isDone = true);
-                  RequestService().updateCorrectionByStatus(
-                      widget.task.id, TaskStatus.extraTime);
-                  // Возвращаем новый дедлайн на предыдущий экран
-                  Navigator.pop(context, widget.task);
-                  //Navigator.pop(context, newDeadline);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(width: 8),
-                    Text(
-                      'Продлить срок',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                    // Обновляем дедлайн в базе данных
+                    TaskService().updateDeadline(newDeadline, widget.task.id);
+                    taskProvider.updateTaskStatus(widget.task, TaskStatus.atWork);
+                    RequestService()
+                        .updateCorrection(widget.correction..isDone = true);
+                    RequestService().updateCorrectionByStatus(
+                        widget.task.id, TaskStatus.extraTime);
+                    // Возвращаем новый дедлайн на предыдущий экран
+                    Navigator.pop(context, widget.task);
+                    //Navigator.pop(context, newDeadline);
+                  })
             ],
           ),
         ),

@@ -334,8 +334,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
                                       child: employee.avatarUrl == null ||
                                               employee.avatarUrl!.isEmpty
                                           ? Text(
-                                              employee.name?.isNotEmpty == true
-                                                  ? employee.name![0]
+                                              employee.fullName?.isNotEmpty == true
+                                                  ? employee.firstName
                                                       .toUpperCase()
                                                   : 'N',
                                               style: const TextStyle(
@@ -354,7 +354,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            employee.name ?? 'Без имени',
+                                            employee.fullName ?? 'Без имени',
                                             style: AppTextStyles.bodySmall,
                                           ),
                                           const SizedBox(height: 2),
@@ -590,18 +590,19 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
 
   Widget _buildIconWithNumber(IconData icon, int count) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: Colors.grey),
-        const SizedBox(width: 4),
+        Icon(icon, size: 14, color: Colors.grey),
+        const SizedBox(width: 8),
         Text(
           count.toString(),
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
             color: Colors.black54,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
       ],
     );
   }

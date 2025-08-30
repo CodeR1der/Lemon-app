@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:provider/provider.dart';
 import 'package:task_tracker/screens/task/task_details_screen.dart';
+import 'package:task_tracker/services/navigation_service.dart';
 
 import '../models/task.dart';
 import '../models/task_status.dart';
 import '../services/task_operations.dart';
 import '../services/task_provider.dart';
+import '../widgets/common/app_buttons.dart';
 
 class QueueScreen extends StatefulWidget {
   final String position;
@@ -106,8 +110,8 @@ class _QueueScreenState extends State<QueueScreen> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const CircleAvatar(radius: 16, backgroundColor: Colors.blue),
-                  const SizedBox(width: 8),
+                  //const CircleAvatar(radius: 16, backgroundColor: Colors.blue),
+                  //const SizedBox(width: 8),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -189,33 +193,18 @@ class _QueueScreenState extends State<QueueScreen> {
               if (queuePositionInt == 1) ...[
                 const SizedBox(height: 16),
                 Consumer<TaskProvider>(
-                  builder: (context, taskProvider, child) => ElevatedButton(
+                  builder: (context, taskProvider, child) =>
+                      AppButtons.primaryButton(
                     onPressed: () {
                       TaskService()
                           .updateQueuePosTask(task..queuePosition = null);
                       taskProvider.updateTaskStatus(task, TaskStatus.atWork);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(width: 8),
-                        Text(
-                          'Взять задачу в работу',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
+                      //NavigationService().clearNavigationStack();
+                      Get.back();
+
+                      NavigationService.navigateToTaskDetails(task);
+                    },//
+                    text: 'Взять задачу в работу',
                   ),
                 ),
               ]

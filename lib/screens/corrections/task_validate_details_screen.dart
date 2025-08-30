@@ -13,6 +13,7 @@ import '../../models/task_status.dart';
 import '../../services/request_operation.dart';
 import '../../services/task_provider.dart';
 import '../../task_screens/task_description_tab.dart';
+import '../../widgets/common/app_buttons.dart';
 import 'correction_screen.dart';
 
 class TaskValidateDetailsScreen extends StatelessWidget {
@@ -289,34 +290,17 @@ class TaskValidateDetailsScreen extends StatelessWidget {
         ),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Consumer<TaskProvider>(
-            builder: (context, taskProvider, child) => ElevatedButton(
+            builder: (context, taskProvider, child) => AppButtons.primaryButton(
               onPressed: () async {
                 await RequestService().updateValidate(validate..isDone = true);
                 await taskProvider.updateTaskStatus(task, TaskStatus.completed);
                 Navigator.pop(context, task);
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                side: BorderSide(color: Colors.orange, width: 1),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(width: 8),
-                  Text(
-                    'Принять',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ],
-              ),
+              text: 'Принять',
             ),
           ),
           const SizedBox(height: 8),
-          ElevatedButton(
+          AppButtons.secondaryButton(
             onPressed: () async {
               final result = await Navigator.push(
                   context,
@@ -327,24 +311,7 @@ class TaskValidateDetailsScreen extends StatelessWidget {
                 Navigator.pop(context, result);
               }
             },
-            style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
-              side: BorderSide(color: Colors.orange, width: 1),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(width: 8),
-                Text(
-                  'Отправить на доработку',
-                  style: TextStyle(color: Colors.black, fontSize: 16),
-                ),
-              ],
-            ),
+            text: 'Отправить на доработку',
           ),
         ]),
       ),

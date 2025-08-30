@@ -76,6 +76,9 @@ class AuthService {
         .maybeSingle();
 
     if (response == null) {
+      if (!isAuth) {
+        return true;
+      }
       return false;
     }
 

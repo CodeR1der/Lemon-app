@@ -40,10 +40,37 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
   void initState() {
     super.initState();
     _currentAnnouncement = widget.announcement;
+
+    // Проверяем доступ к объявлению
+    if (!_hasAccessToAnnouncement()) {
+      // Если у пользователя нет доступа, возвращаемся назад
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.back();
+        Get.snackbar(
+          'Ошибка доступа',
+          'У вас нет доступа к этому объявлению',
+          snackPosition: SnackPosition.TOP,
+        );
+      });
+      return;
+    }
+
     _tabController = TabController(length: 3, vsync: this);
     _loadEmployees();
     _loadLogs();
     _setupRealtimeSubscription();
+  }
+
+  bool _hasAccessToAnnouncement() {
+    final currentUser = UserService.to.currentUser!;
+
+    // Директоры и коммуникаторы имеют доступ ко всем объявлениям
+    if (currentUser.role == 'Директор' || currentUser.role == 'Коммуникатор') {
+      return true;
+    }
+
+    // Обычные сотрудники имеют доступ только к объявлениям, предназначенным для них
+    return _currentAnnouncement.selectedEmployees.contains(currentUser.userId);
   }
 
   void _setupRealtimeSubscription() {
@@ -490,13 +517,13 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen>
       final currentUser = UserService.to.currentUser!;
       await AnnouncementService.markAsReadForEmployee(
         employee.userId,
-        employee.name,
+        employee.shortName,
         _currentAnnouncement,
         currentUser.userId,
-        currentUser.name,
+        currentUser.shortName,
         currentUser.role,
       );
-      Get.snackbar('Успех', '${employee.name} отмечен как прочитавший');
+      Get.snackbar('Успех', '${employee.shortName} отмечен как прочитавший');
       // UI обновится автоматически через Realtime
     } catch (e) {
       print('Ошибка Не удалось отметить как прочитанное: $e');

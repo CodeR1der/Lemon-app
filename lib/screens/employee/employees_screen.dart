@@ -48,6 +48,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
 
   Future<void> _loadEmployees() async {
     try {
+      //
       setState(() {
         _isLoading = true;
       });
@@ -93,7 +94,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     String query = _searchController.text.toLowerCase();
     setState(() {
       _filteredEmployees = _employees
-          .where((employee) => employee.name.toLowerCase().contains(query))
+          .where((employee) => employee.fullName.toLowerCase().contains(query))
           .toList();
     });
   }
@@ -176,49 +177,53 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
           _filteredEmployees[filteredIndex] = updatedEmployee;
         }
       });
-      Get.snackbar(
-          'Успех', 'Роль сотрудника ${employee.name} изменена на $newRole');
+      Get.snackbar('Успех',
+          'Роль сотрудника ${employee.shortName} изменена на $newRole');
     } catch (e) {}
   }
 
   Widget buildEmployeeIcons(Employee employee) {
     final taskCounts = _employeeTaskCounts[employee.userId] ?? {};
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        _buildIconWithNumber(Iconsax.archive_tick,
-            taskCounts[TaskStatus.atWork] ?? 0), // Сейчас в работе
-        _buildIconWithNumber(Iconsax.task_square,
-            taskCounts[TaskStatus.queue] ?? 0), // В очереди
-        _buildIconWithNumber(Iconsax.calendar_remove,
-            taskCounts[TaskStatus.overdue] ?? 0), // Просроченные
-        _buildIconWithNumber(Iconsax.edit,
-            taskCounts[TaskStatus.needTicket] ?? 0), //Нужно письмо решение
-        _buildIconWithNumber(
-            Iconsax.eye, taskCounts[TaskStatus.notRead] ?? 0), // Не прочитано
-        _buildIconWithNumber(Iconsax.search_normal,
-            taskCounts[TaskStatus.completedUnderReview] ?? 0), // На проверке
-        _buildIconWithNumber(
-            Iconsax.clock, taskCounts[TaskStatus.extraTime] ?? 0), // Доп. время
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          _buildIconWithNumber(Iconsax.archive_tick,
+              taskCounts[TaskStatus.atWork] ?? 0), // Сейчас в работе
+          _buildIconWithNumber(Iconsax.task_square,
+              taskCounts[TaskStatus.queue] ?? 0), // В очереди
+          _buildIconWithNumber(Iconsax.calendar_remove,
+              taskCounts[TaskStatus.overdue] ?? 0), // Просроченные
+          _buildIconWithNumber(Iconsax.edit,
+              taskCounts[TaskStatus.needTicket] ?? 0), //Нужно письмо решение
+          _buildIconWithNumber(
+              Iconsax.eye, taskCounts[TaskStatus.notRead] ?? 0), // Не прочитано
+          _buildIconWithNumber(Iconsax.search_normal,
+              taskCounts[TaskStatus.completedUnderReview] ?? 0), // На проверке
+          _buildIconWithNumber(Iconsax.clock,
+              taskCounts[TaskStatus.extraTime] ?? 0), // Доп. время
+        ],
+      ),
     );
   }
 
   Widget _buildIconWithNumber(IconData icon, int count) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: Colors.grey),
-        const SizedBox(width: 4),
+        Icon(icon, size: 14, color: Colors.grey),
+        const SizedBox(width: 8),
         Text(
           count.toString(),
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
             color: Colors.black54,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
       ],
     );
   }
@@ -596,7 +601,14 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
+        final TextEditingController firstNameController =
+            TextEditingController();
+        final TextEditingController lastNameController =
+            TextEditingController();
+        final TextEditingController middleNameController =
+            TextEditingController();
         final TextEditingController nameController = TextEditingController();
+
         final TextEditingController positionController =
             TextEditingController();
         final TextEditingController phoneController = TextEditingController();
@@ -621,9 +633,29 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                       const SizedBox(height: 16),
                       TextField(
                         textCapitalization: TextCapitalization.words,
-                        controller: nameController,
+                        controller: lastNameController,
                         decoration: InputDecoration(
-                          hintText: 'ФИО',
+                          hintText: 'Фамилия',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      TextField(
+                        textCapitalization: TextCapitalization.words,
+                        controller: firstNameController,
+                        decoration: InputDecoration(
+                          hintText: 'Имя',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      TextField(
+                        textCapitalization: TextCapitalization.words,
+                        controller: middleNameController,
+                        decoration: InputDecoration(
+                          hintText: 'Отчество',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -650,46 +682,44 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () async {
-                          try {
-                            if (nameController.text.isNotEmpty &&
-                                positionController.text.isNotEmpty) {
-                              final newEmployee = Employee(
-                                userId: const Uuid().v4(),
-                                // Temporary ID
-                                name: nameController.text,
-                                position: positionController.text,
-                                phone: phoneController.text,
-                                telegramId: null,
-                                // Optional field
-                                avatarUrl: 'users/default.jpg',
-                                vkId: null,
-                                // Optional field
-                                role: 'Исполнитель / Постановщик',
-                                // Default role
-                                companyId:
-                                    _userService.currentUser?.companyId ?? '',
-                              );
-                              await _employeeService.addEmployee(newEmployee);
-                              Get.snackbar('Успех',
-                                  'Сотрудник ${newEmployee.name} создан');
-                              Navigator.pop(context);
-                              _loadEmployees(); // Reload employees to include the new one
-                              _clearProjectsCache(); // Очищаем кэш проектов
-                            } else {
-                              Get.snackbar(
-                                  'Ошибка', 'Пожалуйста, заполните все поля');
+                      AppButtons.primaryButton(
+                          text: 'Создать',
+                          onPressed: () async {
+                            try {
+                              if (nameController.text.isNotEmpty &&
+                                  positionController.text.isNotEmpty) {
+                                final newEmployee = Employee(
+                                  userId: const Uuid().v4(),
+                                  // Temporary ID
+                                  position: positionController.text,
+                                  phone: phoneController.text,
+                                  telegramId: null,
+                                  // Optional field
+                                  avatarUrl: 'users/default.jpg',
+                                  vkId: null,
+                                  // Optional field
+                                  role: 'Исполнитель / Постановщик',
+                                  // Default role
+                                  companyId:
+                                      _userService.currentUser?.companyId ?? '',
+                                  firstName: firstNameController.text,
+                                  lastName: lastNameController.text,
+                                  middleName: middleNameController.text ?? '',
+                                );
+                                await _employeeService.addEmployee(newEmployee);
+                                Get.snackbar('Успех',
+                                    'Сотрудник ${newEmployee.shortName} создан');
+                                Navigator.pop(context);
+                                _loadEmployees(); // Reload employees to include the new one
+                                _clearProjectsCache(); // Очищаем кэш проектов
+                              } else {
+                                Get.snackbar(
+                                    'Ошибка', 'Пожалуйста, заполните все поля');
+                              }
+                            } catch (e) {
+                              print(e);
                             }
-                          } catch (e) {}
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 48),
-                        ),
-                        child: const Text('Создать'),
-                      ),
+                          })
                     ],
                   ),
                 );
@@ -818,6 +848,8 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                         return AppCommonWidgets.employeeTile(
                           employee: employee,
                           context: context,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 4.0),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -841,12 +873,15 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                           trailing: _userService.currentUser?.role ==
                                       'Директор' &&
                                   !isCurrentUser
-                              ? IconButton(
-                                  icon: const Icon(Icons.more_vert, size: 40),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: () =>
-                                      _showEmployeeOptions(employee),
+                              ? Padding(
+                                  padding: const EdgeInsets.only(right: 8.0),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.more_vert, size: 40),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    onPressed: () =>
+                                        _showEmployeeOptions(employee),
+                                  ),
                                 )
                               : null,
                         );

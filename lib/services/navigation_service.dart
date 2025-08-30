@@ -68,6 +68,11 @@ class NavigationService {
     Get.to(() => TaskDetailsScreen(task: task));
   }
 
+  /// Очистка стека навигации (статический метод)
+  static void clearNavigationStackStatic() {
+    Get.until((route) => route.isFirst);
+  }
+
   /// Навигация к созданию задачи с переходом на детали после создания
   static Future<void> navigateToCreateTaskWithDetails({
     Employee? employee,

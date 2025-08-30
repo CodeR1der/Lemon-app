@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:just_audio/just_audio.dart';
@@ -40,6 +41,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
   String? audioMessage;
   List<String> videoMessage = [];
   bool isRecording = false;
+  bool _isSubmitting = false;
 
   final AudioRecorder _audioRecorder = AudioRecorder();
   final ImagePicker _imagePicker = ImagePicker();
@@ -174,7 +176,11 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
   }
 
   void _submitCorrection() async {
-    if (!_canSubmit) return;
+    if (!_canSubmit || _isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
 
     try {
       final correction = _createCorrection();
@@ -191,24 +197,26 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
         await RequestService().updateValidate(widget.validate!..isDone = true);
         await taskProvider.updateTaskStatus(task, TaskStatus.atWork);
       } else if (task.status == TaskStatus.atWork) {
+        Navigator.pop(context);
         await taskProvider.updateTaskStatus(task, TaskStatus.extraTime);
       } else if (task.status == TaskStatus.overdue) {
+        Navigator.pop(context);
         await RequestService()
             .updateCorrection(widget.prevCorrection!..isDone = true);
       } else {
+        Navigator.pop(context);
         if (task.status == TaskStatus.needTicket) {
+          Navigator.pop(context);
           await RequestService()
               .updateCorrection(widget.prevCorrection!..isDone = true);
         }
         await taskProvider.updateTaskStatus(task, TaskStatus.revision);
       }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Задача отправлена на доработку')),
-      );
-
-      Navigator.pop(context);
-    } catch (e) {}
+    } catch (e) {
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
   }
 
   @override
@@ -368,9 +376,18 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
         ),
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: _canSubmit ? _submitCorrection : null,
+          onPressed: (_canSubmit && !_isSubmitting) ? _submitCorrection : null,
           style: AppButtonStyles.primaryButton,
-          child: const Text('Отправить'),
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Text('Отправить'),
         ),
       ),
     );

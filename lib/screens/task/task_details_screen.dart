@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 
 import '../../models/task.dart';
@@ -111,6 +112,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                   if (isMember) const Tab(text: 'Чат'),
                   const Tab(text: 'Срочность'),
                   const Tab(text: 'Команда'),
+                  if(UserService.to.currentUser!.role == 'Директор' || RoleHelper.determineUserRoleInTask(currentUserId: UserService.to.currentUser!.userId, task: widget.task) == TaskRole.communicator )
                   const Tab(text: 'Логи'),
                 ],
               ),

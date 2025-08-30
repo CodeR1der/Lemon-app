@@ -14,7 +14,7 @@ class UserService extends GetxService {
   late RxBool isLoggedIn;
   final Map<String, String> _userNamesCache = {}; // Кэш для имен пользователей
   final Map<String, Map<String, String?>> _userDataCache =
-      {}; // Кэш для данных пользователя
+  {}; // Кэш для данных пользователя
   UserService(this._supabase) {
     isInitialized = false.obs;
     isLoggedIn = false.obs;
@@ -59,13 +59,14 @@ class UserService extends GetxService {
   Future<bool> signUp({
     required String email,
     required String password,
-    String? name,
+    String? firstName,
+    String? lastName,
+    String? middleName,
     String? position,
     String? role,
     String? code,
     String? phone,
-  })
-  async {
+  }) async {
     try {
       isInitialized.value = false;
 
@@ -121,7 +122,9 @@ class UserService extends GetxService {
         await _supabase.rpc('insert_employee', params: {
           'p_user_id': response.user!.id,
           'p_company_id': companyId,
-          'p_name': name,
+          'p_first_name': firstName,
+          'p_last_name': lastName,
+          'p_middle_name': middleName,
           'p_position': position,
           'p_role': role,
           'p_phone': '+7 $phone',
@@ -200,23 +203,55 @@ class UserService extends GetxService {
     try {
       // Запрашиваем данные из таблицы employee
       final response =
-          await Supabase.instance.client.from('employee').select('''
-      name, 
+      await Supabase.instance.client.from('employee').select('''
+      first_name, 
+      last_name, 
+      middle_name,
       avatar_url,
       user_id
     ''').eq('user_id', userId).single();
 
       if (response.isNotEmpty) {
-        final name = response['name'] as String?;
+        final firstName = response['first_name'] as String?;
+        final lastName = response['last_name'] as String?;
+        final middleName = response['middle_name'] as String?;
         final avatarUrl = response['avatar_url'] as String?;
-        final userData = {'name': name, 'avatar_url': avatarUrl};
+
+        // Формируем полное имя
+        String? fullName;
+        if (firstName != null && lastName != null) {
+          fullName = middleName != null
+              ? '$lastName $firstName $middleName'
+              : '$lastName $firstName';
+        }
+
+        final userData = {
+          'name': fullName,
+          'avatar_url': avatarUrl,
+          'first_name': firstName,
+          'last_name': lastName,
+          'middle_name': middleName
+        };
+
         _userDataCache[userId] = userData; // Сохраняем в кэш
         return userData;
       }
-      return {'name': null, 'avatar_url': null};
+      return {
+        'name': null,
+        'avatar_url': null,
+        'first_name': null,
+        'last_name': null,
+        'middle_name': null
+      };
     } catch (e) {
       print('Error fetching user data for userId $userId: $e');
-      return {'name': null, 'avatar_url': null};
+      return {
+        'name': null,
+        'avatar_url': null,
+        'first_name': null,
+        'last_name': null,
+        'middle_name': null
+      };
     }
   }
 
@@ -231,16 +266,26 @@ class UserService extends GetxService {
       // Запрашиваем данные из таблицы employee
       final response = await Supabase.instance.client
           .from('employee')
-          .select('name')
+          .select('first_name, last_name, middle_name')
           .eq('user_id', userId)
           .single();
 
       if (response.isNotEmpty) {
-        final name = response['name'] as String?;
-        if (name != null) {
+        final firstName = response['first_name'] as String?;
+        final lastName = response['last_name'] as String?;
+        final middleName = response['middle_name'] as String?;
+
+        String? fullName;
+        if (firstName != null && lastName != null) {
+          fullName = middleName != null
+              ? '$lastName $firstName $middleName'
+              : '$lastName $firstName';
+        }
+
+        if (fullName != null) {
           // Сохраняем в кэш
-          _userNamesCache[userId] = name;
-          return name;
+          _userNamesCache[userId] = fullName;
+          return fullName;
         }
       }
       return null; // Если имя не найдено
