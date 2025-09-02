@@ -71,7 +71,12 @@ class CompletedUnderReviewLayoutStrategy extends BaseTaskLayoutStrategy {
               ],
             );
           case TaskRole.none:
-            throw UnimplementedError();
+            return Column(
+              children: [
+                buildHistorySection(context, revisions),
+                const Divider(),
+              ],
+            );
         }
       },
     );

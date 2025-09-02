@@ -4,6 +4,7 @@ class ChatMessage {
   final String userId;
   final String? message;
   final List<String> fileUrl;
+  final String? fileName; // Добавьте это поле
   final DateTime createdAt;
 
   ChatMessage({
@@ -12,17 +13,20 @@ class ChatMessage {
     required this.userId,
     this.message,
     required this.fileUrl,
+    this.fileName, // И это
     required this.createdAt,
   });
 
+  // Обновите методы fromJson и toJson соответственно
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     return ChatMessage(
-      id: json['id'] as String,
-      taskId: json['task_id'] as String,
-      userId: json['user_id'] as String,
-      message: json['message'] as String?,
+      id: json['id'],
+      taskId: json['task_id'],
+      userId: json['user_id'],
+      message: json['message'],
       fileUrl: List<String>.from(json['file_url'] ?? []),
-      createdAt: DateTime.parse(json['created_at'] as String),
+      fileName: json['file_name'], // Добавьте
+      createdAt: DateTime.parse(json['created_at']),
     );
   }
 
@@ -30,9 +34,10 @@ class ChatMessage {
     return {
       'id': id,
       'task_id': taskId,
-      'user_id': userId,
+      'user_id': userId,//
       'message': message,
       'file_url': fileUrl,
+      'file_name': fileName, // Добавьте
       'created_at': createdAt.toIso8601String(),
     };
   }

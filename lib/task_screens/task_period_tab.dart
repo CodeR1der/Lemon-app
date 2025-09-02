@@ -11,7 +11,7 @@ class TaskPeriodTab extends StatelessWidget {
 
   const TaskPeriodTab({super.key, required this.task});
 
-  String _formatDeadline(DateTime? dateTime) {
+  static String formatDeadline(DateTime? dateTime) {
     if (dateTime == null) return 'Не установлен';
     final dateFormat = DateFormat('dd.MM.yyyy');
     final timeFormat = DateFormat('HH:mm');
@@ -24,7 +24,7 @@ class TaskPeriodTab extends StatelessWidget {
     if (task.deadline == null) {
       formattedDate = DateFormat('dd.MM.yyyy').format(task.endDate);
     } else {
-      formattedDate = _formatDeadline(task.deadline);
+      formattedDate = formatDeadline(task.deadline);
     }
 
     final priorityText = task.priorityToString();

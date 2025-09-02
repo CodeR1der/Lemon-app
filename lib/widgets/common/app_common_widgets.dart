@@ -460,6 +460,69 @@ class AppCommonWidgets {
     );
   }
 
+  /// Виджет для отображения сотрудника в виде ListTileSmall
+  static Widget employeeTileSmall({
+    required Employee employee,
+    required BuildContext context,
+    double avatarRadius = 17,
+    EdgeInsets? contentPadding,
+    Widget? subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+    bool showNavigation = true,
+  }) {
+    final employeeService = EmployeeService();
+
+    return ListTile(
+      contentPadding: contentPadding ??
+          const EdgeInsets.symmetric(vertical: 0.0),
+      leading: CircleAvatar(
+        radius: avatarRadius,
+        backgroundImage: employee.avatarUrl != null &&
+            employee.avatarUrl!.isNotEmpty
+            ? NetworkImage(employeeService.getAvatarUrl(employee.avatarUrl!))
+            : null,
+        child: employee.avatarUrl == null || employee.avatarUrl!.isEmpty
+            ? Icon(Icons.person, size: avatarRadius)
+            : null,
+      ),
+      title: Text(
+        employee.fullName,
+        style: AppTextStyles.bodySmall,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: subtitle ??
+          Padding(
+            padding: const EdgeInsets.only(top: 2.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  employee.position,
+                  style: AppTextStyles.caption,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+      trailing: trailing,
+      onTap: onTap ??
+          (showNavigation
+              ? () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    EmployeeDetailScreen(employee: employee),
+              ),
+            );
+          }
+              : null),
+    );
+  }
+
   /// Виджет для отображения сотрудника в виде карточки
   static Widget employeeCard({
     required Employee employee,

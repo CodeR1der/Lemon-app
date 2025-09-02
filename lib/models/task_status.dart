@@ -46,9 +46,9 @@ class StatusHelper {
       case TaskStatus.completedUnderReview:
         return 'Завершенная задача на проверке';
       case TaskStatus.completed:
-        return 'Архив задач';
+        return 'Завершена';
       case TaskStatus.closed:
-        return 'Закрытая';
+        return 'Закрыта';
     }
   }
 
@@ -114,12 +114,12 @@ class StatusHelper {
       case 'completedUnderReview':
         return TaskStatus.completedUnderReview;
 
-      case 'Архив задач':
+      case 'Завершена':
         return TaskStatus.completed;
       case 'completed':
         return TaskStatus.completed;
 
-      case 'Закрытая':
+      case 'Закрыта':
         return TaskStatus.closed;
       case 'closed':
         return TaskStatus.closed;
@@ -156,9 +156,41 @@ class StatusHelper {
       case TaskStatus.completedUnderReview:
         return Iconsax.search_normal_copy;
       case TaskStatus.completed:
-        return Iconsax.folder_open_copy;
+        return Iconsax.tick_circle;
       case TaskStatus.closed:
-        return Iconsax.folder_open_copy;
+        return Iconsax.close_circle;
+    }
+  }
+  static IconData getStatusColor(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.newTask:
+        return Iconsax.d_cube_scan_copy;
+      case TaskStatus.revision:
+        return Iconsax.box_search_copy;
+      case TaskStatus.queue:
+        return Iconsax.stickynote_copy;
+      case TaskStatus.notRead:
+        return Iconsax.eye_copy;
+      case TaskStatus.needExplanation:
+        return Iconsax.timer_copy;
+      case TaskStatus.inOrder:
+        return Iconsax.task_square_copy;
+      case TaskStatus.atWork:
+        return Iconsax.archive_tick_copy;
+      case TaskStatus.controlPoint:
+        return Iconsax.arrow_square_copy;
+      case TaskStatus.needTicket:
+        return Iconsax.edit_copy;
+      case TaskStatus.extraTime:
+        return Iconsax.clock_copy;
+      case TaskStatus.overdue:
+        return Iconsax.calendar_remove_copy;
+      case TaskStatus.completedUnderReview:
+        return Iconsax.search_normal_copy;
+      case TaskStatus.completed:
+        return Iconsax.tick_circle;
+      case TaskStatus.closed:
+        return Iconsax.close_circle;
     }
   }
 }

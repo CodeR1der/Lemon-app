@@ -115,12 +115,16 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = UserService.to.currentUser;
+    final isDirector = currentUser?.role == "Директор"; // <-- проверка роли
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         top: false,
-        child: Stack(
+        child: isDirector
+            ? _buildDirectorView(widget.employee)   // <-- для директора
+            : Stack(                                // <-- как сейчас
           children: [
             _buildNestedScrollView(widget.employee.shortName),
             if (_shouldShowCreateTaskButton) _buildCreateTaskButton(),
@@ -129,6 +133,132 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
       ),
     );
   }
+
+  Widget _buildDirectorView(Employee employee) {
+    return DefaultTabController(
+      length: 2,
+      child: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            _buildSliverAppBar(employee.shortName, innerBoxIsScrolled),
+
+            // табы "Информация / Работа" сразу после AppBar
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SliverAppBarDelegate(
+                TabBar(
+                  labelColor: _primaryColor,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: _primaryColor,
+                  tabs: const [
+                    Tab(text: "Информация"),
+                    Tab(text: "Работа"),
+                  ],
+                ),
+              ),
+            ),
+          ];
+        },
+        body: TabBarView(
+          children: [
+            // Вкладка "Информация"
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(_padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildAvatar(),
+                  _buildProfileSection('ФИО', employee.fullName),
+                  const Divider(),
+                  _buildProfileSection('Роль', employee.role),
+                  const Divider(),
+                  _buildProfileSection('Должность', employee.position),
+                  const Divider(),
+                  _buildProfileSection(
+                      'Контактный телефон', employee.phone ?? ''),
+                  const Divider(),
+                  _buildProfileSection(
+                      'Имя пользователя в Телеграм', employee.telegramId ?? ''),
+                  const Divider(),
+                  _buildProfileSection(
+                      'Адрес страницы в VK', employee.vkId ?? ''),
+                  const Divider(),
+                  AppButtons.greyButton(text: 'Удалить сотрудника', onPressed: () => {}),
+                ],
+              ),
+            ),
+
+            // Вкладка "Работа"
+            Stack(
+              children: [
+                _buildProjectsAndTasksOnly(), // <-- вынес отдельно
+                if (_shouldShowCreateTaskButton) _buildCreateTaskButton(),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Только проекты и задачи (без профиля)
+  Widget _buildProjectsAndTasksOnly() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadProjects,
+              child: const Text('Повторить'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_projects.isEmpty) {
+      return const Center(child: Text('Сотрудник не участвует в проектах'));
+    }
+
+    if (_tabController == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Column(
+      children: [
+        Material(
+          color: Colors.white,
+          child: TabBar(
+            controller: _tabController!,
+            isScrollable: true,
+            labelColor: _primaryColor,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: _primaryColor,
+            tabs: _projects.map((project) {
+              final taskCount = _projectTasks[project.projectId]?.length ?? 0;
+              return _buildProjectTab(project.name, taskCount);
+            }).toList(),
+          ),
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController!,
+            children: _projects.map((project) {
+              return _buildProjectTabView();
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
 
   Widget _buildNestedScrollView(String shortName) {
     return NestedScrollView(

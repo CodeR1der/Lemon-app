@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/services/task_operations.dart';
 
@@ -98,8 +100,15 @@ class TaskCategories {
 
       // Обновляем категории с данными о количестве задач
       return categories.map((category) {
-        final count = tasksData[StatusHelper.displayName(category.status)] ?? 0;
-        return category.copyWith(count: count);
+        if (category.status == TaskStatus.completed) {
+          // Для архива считаем completed и closed вместе
+          final completedCount = tasksData[StatusHelper.displayName(TaskStatus.completed)] ?? 0;
+          final closedCount = tasksData[StatusHelper.displayName(TaskStatus.closed)] ?? 0;
+          return category.copyWith(count: completedCount + closedCount);
+        } else {
+          final count = tasksData[StatusHelper.displayName(category.status)] ?? 0;
+          return category.copyWith(count: count);
+        }
       }).toList();
     } catch (e) {
       print('Error getting categories: $e');
@@ -158,7 +167,7 @@ class TaskCategories {
             .getTasksWithControlPointsForCommunicator(employeeId);
       } else {
         tasksCount =
-            await TaskService().getCountOfTasksByStatus(position, employeeId);
+        await TaskService().getCountOfTasksByStatus(position, employeeId);
       }
 
       // Выбираем соответствующий список категорий
@@ -180,7 +189,13 @@ class TaskCategories {
       // Обновляем count для каждой категории
       return categories.map((category) {
         late int count = 0;
-        if (position == "Исполнитель" && category.status == TaskStatus.queue) {
+
+        // Для архива считаем completed и closed вместе
+        if (category.status == TaskStatus.completed) {
+          final completedCount = tasksCount[StatusHelper.displayName(TaskStatus.completed)] ?? 0;
+          final closedCount = tasksCount[StatusHelper.displayName(TaskStatus.closed)] ?? 0;
+          count = completedCount + closedCount;
+        } else if (position == "Исполнитель" && category.status == TaskStatus.queue) {
           count = (tasksCount[StatusHelper.displayName(category.status)]! +
               tasksCount[StatusHelper.displayName(TaskStatus.inOrder)]!);
         } else if ((position == "Исполнитель" || position == "Постановщик") &&
@@ -190,8 +205,8 @@ class TaskCategories {
         } else {
           count = tasksCount[StatusHelper.displayName(category.status)] ?? 0;
         }
-        category.count = count;
-        return category;
+
+        return category.copyWith(count: count);
       }).toList();
     } catch (e) {
       print('Error getting categories: $e');
@@ -210,6 +225,13 @@ class TaskCategories {
           return _executerCategories;
       }
     }
+  }
+
+  static IconData getCategoryIcon(TaskStatus status) {
+    if (status == TaskStatus.completed) {
+      return Iconsax.folder_open_copy; // Иконка для категории "Архив задач"
+    }
+    return StatusHelper.getStatusIcon(status); // Стандартные иконки для других категорий
   }
 
   Future<List<TaskCategory>> getCategoriesList(String position) async {

@@ -278,7 +278,7 @@ class UserService extends GetxService {
         String? fullName;
         if (firstName != null && lastName != null) {
           fullName = middleName != null
-              ? '$lastName $firstName $middleName'
+              ? '$lastName $firstName '
               : '$lastName $firstName';
         }
 

@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:task_tracker/services/control_point_operations.dart';
 import 'package:task_tracker/services/task_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/widgets/common/app_common.dart';
 import 'package:video_player/video_player.dart';
 
 import '../models/task.dart';
@@ -143,7 +144,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Статус', style: Theme.of(context).textTheme.titleSmall),
+            Text('Статус', style: AppTextStyles.titleSmall),
             const SizedBox(height: 4),
             _isLoadingStatus
                 ? Container(
@@ -183,7 +184,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                         const SizedBox(width: 6),
                         Text(
                           StatusHelper.displayName(_displayStatus!),
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: AppTextStyles.bodySmall,
                         ),
                       ],
                     ),
@@ -195,33 +196,33 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
             ),
 
             // Проект
-            Text('Проект', style: Theme.of(context).textTheme.titleSmall),
+            Text('Проект', style: AppTextStyles.titleSmall),
             const SizedBox(height: 4),
             Text(_currentTask.project?.name ?? 'Не указан',
-                style: Theme.of(context).textTheme.bodyMedium),
+                style: AppTextStyles.bodyMedium),
             const SizedBox(height: 16),
 
             // Название задачи
             Text('Название задачи',
-                style: Theme.of(context).textTheme.titleSmall),
+                style: AppTextStyles.titleSmall),
             const SizedBox(height: 4),
             Text(_currentTask.taskName,
-                style: Theme.of(context).textTheme.bodyMedium),
+                style: AppTextStyles.bodyMedium),
             const SizedBox(height: 16),
 
             // Описание задачи
             Text('Описание задачи',
-                style: Theme.of(context).textTheme.titleSmall),
+                style: AppTextStyles.titleSmall),
             const SizedBox(height: 4),
             Text(_currentTask.description,
-                style: Theme.of(context).textTheme.bodyMedium),
+                style: AppTextStyles.bodyMedium),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 // Фотографии
                 Text('Фотографии',
-                    style: Theme.of(context).textTheme.titleSmall),
+                    style: AppTextStyles.titleSmall),
                 const SizedBox(width: 8),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -231,11 +232,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                   ),
                   child: Text(
                     _currentTask.attachments.length.toString(),
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                    style: AppTextStyles.bodyMedium
                   ),
                 ),
               ],
@@ -289,13 +286,13 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                       );
                     },
                   )
-                : const Text('Нет фотографий'),
+                : const Text('Нет фотографий', style: AppTextStyles.bodyMedium,),
             const SizedBox(height: 16),
 
             // Аудиозаписи
             Text(
               'Аудиозаписи ',
-              style: Theme.of(context).textTheme.titleSmall,
+              style: AppTextStyles.titleSmall,
             ),
             const SizedBox(height: 8),
             if (_currentTask.audioMessage != null)
@@ -307,7 +304,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                 ),
               )
             else
-              const Text('Нет аудиозаписей'),
+              const Text('Нет аудиозаписей',style: AppTextStyles.bodyMedium,),
             const SizedBox(height: 16),
 
             // Видео
@@ -315,7 +312,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 // Фотографии
-                Text('Видео', style: Theme.of(context).textTheme.titleSmall),
+                Text('Видео', style: AppTextStyles.titleSmall),
                 const SizedBox(width: 8),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -325,11 +322,7 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                   ),
                   child: Text(
                     _currentTask.videoMessage!.length.toString(),
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                    style: AppTextStyles.bodyMedium
                   ),
                 ),
               ],

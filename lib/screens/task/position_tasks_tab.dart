@@ -93,7 +93,7 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
   }
 
   Widget _buildCategoryItem(BuildContext context, TaskCategory category) {
-    final icon = StatusHelper.getStatusIcon(category.status);
+    final icon = TaskCategories.getCategoryIcon(category.status);
 
     return ListTile(
       contentPadding:

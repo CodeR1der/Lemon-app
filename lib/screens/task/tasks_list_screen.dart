@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/screens/task/task_details_screen.dart';
+import 'package:task_tracker/task_screens/task_period_tab.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
+import 'package:task_tracker/widgets/common/app_colors.dart';
 
 import '../../models/task.dart';
 import '../../models/task_role.dart';
@@ -34,6 +38,7 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
   bool _initialized = false;
   bool _isLoading = false;
   RealtimeChannel? _realtimeChannel;
+  final Map<String, bool> _expandedStates = {};
 
   @override
   void initState() {
@@ -65,18 +70,13 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
         );
       }
       _initialized = true;
-
-      // Настраиваем Realtime подписку для этого экрана
       _setupRealtimeSubscription();
     }
   }
 
   void _setupRealtimeSubscription() {
-    // Упрощенная подписка - основное обновление идет через TaskProvider
     print('TaskListScreen: Realtime подписка настроена через TaskProvider');
   }
-
-  // Методы обработки Realtime событий удалены - теперь используется TaskProvider
 
   Future<void> _loadTasks() async {
     setState(() {
@@ -85,10 +85,8 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
 
     try {
       final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-      print(
-          'TaskListScreen: Загружаем задачи для статуса: ${widget.status}, позиции: ${widget.position}');
+      print('TaskListScreen: Загружаем задачи для статуса: ${widget.status}, позиции: ${widget.position}');
 
-      // Загружаем задачи через TaskProvider - они будут доступны через Consumer
       if (widget.projectId != null) {
         taskProvider.loadTasksAndCategories(
           taskCategories: TaskCategories(),
@@ -112,37 +110,35 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
     }
   }
 
-  Widget _buildTaskCard(BuildContext context, Task task) {
-    // Определяем отображаемый статус
-    TaskStatus displayStatus = task.status;
+  void _toggleExpand(String taskId) {
+    setState(() {
+      _expandedStates[taskId] = !(_expandedStates[taskId] ?? false);
+    });
+  }
 
-    // Для проектов всегда используем реальный статус из БД
-    if (widget.projectId != null) {
-      displayStatus = task.status;
-      print(
-          'TaskListScreen: Отображаем задачу ${task.id} в проекте со статусом: ${task.status}');
-    } else if (widget.position ==
-            RoleHelper.convertToString(TaskRole.communicator) &&
-        task.status == TaskStatus.atWork &&
-        widget.status == TaskStatus.controlPoint) {
-      // Для коммуникатора в списке контрольных точек отображаем как "Контрольная точка"
-      displayStatus = TaskStatus.controlPoint;
-      print(
-          'TaskListScreen: Отображаем задачу ${task.id} как "Контрольная точка"');
+  Widget _buildTaskCard(BuildContext context, Task task) {
+    final isExpanded = _expandedStates[task.id] ?? false;
+    final isArchived = task.status == TaskStatus.closed || task.status == TaskStatus.completed;
+
+    // Определяем иконку и текст статуса
+    IconData statusIcon;
+    String statusText;
+
+    if (isArchived) {
+      if (task.status == TaskStatus.completed) {
+        statusIcon = Iconsax.tick_circle;
+        statusText = 'Завершена';
+      } else {
+        statusIcon = Iconsax.close_circle;
+        statusText = 'Закрыта';
+      }
     } else {
-      print(
-          'TaskListScreen: Отображаем задачу ${task.id} со статусом: ${task.status}');
+      statusIcon = TaskCategories.getCategoryIcon(task.status);
+      statusText = StatusHelper.displayName(task.status);
     }
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TaskDetailsScreen(task: task),
-          ),
-        );
-      },
+      onTap: () => _toggleExpand(task.id),
       child: AppCommonWidgets.card(
         margin: AppSpacing.marginBottom16,
         padding: AppSpacing.paddingAll16,
@@ -150,37 +146,122 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppCommonWidgets.labeledField(
-              label: 'Статус',
-              child: AppCommonWidgets.statusChip(
-                icon: StatusHelper.getStatusIcon(displayStatus),
-                text: StatusHelper.displayName(displayStatus),
-              ),
-            ),
-            if (widget.position ==
-                    RoleHelper.convertToString(TaskRole.communicator) &&
-                widget.status == TaskStatus.queue) ...[
-              AppCommonWidgets.labeledField(
-                label: 'Очередность задачи',
-                child: AppCommonWidgets.counterChip(
-                  count: task.queuePosition.toString(),
+            // Заголовок карточки
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isArchived) ...[
+                        // Для архивных задач: статус сверху
+                        AppCommonWidgets.labeledField(
+                          label: 'Статус',
+                          child: AppCommonWidgets.statusChip(
+                            icon: statusIcon,
+                            text: statusText,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      // Название задачи для всех
+                      AppCommonWidgets.labeledField(
+                        label: 'Название задачи',
+                        child: Text(
+                          task.taskName,
+                          style: AppTextStyles.bodyMedium,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
+                Icon(
+                  isExpanded ? Iconsax.arrow_circle_up_copy : Iconsax.arrow_circle_down_copy,
+                  size: 32,
+                  color: AppColors.primaryGrey,
+                ),
+              ],
+            ),
+
+            // Исполнитель для неархивных задач в неразвернутом состоянии
+            if (!isExpanded && !isArchived && task.team.teamMembers.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text('Исполнитель', style: AppTextStyles.titleSmall),
+              AppCommonWidgets.employeeTileSmall(
+                  employee: task.team.teamMembers.first,
+                  context: context
               ),
             ],
-            AppCommonWidgets.labeledField(
-              label: 'Название задачи',
-              child: Text(
-                task.taskName,
-                style: AppTextStyles.bodyMedium,
+
+            // Развернутое состояние
+            if (isExpanded) ...[
+              const SizedBox(height: 16),
+
+              // Статус для неархивных задач в развернутом состоянии
+              if (!isArchived) ...[
+                AppCommonWidgets.labeledField(
+                  label: 'Сделать до',
+                  child: Row(children: [
+                    Icon(Iconsax.calendar,size: 18),
+                    AppSpacing.width4,
+                    Text(task.deadline != null ? TaskPeriodTab.formatDeadline(task.deadline) :TaskPeriodTab.formatDeadline(task.endDate), style: AppTextStyles.bodyMedium,) ,
+                  ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Проект
+              AppCommonWidgets.labeledField(
+                label: 'Проект',
+                child: Text(
+                  task.project?.name ?? 'Не указан',
+                  style: AppTextStyles.bodyMedium,
+                ),
               ),
-            ),
-            AppCommonWidgets.labeledField(
-              label: 'Проект',
-              child: Text(
-                task.project?.name ?? 'Не указан',
-                style: AppTextStyles.bodyMedium,
-              ),
-            ),
+
+              // Исполнитель
+              const SizedBox(height: 12),
+              Text('Исполнитель', style: AppTextStyles.titleSmall),
+              if (task.team.teamMembers.isNotEmpty)
+                AppCommonWidgets.employeeTileSmall(
+                    employee: task.team.teamMembers.first,
+                    context: context
+                )
+              else
+                Text('Не назначен', style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey)),
+
+              // Очередность для коммуникатора
+              if (widget.position == RoleHelper.convertToString(TaskRole.communicator) &&
+                  widget.status == TaskStatus.queue) ...[
+                const SizedBox(height: 12),
+                AppCommonWidgets.labeledField(
+                  label: 'Очередность задачи',
+                  child: AppCommonWidgets.counterChip(
+                    count: task.queuePosition.toString(),
+                  ),
+                ),
+              ],
+
+              // Кнопка подробнее
+              const SizedBox(height: 16),
+              AppButtons.secondaryButton(
+                  text: 'Подробнее',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TaskDetailsScreen(task: task),
+                      ),
+                    );
+                  }
+              )
+            ],
           ],
         ),
       ),
@@ -193,7 +274,9 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text(StatusHelper.displayName(widget.status)),
+        title: Text(widget.status == TaskStatus.completed
+            ? 'Архив задач'
+            : StatusHelper.displayName(widget.status)),
       ),
       body: SafeArea(
         top: false,
@@ -203,10 +286,8 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
               return AppCommonWidgets.loadingIndicator();
             }
             if (taskProvider.error != null) {
-              return AppCommonWidgets.errorWidget(
-                  'Ошибка: ${taskProvider.error}');
+              return AppCommonWidgets.errorWidget('Ошибка: ${taskProvider.error}');
             }
-//
             final tasks = _getTasksFromProvider(taskProvider);
 
             if (tasks.isEmpty) {
@@ -215,8 +296,7 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                children:
-                    tasks.map((task) => _buildTaskCard(context, task)).toList(),
+                children: tasks.map((task) => _buildTaskCard(context, task)).toList(),
               ),
             );
           },
@@ -226,10 +306,24 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
   }
 
   List<Task> _getTasksFromProvider(TaskProvider taskProvider) {
-    // Получаем актуальные задачи из TaskProvider
+    if (widget.status == TaskStatus.completed) {
+      final completedTasks = taskProvider.getTasksByStatus(
+        TaskStatus.completed,
+        projectId: widget.projectId,
+        userId: widget.userId,
+        position: widget.position,
+      );
+      final closedTasks = taskProvider.getTasksByStatus(
+        TaskStatus.closed,
+        projectId: widget.projectId,
+        userId: widget.userId,
+        position: widget.position,
+      );
+      return [...completedTasks, ...closedTasks];
+    }
+
     if (widget.status == TaskStatus.controlPoint &&
         widget.position == RoleHelper.convertToString(TaskRole.communicator)) {
-      // Для контрольных точек коммуникатора используем специальную логику
       return taskProvider.getTasksByStatus(
         TaskStatus.atWork,
         projectId: widget.projectId,
@@ -238,7 +332,6 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
       );
     } else if (widget.status == TaskStatus.atWork &&
         widget.position == RoleHelper.convertToString(TaskRole.communicator)) {
-      // Для задач "В работе" коммуникатора используем специальную логику
       return taskProvider.getTasksByStatus(
         TaskStatus.atWork,
         projectId: widget.projectId,
@@ -248,7 +341,6 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
     } else if (widget.status == TaskStatus.controlPoint &&
         (widget.position == RoleHelper.convertToString(TaskRole.executor) ||
             widget.position == RoleHelper.convertToString(TaskRole.creator))) {
-      // Для исполнителя и постановщика объединяем задачи "В работе" и "Контрольная точка"
       final atWorkTasks = taskProvider.getTasksByStatus(
         TaskStatus.atWork,
         projectId: widget.projectId,
@@ -263,13 +355,11 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
       );
       return [...atWorkTasks, ...controlPointTasks];
     } else if (widget.projectId != null) {
-      // Для проектов используем реальный статус из БД
       return taskProvider.getTasksByStatus(
         widget.status,
         projectId: widget.projectId,
       );
     } else {
-      // Для остальных случаев используем обычный метод
       return taskProvider.getTasksByStatus(
         widget.status,
         projectId: widget.projectId,

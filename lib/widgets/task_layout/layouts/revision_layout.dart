@@ -64,7 +64,6 @@ class RevisionLayoutStrategy extends BaseTaskLayoutStrategy {
     return [
       buildHistorySection(context, revisions),
       const Divider(),
-      buildRevisionsSection(context, task, TaskRole.none, revisions),
     ];
   }
 }
