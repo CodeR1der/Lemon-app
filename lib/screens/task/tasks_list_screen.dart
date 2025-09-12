@@ -162,6 +162,7 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
                           child: AppCommonWidgets.statusChip(
                             icon: statusIcon,
                             text: statusText,
+                            status: task.status
                           ),
                         ),
                         const SizedBox(height: 8),

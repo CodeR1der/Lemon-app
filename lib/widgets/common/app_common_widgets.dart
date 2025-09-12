@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:task_tracker/models/employee.dart';
 import 'package:task_tracker/screens/employee/employee_details_screen.dart';
 import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/widgets/common/app_colors.dart';
 
+import '../../models/task_status.dart';
 import 'app_container_styles.dart';
 import 'app_spacing.dart';
 import 'app_text_styles.dart';
@@ -88,9 +90,19 @@ class AppCommonWidgets {
   static Widget statusChip({
     required IconData icon,
     required String text,
-    Color? backgroundColor,
     Color? textColor,
+    TaskStatus? status
   }) {
+    var backgroundColor = status == TaskStatus.completed
+        ? Colors.green.withOpacity(0.2)
+        : status == TaskStatus.closed
+        ? Colors.red.withOpacity(0.2)
+        : const Color(0xFFEBEDF0);
+    var textColor = status == TaskStatus.completed
+    ? Colors.green[800]
+        : status == TaskStatus.closed
+    ? Colors.red[800]
+        : Colors.black;
     return Container(
       padding: AppSpacing.paddingHorizontal8Vertical4,
       decoration: AppContainerStyles.statusContainerDecoration.copyWith(
@@ -206,6 +218,7 @@ class AppCommonWidgets {
     return Container(
       decoration: AppContainerStyles.inputFieldDecoration,
       child: TextField(
+        textCapitalization: TextCapitalization.words,
         controller: controller,
         expands: isMultiline,
         maxLines:  maxLines,
@@ -332,6 +345,91 @@ class AppCommonWidgets {
           ),
           contentPadding: AppSpacing.paddingVertical12,
         ),
+      ),
+    );
+  }
+
+  static Widget inputPhoneField(
+      {
+        required TextEditingController phoneController,
+        required String hintText,
+        Widget? prefixIcon,
+        bool enabled = true,
+        VoidCallback? onTap,
+        VoidCallback? onChanged
+      }
+      ){
+    return GestureDetector(
+      onTap: onTap,
+      child: TextFormField(
+        controller: phoneController,
+        keyboardType: TextInputType.phone,
+        decoration: InputDecoration(
+          prefixText: '+7 ',
+          prefixStyle: AppTextStyles.bodySmall,
+          isCollapsed: true,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey[400]!, width: 1),
+          ),
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          hintText: 'XXX XXX-XX-XX',
+          hintStyle: AppTextStyles.titleSmall,
+        ),
+        style: AppTextStyles.bodySmall,
+        onChanged: (value) {
+          onChanged;
+        },
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Пожалуйста, введите номер телефона';
+          }
+          if (!RegExp(r'^[0-9]{10}$')
+              .hasMatch(value.replaceAll(RegExp(r'[^0-9]'), ''))) {
+            return 'Введите корректный номер телефона';
+          }
+          return null;
+        },
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(10),
+          TextInputFormatter.withFunction(
+                (oldValue, newValue) {
+              if (newValue.text.isEmpty) return newValue;
+
+              final text = newValue.text;
+              String newText = text;
+
+              if (text.length > 3) {
+                newText = '${text.substring(0, 3)} ${text.substring(3)}';
+              }
+              if (text.length > 6) {
+                newText =
+                '${newText.substring(0, 7)}-${newText.substring(7)}';
+              }
+              if (text.length > 8) {
+                newText =
+                '${newText.substring(0, 10)}-${newText.substring(10)}';
+              }
+
+              return TextEditingValue(
+                text: newText,
+                selection: TextSelection.collapsed(offset: newText.length),
+              );
+            },
+          )
+        ],
       ),
     );
   }

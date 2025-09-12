@@ -7,8 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:task_tracker/auth/auth_main_screen.dart';
 import 'package:task_tracker/models/announcement.dart';
 import 'package:task_tracker/models/task.dart';
-import 'package:task_tracker/screens/annoncement/add_announcement.dart';
-import 'package:task_tracker/screens/annoncement/announcement_screen.dart';
+import 'package:task_tracker/screens/announcement/add_announcement.dart';
+import 'package:task_tracker/screens/announcement/announcement_screen.dart';
 import 'package:task_tracker/screens/employee/employees_screen.dart';
 import 'package:task_tracker/screens/employee/profile_screen.dart';
 import 'package:task_tracker/screens/home_page.dart';
@@ -24,8 +24,6 @@ import 'package:task_tracker/services/task_provider.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/task_screens/task_title_screen.dart';
 import 'package:task_tracker/widgets/navigation_panel.dart';
-
-import 'auth/auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,7 +65,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => TaskProvider()),
-        ChangeNotifierProvider(create: (_) => ProjectProvider()),
+        ChangeNotifierProvider(create: (_) => ProjectProvider()..loadProjects()),
         ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
       ],
       child: Builder(
@@ -77,9 +75,10 @@ class MyApp extends StatelessWidget {
           final padding = mediaQuery.padding;
 
           return GetMaterialApp(
-            builder: (context, child) {
+            builder: (context, child) {//
               return MediaQuery(
                 data: mediaQuery.copyWith(
+                  textScaler: TextScaler.noScaling,
                   // Сохраняем отступ для статус бара, убираем только нижний отступ
                   padding: EdgeInsets.only(top: padding.top),
                   viewPadding: EdgeInsets.only(top: padding.top),

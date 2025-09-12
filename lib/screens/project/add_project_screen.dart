@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:task_tracker/widgets/common/app_buttons.dart';
 
 import '../../models/employee.dart';
 import '../../services/employee_operations.dart';
 import '../../services/project_provider.dart';
 import '../../services/user_service.dart';
+import '../../widgets/common/app_common_widgets.dart';
 
 class AddProjectScreen extends StatefulWidget {
   const AddProjectScreen({super.key});
@@ -42,7 +44,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     try {
       final employees = await _employeeService.getAllEmployees();
       setState(() {
-        _allEmployees = employees.where((employee) => employee.userId != UserService.to.currentUser!.userId).toList();
+        _allEmployees = employees
+            .where((employee) =>
+                employee.userId != UserService.to.currentUser!.userId)
+            .toList();
         _isLoadingEmployees = false;
       });
     } catch (e) {
@@ -108,13 +113,13 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                 },
                                 secondary: CircleAvatar(
                                   radius: 16,
-                                  backgroundImage: employee.avatarUrl !=
-                                      null &&
-                                      employee.avatarUrl!.isNotEmpty
-                                      ? NetworkImage(EmployeeService().getAvatarUrl(employee.avatarUrl!))
+                                  backgroundImage: employee.avatarUrl != null &&
+                                          employee.avatarUrl!.isNotEmpty
+                                      ? NetworkImage(EmployeeService()
+                                          .getAvatarUrl(employee.avatarUrl!))
                                       : null,
                                   child: employee.avatarUrl == null ||
-                                      employee.avatarUrl!.isEmpty
+                                          employee.avatarUrl!.isEmpty
                                       ? const Icon(Icons.person, size: 16)
                                       : null,
                                 ),
@@ -190,8 +195,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       if (projectProvider.error == null) {
         Navigator.pop(context);
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   @override
@@ -488,28 +492,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      OutlinedButton(
-                        onPressed: _showEmployeesModalSheet,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.black,
-                          side: const BorderSide(color: Colors.orange),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Iconsax.user_cirlce_add,
-                              size: 24,
-                            ),
-                            SizedBox(width: 8),
-                            Text('Прикрепить сотрудников'),
-                          ],
-                        ),
-                      ),
+                      AppButtons.secondaryButton(
+                          text: 'Прикрепить сотрудников',
+                          onPressed: _showEmployeesModalSheet,
+                          icon: Iconsax.user_cirlce_add),
                       if (_selectedEmployees.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         const Text(
@@ -519,22 +505,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        ..._selectedEmployees.map((employee) => ListTile(
-                              leading: CircleAvatar(
-                                child: Text(employee.firstName),
-                              ),
-                              title: Text(employee.fullName),
-                              subtitle: Text(employee.role),
-                              trailing: employee.userId != UserService.to.currentUser!.userId ? IconButton(
-                                icon: const Icon(Iconsax.trash,
-                                    color: Colors.red),
-                                onPressed: () {
-                                  setState(() {
-                                    _selectedEmployees.remove(employee);
-                                  });
-                                },
-                              ) : null,
-                            )),
+                        ..._selectedEmployees.map((employee) =>
+                            AppCommonWidgets.employeeTile(
+                                employee: employee, context: context)),
                       ],
                       const SizedBox(height: 12),
                     ],
@@ -546,22 +519,13 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         ),
       ),
       bottomSheet: Container(
-        color: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _canSubmit ? _submit : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _canSubmit ? Colors.orange : Colors.grey,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: const Text('Создать'),
-        ),
-      ),
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          width: double.infinity,
+          child: AppButtons.primaryButton(
+              text: 'Создать',
+              onPressed: () => _canSubmit ? _submit : null,
+              backgroundColor: _canSubmit ? Colors.orange : Colors.grey)),
     );
   }
 }

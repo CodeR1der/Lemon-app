@@ -11,14 +11,20 @@ class AppButtons {
     required String text,
     required VoidCallback onPressed,
     IconData? icon,
+    Color? backgroundColor,
     bool isLoading = false,
     bool isFullWidth = true,
   }) {
+    final buttonStyle = backgroundColor != null
+        ? AppButtonStyles.primaryButton.copyWith(
+      backgroundColor: WidgetStateProperty.all(backgroundColor),
+    )
+        : AppButtonStyles.primaryButton;
     return SizedBox(
       width: isFullWidth ? double.infinity : null,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
-        style: AppButtonStyles.primaryButton,
+        style: buttonStyle,
         child: isLoading
             ? const SizedBox(
                 height: 20,

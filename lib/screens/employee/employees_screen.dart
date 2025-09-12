@@ -631,62 +631,22 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                             fontFamily: 'Roboto'),
                       ),
                       const SizedBox(height: 16),
-                      TextField(
-                        textCapitalization: TextCapitalization.words,
-                        controller: lastNameController,
-                        decoration: InputDecoration(
-                          hintText: 'Фамилия',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      TextField(
-                        textCapitalization: TextCapitalization.words,
-                        controller: firstNameController,
-                        decoration: InputDecoration(
-                          hintText: 'Имя',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      TextField(
-                        textCapitalization: TextCapitalization.words,
-                        controller: middleNameController,
-                        decoration: InputDecoration(
-                          hintText: 'Отчество',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: positionController,
-                        decoration: InputDecoration(
-                          hintText: 'Должность',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: phoneController,
-                        decoration: InputDecoration(
-                          hintText: 'Номер телефона',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
+                      AppCommonWidgets.inputField(controller: lastNameController, hintText: 'Фамилия'),
+                      AppSpacing.height8,
+                      AppCommonWidgets.inputField(controller: firstNameController, hintText: 'Имя'),
+                      AppSpacing.height8,
+                      AppCommonWidgets.inputField(controller: middleNameController, hintText: 'Отчество'),
+                      AppSpacing.height8,
+                      AppCommonWidgets.inputField(controller: positionController, hintText: 'Должность'),
+                      AppSpacing.height8,
+                      AppCommonWidgets.inputPhoneField(phoneController: phoneController, hintText: 'Номер телефона'),
+
                       const SizedBox(height: 24),
                       AppButtons.primaryButton(
                           text: 'Создать',
                           onPressed: () async {
                             try {
-                              if (nameController.text.isNotEmpty &&
+                              if (firstNameController.text.isNotEmpty && lastNameController.text.isNotEmpty && phoneController.text.isNotEmpty &&
                                   positionController.text.isNotEmpty) {
                                 final newEmployee = Employee(
                                   userId: const Uuid().v4(),
@@ -695,11 +655,11 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                                   phone: phoneController.text,
                                   telegramId: null,
                                   // Optional field
-                                  avatarUrl: 'users/default.jpg',
+                                  avatarUrl: 'default.jpg',
                                   vkId: null,
                                   // Optional field
                                   role: 'Исполнитель / Постановщик',
-                                  // Default role
+                                  // Default role..
                                   companyId:
                                       _userService.currentUser?.companyId ?? '',
                                   firstName: firstNameController.text,
@@ -810,15 +770,10 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 40),
-                  TextField(
+                  AppCommonWidgets.filledInputField(
                     controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Поиск',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
+                    hintText: 'Поиск',
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   ),
                   Expanded(
                     child: ListView.builder(

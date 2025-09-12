@@ -21,7 +21,7 @@ import '../models/task_status.dart';
 import '../services/task_categories.dart';
 import '../services/task_provider.dart';
 import '../widgets/common/app_common.dart';
-import 'annoncement/announcement_screen.dart';
+import 'announcement/announcement_screen.dart';
 import 'employee_queue_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -645,7 +645,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTaskCategoryItem(TaskCategory category) {
-    final icon = StatusHelper.getStatusIcon(
+    final icon = TaskCategories.getCategoryIcon(
         category.status); // Используем существующий метод
 
     return ListTile(
