@@ -148,15 +148,15 @@ class _SearchScreenState extends State<SearchScreen> {
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            _showAllTasks = false;
-                            _showAllEmployees = false;
-                          });
-                        },
-                      )
+                  icon: const Icon(Icons.clear, color: Colors.grey),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _showAllTasks = false;
+                      _showAllEmployees = false;
+                    });
+                  },
+                )
                     : null,
                 hintText: 'Поиск по задачам и исполнителям',
                 border: OutlineInputBorder(
@@ -164,7 +164,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   borderSide: BorderSide.none,
                 ),
                 contentPadding:
-                    const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               ),
               onChanged: (value) => _performSearch(),
             ),
@@ -205,7 +205,7 @@ class _SearchScreenState extends State<SearchScreen> {
               },
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.grey.withOpacity(0.3)),
@@ -251,7 +251,7 @@ class _SearchScreenState extends State<SearchScreen> {
               },
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.grey.withOpacity(0.3)),

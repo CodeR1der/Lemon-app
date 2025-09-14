@@ -28,19 +28,20 @@ class PositionTasksTab extends StatefulWidget {
 class _PositionTasksTabState extends State<PositionTasksTab> {
   bool _initialized = false;
   late Provider provider;
+  TaskProvider? _taskProvider; // Store reference to TaskProvider
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      _taskProvider = Provider.of<TaskProvider>(context, listen: false);
       if (widget.projectId != null) {
-        taskProvider.loadTasksAndCategories(
+        _taskProvider!.loadTasksAndCategories(
           taskCategories: TaskCategories(),
           projectId: widget.projectId,
         );
       } else if (widget.position != null && widget.employeeId != null) {
-        taskProvider.loadTasksAndCategories(
+        _taskProvider!.loadTasksAndCategories(
           taskCategories: TaskCategories(),
           position: widget.position!,
           employeeId: widget.employeeId!,
@@ -53,8 +54,7 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
   @override
   void dispose() {
     // Отписываемся от Realtime подписок при закрытии экрана
-    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-    taskProvider.disposeRealtimeSubscriptions();
+    _taskProvider?.disposeRealtimeSubscriptions();
     super.dispose();
   }
 

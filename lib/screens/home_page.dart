@@ -12,6 +12,7 @@ import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/navigation_service.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/widgets/common/refresh_wrapper.dart';
 
 import '../models/employee.dart';
 import '../models/project.dart';
@@ -99,6 +100,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _refreshData() async {
+    setState(() {
+      _isLoading.value = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _loadData();
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Ошибка обновления данных: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading.value = false;
+      });
+    }
+  }
   @override
   void dispose() {
     super.dispose();
@@ -348,35 +367,34 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         body: _errorMessage != null
             ? Center(child: Text(_errorMessage!))
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppSpacing.height16,
-                    _buildUserInfo(),
-                    AppSpacing.height16,
-                    _buildSearchBox(),
-                    AppSpacing.height16,
-                    _buildAddTaskButton(),
-                    AppSpacing.height16,
-                    if (UserService.to.currentUser!.role == 'Директор' ||
-                        UserService.to.currentUser!.role == 'Коммуникатор') ...[
-                      _buildAddAnnouncementButton(),
-                      AppSpacing.height16,
-                    ],
-                    _buildAnnouncementSection(),
-                    _buildTasksSection(),
-                    AppSpacing.height16,
-                    _buildEmployeesSection(),
-                    AppSpacing.height16,
-                    _buildProjectsSection(),
-                  ],
-                ),
-              ),
+            :  RefreshableScrollView(
+          onRefresh: _loadData,
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            AppSpacing.height16,
+            _buildUserInfo(),
+            AppSpacing.height16,
+            _buildSearchBox(),
+            AppSpacing.height16,
+            _buildAddTaskButton(),
+            AppSpacing.height16,
+            if (UserService.to.currentUser!.role == 'Директор' ||
+                UserService.to.currentUser!.role == 'Коммуникатор') ...[
+              _buildAddAnnouncementButton(),
+              AppSpacing.height16,
+            ],
+            _buildAnnouncementSection(),
+            _buildTasksSection(),
+            AppSpacing.height16,
+            _buildEmployeesSection(),
+            AppSpacing.height16,
+            _buildProjectsSection(),
+          ],
+        ),
       );
     });
   }
+
 
   Widget _buildUserInfo() {
     final user = UserService.to.currentUser!;

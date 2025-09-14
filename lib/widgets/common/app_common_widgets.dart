@@ -87,22 +87,21 @@ class AppCommonWidgets {
   }
 
   /// Виджет для отображения статуса задачи
-  static Widget statusChip({
-    required IconData icon,
-    required String text,
-    Color? textColor,
-    TaskStatus? status
-  }) {
+  static Widget statusChip(
+      {required IconData icon,
+      required String text,
+      Color? textColor,
+      TaskStatus? status}) {
     var backgroundColor = status == TaskStatus.completed
         ? Colors.green.withOpacity(0.2)
         : status == TaskStatus.closed
-        ? Colors.red.withOpacity(0.2)
-        : const Color(0xFFEBEDF0);
+            ? Colors.red.withOpacity(0.2)
+            : const Color(0xFFEBEDF0);
     var textColor = status == TaskStatus.completed
-    ? Colors.green[800]
+        ? Colors.green[800]
         : status == TaskStatus.closed
-    ? Colors.red[800]
-        : Colors.black;
+            ? Colors.red[800]
+            : Colors.black;
     return Container(
       padding: AppSpacing.paddingHorizontal8Vertical4,
       decoration: AppContainerStyles.statusContainerDecoration.copyWith(
@@ -221,7 +220,7 @@ class AppCommonWidgets {
         textCapitalization: TextCapitalization.words,
         controller: controller,
         expands: isMultiline,
-        maxLines:  maxLines,
+        maxLines: maxLines,
         keyboardType: keyboardType ??
             (isMultiline ? TextInputType.multiline : TextInputType.text),
         onChanged: onChanged,
@@ -325,8 +324,10 @@ class AppCommonWidgets {
     required TextEditingController controller,
     required String hintText,
     Widget? prefixIcon,
+    Widget? suffixIcon,
     bool enabled = true,
     VoidCallback? onTap,
+    ValueChanged<String>? onChanged,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -338,6 +339,7 @@ class AppCommonWidgets {
           filled: true,
           fillColor: Colors.grey[200],
           prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
           hintText: hintText,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -345,20 +347,18 @@ class AppCommonWidgets {
           ),
           contentPadding: AppSpacing.paddingVertical12,
         ),
+        onChanged: onChanged,
       ),
     );
   }
 
   static Widget inputPhoneField(
-      {
-        required TextEditingController phoneController,
-        required String hintText,
-        Widget? prefixIcon,
-        bool enabled = true,
-        VoidCallback? onTap,
-        VoidCallback? onChanged
-      }
-      ){
+      {required TextEditingController phoneController,
+      required String hintText,
+      Widget? prefixIcon,
+      bool enabled = true,
+      VoidCallback? onTap,
+      VoidCallback? onChanged}) {
     return GestureDetector(
       onTap: onTap,
       child: TextFormField(
@@ -383,7 +383,7 @@ class AppCommonWidgets {
             borderSide: BorderSide(color: Colors.grey[400]!, width: 1),
           ),
           contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           hintText: 'XXX XXX-XX-XX',
           hintStyle: AppTextStyles.titleSmall,
         ),
@@ -405,7 +405,7 @@ class AppCommonWidgets {
           FilteringTextInputFormatter.digitsOnly,
           LengthLimitingTextInputFormatter(10),
           TextInputFormatter.withFunction(
-                (oldValue, newValue) {
+            (oldValue, newValue) {
               if (newValue.text.isEmpty) return newValue;
 
               final text = newValue.text;
@@ -415,12 +415,11 @@ class AppCommonWidgets {
                 newText = '${text.substring(0, 3)} ${text.substring(3)}';
               }
               if (text.length > 6) {
-                newText =
-                '${newText.substring(0, 7)}-${newText.substring(7)}';
+                newText = '${newText.substring(0, 7)}-${newText.substring(7)}';
               }
               if (text.length > 8) {
                 newText =
-                '${newText.substring(0, 10)}-${newText.substring(10)}';
+                    '${newText.substring(0, 10)}-${newText.substring(10)}';
               }
 
               return TextEditingValue(
@@ -505,8 +504,8 @@ class AppCommonWidgets {
     final employeeService = EmployeeService();
 
     return ListTile(
-      contentPadding: contentPadding ??
-          const EdgeInsets.symmetric(vertical: 4.0),
+      contentPadding:
+          contentPadding ?? const EdgeInsets.symmetric(vertical: 4.0),
       leading: CircleAvatar(
         radius: avatarRadius,
         backgroundImage: employee.avatarUrl != null &&
@@ -572,12 +571,12 @@ class AppCommonWidgets {
     final employeeService = EmployeeService();
 
     return ListTile(
-      contentPadding: contentPadding ??
-          const EdgeInsets.symmetric(vertical: 0.0),
+      contentPadding:
+          contentPadding ?? const EdgeInsets.symmetric(vertical: 0.0),
       leading: CircleAvatar(
         radius: avatarRadius,
         backgroundImage: employee.avatarUrl != null &&
-            employee.avatarUrl!.isNotEmpty
+                employee.avatarUrl!.isNotEmpty
             ? NetworkImage(employeeService.getAvatarUrl(employee.avatarUrl!))
             : null,
         child: employee.avatarUrl == null || employee.avatarUrl!.isEmpty
@@ -609,14 +608,14 @@ class AppCommonWidgets {
       onTap: onTap ??
           (showNavigation
               ? () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    EmployeeDetailScreen(employee: employee),
-              ),
-            );
-          }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          EmployeeDetailScreen(employee: employee),
+                    ),
+                  );
+                }
               : null),
     );
   }

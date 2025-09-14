@@ -766,107 +766,111 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  AppCommonWidgets.filledInputField(
-                    controller: _searchController,
-                    hintText: 'Поиск',
-                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: EdgeInsets.zero,
-                      itemCount: _filteredEmployees.length +
-                          (_filteredEmployees.length > 1
-                              ? 1
-                              : 0), // +1 для разделителя
-                      itemBuilder: (context, index) {
-                        // Если это позиция для разделителя (после первого элемента)
-                        if (index == 1 && _filteredEmployees.length > 1) {
-                          return Container(
-                            margin: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: const Divider(
-                              thickness: 1,
-                              color: Colors.grey,
-                            ),
-                          );
-                        }
-
-                        // Корректируем индекс для получения сотрудника
-                        int employeeIndex = index > 1 ? index - 1 : index;
-                        Employee employee = _filteredEmployees[employeeIndex];
-                        bool isCurrentUser =
-                            employee.userId == _userService.currentUser?.userId;
-
-                        return AppCommonWidgets.employeeTile(
-                          employee: employee,
-                          context: context,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 4.0),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                employee.position,
-                                style: const TextStyle(
-                                  color: Colors.black38,
-                                  fontSize: 12,
-                                  fontFamily: 'Roboto',
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              SizedBox(
-                                height: 16,
-                                child: buildEmployeeIcons(employee),
-                              ),
-                            ],
-                          ),
-                          trailing: _userService.currentUser?.role ==
-                                      'Директор' &&
-                                  !isCurrentUser
-                              ? Padding(
-                                  padding: const EdgeInsets.only(right: 8.0),
-                                  child: IconButton(
-                                    icon: const Icon(Icons.more_vert, size: 40),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    onPressed: () =>
-                                        _showEmployeeOptions(employee),
-                                  ),
-                                )
-                              : null,
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+            AppCommonWidgets.filledInputField(
+              controller: _searchController,
+              hintText: 'Поиск',
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
             ),
-      bottomSheet: _userService.currentUser?.role == 'Директор'
-          ? SafeArea(
-              child: Container(
-                color: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppButtons.primaryButton(
-                        text: 'Создать сотрудника',
-                        onPressed: _showAddEmployeeDialog),
-                    const SizedBox(height: 8),
-                    AppButtons.secondaryButton(
-                        text: 'Показать QR-код компании',
-                        onPressed: _showCompanyQRCode),
-                  ],
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refreshData, // ✅ обновление свайпом вниз
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: _filteredEmployees.length +
+                      (_filteredEmployees.length > 1 ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == 1 && _filteredEmployees.length > 1) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: const Divider(
+                          thickness: 1,
+                          color: Colors.grey,
+                        ),
+                      );
+                    }
+
+                    int employeeIndex = index > 1 ? index - 1 : index;
+                    Employee employee = _filteredEmployees[employeeIndex];
+                    bool isCurrentUser =
+                        employee.userId == _userService.currentUser?.userId;
+
+                    return AppCommonWidgets.employeeTile(
+                      employee: employee,
+                      context: context,
+                      contentPadding:
+                      const EdgeInsets.symmetric(vertical: 4.0),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            employee.position,
+                            style: const TextStyle(
+                              color: Colors.black38,
+                              fontSize: 12,
+                              fontFamily: 'Roboto',
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          SizedBox(
+                            height: 16,
+                            child: buildEmployeeIcons(employee),
+                          ),
+                        ],
+                      ),
+                      trailing: _userService.currentUser?.role ==
+                          'Директор' &&
+                          !isCurrentUser
+                          ? Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: IconButton(
+                          icon: const Icon(Icons.more_vert, size: 40),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () =>
+                              _showEmployeeOptions(employee),
+                        ),
+                      )
+                          : null,
+                    );
+                  },
                 ),
               ),
-            )
+            ),
+          ],
+        ),
+      ),
+      bottomSheet: _userService.currentUser?.role == 'Директор'
+          ? SafeArea(
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppButtons.primaryButton(
+                  text: 'Создать сотрудника',
+                  onPressed: _showAddEmployeeDialog),
+              const SizedBox(height: 8),
+              AppButtons.secondaryButton(
+                  text: 'Показать QR-код компании',
+                  onPressed: _showCompanyQRCode),
+            ],
+          ),
+        ),
+      )
           : null,
     );
   }
+
+  Future<void> _refreshData() async {
+    await _loadEmployees();
+    _clearProjectsCache();
+  }
+
 }

@@ -7,17 +7,33 @@ import '/models/project.dart';
 import '/services/user_service.dart';
 import '../../services/project_provider.dart';
 import '../../widgets/common/app_buttons.dart';
+import '../../widgets/common/refresh_wrapper.dart';
 import 'add_project_screen.dart';
 import 'project_details_screen.dart';
 
-class ProjectScreen extends StatelessWidget {
+class ProjectScreen extends StatefulWidget {
   const ProjectScreen({super.key});
+
+  @override
+  State<ProjectScreen> createState() => _ProjectScreenState();
+}
+
+class _ProjectScreenState extends State<ProjectScreen> {
+  Future<void> _refreshData() async {
+    try {
+      await Provider.of<ProjectProvider>(context, listen: false).loadProjects();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка обновления проектов: $e')),
+      );
+    }
+  }
 
   void _openProjectDetails(BuildContext context, Project project) {
     Get.to(() => ProjectDetailsScreen(project: project));
   }
 
-  void _openAddProjectScreen(BuildContext context) {//
+  void _openAddProjectScreen(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AddProjectScreen()),
@@ -40,27 +56,26 @@ class ProjectScreen extends StatelessWidget {
               child: provider.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : provider.projects.isEmpty
-                  ? const Center(
-                child: Text(
-                  'Нет проектов',
-                  style:
-                  TextStyle(fontSize: 18, color: Colors.grey),
-                ),
+                  ? RefreshableScrollView(
+                onRefresh: _refreshData,
+                children: const [
+                  Center(
+                    child: Text(
+                      'Нет проектов',
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                  ),
+                ],
               )
-                  : GridView.builder(
-                gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.5,
-                ),
-                itemCount: provider.projects.length,
-                itemBuilder: (context, index) {
-                  final project = provider.projects[index];
+                  : RefreshableGridView(
+                onRefresh: _refreshData,
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.5,
+                children: provider.projects.map((project) {
                   return GestureDetector(
-                    onTap: () =>
-                        _openProjectDetails(context, project),
+                    onTap: () => _openProjectDetails(context, project),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -74,15 +89,13 @@ class ProjectScreen extends StatelessWidget {
                         ],
                       ),
                       child: Column(
-                        crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: CircleAvatar(
                               radius: 20,
-                              backgroundImage: project.avatarUrl !=
-                                  null
+                              backgroundImage: project.avatarUrl != null
                                   ? NetworkImage(project.avatarUrl!)
                                   : null,
                               child: project.avatarUrl == null
@@ -92,8 +105,7 @@ class ProjectScreen extends StatelessWidget {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
                             child: Text(
                               project.name,
                               style: const TextStyle(
@@ -108,20 +120,20 @@ class ProjectScreen extends StatelessWidget {
                       ),
                     ),
                   );
-                },
+                }).toList(),
               ),
             ),
           ),
           bottomSheet: isDirector
-              ?
-          Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                  vertical: 24, horizontal: 16),
-              width: double.infinity,
-              child: AppButtons.primaryButton(text: 'Добавить проект',
-                  icon: Iconsax.box_add,
-                  onPressed: () => _openAddProjectScreen(context))
+              ? Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            width: double.infinity,
+            child: AppButtons.primaryButton(
+              text: 'Добавить проект',
+              icon: Iconsax.box_add,
+              onPressed: () => _openAddProjectScreen(context),
+            ),
           )
               : null,
         );

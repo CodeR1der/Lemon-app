@@ -73,7 +73,7 @@ class TaskProvider with ChangeNotifier {
         final categories =
             await taskCategories.getCategories(position, employeeId);
         _categories['$position:$employeeId'] = categories;
-      }//
+      } //
       _error = null;
 
       // Настраиваем Realtime подписки
@@ -221,7 +221,7 @@ class TaskProvider with ChangeNotifier {
 
   Future<void> updateTaskStatus(Task task, TaskStatus status) async {
     try {
-       _isLoading = true;
+      _isLoading = true;
       notifyListeners();
 
       final updatedTask = task.copyWith(status: status);
