@@ -71,9 +71,9 @@ class TaskProvider with ChangeNotifier {
         _categories['project:$projectId'] = categories;
       } else if (position != null && employeeId != null) {
         final categories =
-            await taskCategories.getCategories(position, employeeId);
+        await taskCategories.getCategories(position, employeeId);
         _categories['$position:$employeeId'] = categories;
-      }//
+      } //
       _error = null;
 
       // Настраиваем Realtime подписки
@@ -142,7 +142,7 @@ class TaskProvider with ChangeNotifier {
       final tasksWithControlPoints = <Task>[];
       for (final task in atWorkTasks) {
         final hasUnclosedControlPoints =
-            await controlPointService.hasUnclosedControlPoints(task.id);
+        await controlPointService.hasUnclosedControlPoints(task.id);
         print(
             'TaskProvider: Задача ${task.id} имеет незакрытые контрольные точки: $hasUnclosedControlPoints');
         if (hasUnclosedControlPoints) {
@@ -165,7 +165,7 @@ class TaskProvider with ChangeNotifier {
       final tasksWithoutControlPoints = <Task>[];
       for (final task in atWorkTasks) {
         final hasUnclosedControlPoints =
-            await controlPointService.hasUnclosedControlPoints(task.id);
+        await controlPointService.hasUnclosedControlPoints(task.id);
         print(
             'TaskProvider: Задача ${task.id} имеет незакрытые контрольные точки: $hasUnclosedControlPoints');
         if (!hasUnclosedControlPoints) {
@@ -221,7 +221,7 @@ class TaskProvider with ChangeNotifier {
 
   Future<void> updateTaskStatus(Task task, TaskStatus status) async {
     try {
-       _isLoading = true;
+      _isLoading = true;
       notifyListeners();
 
       final updatedTask = task.copyWith(status: status);
@@ -243,14 +243,14 @@ class TaskProvider with ChangeNotifier {
       if (key.startsWith('project:')) {
         final projectId = key.split(':')[1];
         final categories =
-            await TaskCategories().getCategoriesProject(projectId);
+        await TaskCategories().getCategoriesProject(projectId);
         _categories[key] = categories;
       } else {
         final parts = key.split(':');
         final position = parts[0];
         final employeeId = parts[1];
         final categories =
-            await TaskCategories().getCategories(position, employeeId);
+        await TaskCategories().getCategories(position, employeeId);
         _categories[key] = categories;
       }
     }
@@ -278,35 +278,35 @@ class TaskProvider with ChangeNotifier {
       _taskChannel = client
           .channel('task_changes_project_$projectId')
           .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'task',
-            filter: PostgresChangeFilter(
-              type: PostgresChangeFilterType.eq,
-              column: 'project_id',
-              value: projectId,
-            ),
-            callback: (payload) {
-              print(
-                  'TaskProvider: Получено изменение задачи в проекте: $payload');
-              _handleTaskChange(payload);
-            },
-          )
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'task',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'project_id',
+          value: projectId,
+        ),
+        callback: (payload) {
+          print(
+              'TaskProvider: Получено изменение задачи в проекте: $payload');
+          _handleTaskChange(payload);
+        },
+      )
           .subscribe();
     } else if (position != null && employeeId != null) {
       // Для личных задач подписываемся на задачи пользователя
       _taskChannel = client
           .channel('task_changes_user_${position}_$employeeId')
           .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'task',
-            callback: (payload) {
-              print(
-                  'TaskProvider: Получено изменение задачи пользователя: $payload');
-              _handleTaskChange(payload);
-            },
-          )
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'task',
+        callback: (payload) {
+          print(
+              'TaskProvider: Получено изменение задачи пользователя: $payload');
+          _handleTaskChange(payload);
+        },
+      )
           .subscribe();
     }
 
@@ -314,15 +314,15 @@ class TaskProvider with ChangeNotifier {
     _controlPointChannel = client
         .channel('control_point_changes')
         .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'control_point',
-          callback: (payload) {
-            print(
-                'TaskProvider: Получено изменение контрольной точки: $payload');
-            _handleControlPointChange(payload);
-          },
-        )
+      event: PostgresChangeEvent.all,
+      schema: 'public',
+      table: 'control_point',
+      callback: (payload) {
+        print(
+            'TaskProvider: Получено изменение контрольной точки: $payload');
+        _handleControlPointChange(payload);
+      },
+    )
         .subscribe();
   }
 

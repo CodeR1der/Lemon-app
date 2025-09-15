@@ -87,21 +87,20 @@ class AppCommonWidgets {
   }
 
   /// Виджет для отображения статуса задачи
-  static Widget statusChip({
-    required IconData icon,
-    required String text,
-    Color? textColor,
-    TaskStatus? status
-  }) {
+  static Widget statusChip(
+      {required IconData icon,
+        required String text,
+        Color? textColor,
+        TaskStatus? status}) {
     var backgroundColor = status == TaskStatus.completed
         ? Colors.green.withOpacity(0.2)
         : status == TaskStatus.closed
         ? Colors.red.withOpacity(0.2)
         : const Color(0xFFEBEDF0);
     var textColor = status == TaskStatus.completed
-    ? Colors.green[800]
+        ? Colors.green[800]
         : status == TaskStatus.closed
-    ? Colors.red[800]
+        ? Colors.red[800]
         : Colors.black;
     return Container(
       padding: AppSpacing.paddingHorizontal8Vertical4,
@@ -221,7 +220,7 @@ class AppCommonWidgets {
         textCapitalization: TextCapitalization.words,
         controller: controller,
         expands: isMultiline,
-        maxLines:  maxLines,
+        maxLines: maxLines,
         keyboardType: keyboardType ??
             (isMultiline ? TextInputType.multiline : TextInputType.text),
         onChanged: onChanged,
@@ -287,7 +286,7 @@ class AppCommonWidgets {
             const SizedBox(height: 24.0),
             ElevatedButton(
               onPressed: onButtonPressed ??
-                  () {
+                      () {
                     Navigator.of(Get.context!).pop();
                   },
               style: ElevatedButton.styleFrom(
@@ -325,8 +324,10 @@ class AppCommonWidgets {
     required TextEditingController controller,
     required String hintText,
     Widget? prefixIcon,
+    Widget? suffixIcon,
     bool enabled = true,
     VoidCallback? onTap,
+    ValueChanged<String>? onChanged,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -338,6 +339,7 @@ class AppCommonWidgets {
           filled: true,
           fillColor: Colors.grey[200],
           prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
           hintText: hintText,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -345,20 +347,18 @@ class AppCommonWidgets {
           ),
           contentPadding: AppSpacing.paddingVertical12,
         ),
+        onChanged: onChanged,
       ),
     );
   }
 
   static Widget inputPhoneField(
-      {
-        required TextEditingController phoneController,
+      {required TextEditingController phoneController,
         required String hintText,
         Widget? prefixIcon,
         bool enabled = true,
         VoidCallback? onTap,
-        VoidCallback? onChanged
-      }
-      ){
+        VoidCallback? onChanged}) {
     return GestureDetector(
       onTap: onTap,
       child: TextFormField(
@@ -415,8 +415,7 @@ class AppCommonWidgets {
                 newText = '${text.substring(0, 3)} ${text.substring(3)}';
               }
               if (text.length > 6) {
-                newText =
-                '${newText.substring(0, 7)}-${newText.substring(7)}';
+                newText = '${newText.substring(0, 7)}-${newText.substring(7)}';
               }
               if (text.length > 8) {
                 newText =
@@ -505,12 +504,12 @@ class AppCommonWidgets {
     final employeeService = EmployeeService();
 
     return ListTile(
-      contentPadding: contentPadding ??
-          const EdgeInsets.symmetric(vertical: 4.0),
+      contentPadding:
+      contentPadding ?? const EdgeInsets.symmetric(vertical: 4.0),
       leading: CircleAvatar(
         radius: avatarRadius,
         backgroundImage: employee.avatarUrl != null &&
-                employee.avatarUrl!.isNotEmpty
+            employee.avatarUrl!.isNotEmpty
             ? NetworkImage(employeeService.getAvatarUrl(employee.avatarUrl!))
             : null,
         child: employee.avatarUrl == null || employee.avatarUrl!.isEmpty
@@ -546,14 +545,14 @@ class AppCommonWidgets {
       onTap: onTap ??
           (showNavigation
               ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          EmployeeDetailScreen(employee: employee),
-                    ),
-                  );
-                }
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    EmployeeDetailScreen(employee: employee),
+              ),
+            );
+          }
               : null),
     );
   }
@@ -572,8 +571,8 @@ class AppCommonWidgets {
     final employeeService = EmployeeService();
 
     return ListTile(
-      contentPadding: contentPadding ??
-          const EdgeInsets.symmetric(vertical: 0.0),
+      contentPadding:
+      contentPadding ?? const EdgeInsets.symmetric(vertical: 0.0),
       leading: CircleAvatar(
         radius: avatarRadius,
         backgroundImage: employee.avatarUrl != null &&
@@ -639,7 +638,7 @@ class AppCommonWidgets {
         leading: CircleAvatar(
           radius: avatarRadius,
           backgroundImage: employee.avatarUrl != null &&
-                  employee.avatarUrl!.isNotEmpty
+              employee.avatarUrl!.isNotEmpty
               ? NetworkImage(employeeService.getAvatarUrl(employee.avatarUrl!))
               : null,
           child: employee.avatarUrl == null || employee.avatarUrl!.isEmpty
@@ -654,14 +653,14 @@ class AppCommonWidgets {
         onTap: onTap ??
             (showNavigation
                 ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EmployeeDetailScreen(employee: employee),
-                      ),
-                    );
-                  }
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      EmployeeDetailScreen(employee: employee),
+                ),
+              );
+            }
                 : null),
       ),
     );
@@ -680,14 +679,14 @@ class AppCommonWidgets {
       onTap: onTap ??
           (showNavigation
               ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          EmployeeDetailScreen(employee: employee),
-                    ),
-                  );
-                }
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    EmployeeDetailScreen(employee: employee),
+              ),
+            );
+          }
               : null),
       child: SizedBox(
         width: width,
@@ -840,7 +839,7 @@ class _CalendarWidgetState extends State<_CalendarWidget> {
                       ),
                       onTap: () {
                         final newDate =
-                            DateTime(widget.focusedDate.year, index + 1, 1);
+                        DateTime(widget.focusedDate.year, index + 1, 1);
                         widget.onMonthChanged(newDate);
                         Navigator.pop(context);
                       },
@@ -911,7 +910,7 @@ class _CalendarWidgetState extends State<_CalendarWidget> {
                       ),
                       onTap: () {
                         final newDate =
-                            DateTime(years[index], widget.focusedDate.month, 1);
+                        DateTime(years[index], widget.focusedDate.month, 1);
                         widget.onYearChanged(newDate);
                         Navigator.pop(context);
                       },
@@ -928,15 +927,15 @@ class _CalendarWidgetState extends State<_CalendarWidget> {
 
   Widget _buildCalendar() {
     final firstDayOfMonth =
-        DateTime(widget.focusedDate.year, widget.focusedDate.month, 1);
+    DateTime(widget.focusedDate.year, widget.focusedDate.month, 1);
     final lastDayOfMonth =
-        DateTime(widget.focusedDate.year, widget.focusedDate.month + 1, 0);
+    DateTime(widget.focusedDate.year, widget.focusedDate.month + 1, 0);
     final firstWeekday = firstDayOfMonth.weekday;
     final daysInMonth = lastDayOfMonth.day;
 
     // Получаем дни предыдущего месяца для заполнения начала календаря
     final prevMonth =
-        DateTime(widget.focusedDate.year, widget.focusedDate.month - 1, 0);
+    DateTime(widget.focusedDate.year, widget.focusedDate.month - 1, 0);
     final daysInPrevMonth = prevMonth.day;
 
     List<Widget> calendarDays = [];
@@ -958,7 +957,7 @@ class _CalendarWidgetState extends State<_CalendarWidget> {
     // Добавляем дни текущего месяца
     for (int day = 1; day <= daysInMonth; day++) {
       final date =
-          DateTime(widget.focusedDate.year, widget.focusedDate.month, day);
+      DateTime(widget.focusedDate.year, widget.focusedDate.month, day);
 
       // Определяем состояние для диапазона
       bool isInRange = false;
@@ -1005,12 +1004,12 @@ class _CalendarWidgetState extends State<_CalendarWidget> {
               color: isRangeStart
                   ? widget.rangeStartColor
                   : isRangeEnd
-                      ? widget.rangeEndColor
-                      : isInRange
-                          ? widget.rangeColor
-                          : isSelected
-                              ? widget.selectedColor
-                              : null,
+                  ? widget.rangeEndColor
+                  : isInRange
+                  ? widget.rangeColor
+                  : isSelected
+                  ? widget.selectedColor
+                  : null,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -1153,18 +1152,18 @@ class _CalendarWidgetState extends State<_CalendarWidget> {
           Row(
             children: AppCommonWidgets._daysOfWeek
                 .map((day) => Expanded(
-                      child: Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          day,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
-                    ))
+              child: Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  day,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ))
                 .toList(),
           ),
           // Календарная сетка

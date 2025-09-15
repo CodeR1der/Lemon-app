@@ -12,6 +12,7 @@ import 'package:task_tracker/services/employee_operations.dart';
 import 'package:task_tracker/services/navigation_service.dart';
 import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
+import 'package:task_tracker/widgets/common/refresh_wrapper.dart';
 
 import '../models/employee.dart';
 import '../models/project.dart';
@@ -72,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // Загружаем объявления через AnnouncementProvider
       final announcementProvider =
-          Provider.of<AnnouncementProvider>(context, listen: false);
+      Provider.of<AnnouncementProvider>(context, listen: false);
       await announcementProvider.loadAnnouncements(
           companyId: UserService.to.currentUser!.companyId);
 
@@ -80,11 +81,11 @@ class _HomeScreenState extends State<HomeScreen> {
       final List<ProjectInformation> projectsWithCounts = [];
       final currentUser = UserService.to.currentUser!;
       final projects =
-          await EmployeeService().getAllProjects(currentUser.userId);
+      await EmployeeService().getAllProjects(currentUser.userId);
 
       for (final project in projects) {
         final workersCount =
-            await ProjectService().getAllWorkersCount(project.projectId);
+        await ProjectService().getAllWorkersCount(project.projectId);
         projectsWithCounts.add(ProjectInformation(project, workersCount));
       }
       _projects.assignAll(projectsWithCounts);
@@ -99,6 +100,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _refreshData() async {
+    setState(() {
+      _isLoading.value = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _loadData();
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Ошибка обновления данных: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading.value = false;
+      });
+    }
+  }
   @override
   void dispose() {
     super.dispose();
@@ -245,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
             scrollDirection: isHorizontal ? Axis.horizontal : Axis.vertical,
             itemCount: itemCount,
             separatorBuilder: (context, index) =>
-                isHorizontal ? const SizedBox(width: 10) : const Divider(),
+            isHorizontal ? const SizedBox(width: 10) : const Divider(),
             itemBuilder: (context, index) {
               return isHorizontal
                   ? _buildShimmerHorizontalItem()
@@ -348,35 +367,34 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         body: _errorMessage != null
             ? Center(child: Text(_errorMessage!))
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppSpacing.height16,
-                    _buildUserInfo(),
-                    AppSpacing.height16,
-                    _buildSearchBox(),
-                    AppSpacing.height16,
-                    _buildAddTaskButton(),
-                    AppSpacing.height16,
-                    if (UserService.to.currentUser!.role == 'Директор' ||
-                        UserService.to.currentUser!.role == 'Коммуникатор') ...[
-                      _buildAddAnnouncementButton(),
-                      AppSpacing.height16,
-                    ],
-                    _buildAnnouncementSection(),
-                    _buildTasksSection(),
-                    AppSpacing.height16,
-                    _buildEmployeesSection(),
-                    AppSpacing.height16,
-                    _buildProjectsSection(),
-                  ],
-                ),
-              ),
+            :  RefreshableScrollView(
+          onRefresh: _loadData,
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            AppSpacing.height16,
+            _buildUserInfo(),
+            AppSpacing.height16,
+            _buildSearchBox(),
+            AppSpacing.height16,
+            _buildAddTaskButton(),
+            AppSpacing.height16,
+            if (UserService.to.currentUser!.role == 'Директор' ||
+                UserService.to.currentUser!.role == 'Коммуникатор') ...[
+              _buildAddAnnouncementButton(),
+              AppSpacing.height16,
+            ],
+            _buildAnnouncementSection(),
+            _buildTasksSection(),
+            AppSpacing.height16,
+            _buildEmployeesSection(),
+            AppSpacing.height16,
+            _buildProjectsSection(),
+          ],
+        ),
       );
     });
   }
+
 
   Widget _buildUserInfo() {
     final user = UserService.to.currentUser!;
@@ -389,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               user.fullName.split(' ').take(2).join(' '),
               style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+              const TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
             ),
             Text(
               user.position,
@@ -465,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (result == true) {
           // Объявление было создано, обновляем данные
           final announcementProvider =
-              Provider.of<AnnouncementProvider>(context, listen: false);
+          Provider.of<AnnouncementProvider>(context, listen: false);
           await announcementProvider.loadAnnouncements(
               companyId: UserService.to.currentUser!.companyId);
         }
@@ -632,7 +650,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(1.0),
               itemCount: categories.length,
               separatorBuilder: (context, index) =>
-                  const Divider(color: Color(0xffbd7d8d9)),
+              const Divider(color: Color(0xffbd7d8d9)),
               itemBuilder: (context, index) {
                 final category = categories[index];
                 return _buildTaskCategoryItem(category);
@@ -710,7 +728,7 @@ class _HomeScreenState extends State<HomeScreen> {
           title: const Text('Сотрудники', style: AppTextStyles.titleMedium),
           trailing: Container(
             padding:
-                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
             decoration: BoxDecoration(
               color: Colors.grey[200],
               borderRadius: BorderRadius.circular(8.0),
@@ -728,15 +746,15 @@ class _HomeScreenState extends State<HomeScreen> {
         _employees.isEmpty
             ? AppCommonWidgets.emptyState('Нет сотрудников')
             : SizedBox(
-                height: 160,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _employees.length,
-                  separatorBuilder: (context, index) => AppSpacing.width12,
-                  itemBuilder: (context, index) =>
-                      _buildEmployeeCell(_employees[index]),
-                ),
-              ),
+          height: 160,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _employees.length,
+            separatorBuilder: (context, index) => AppSpacing.width12,
+            itemBuilder: (context, index) =>
+                _buildEmployeeCell(_employees[index]),
+          ),
+        ),
       ],
     );
   }
@@ -757,7 +775,7 @@ class _HomeScreenState extends State<HomeScreen> {
           title: const Text('Проекты', style: AppTextStyles.titleMedium),
           trailing: Container(
             padding:
-                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
             decoration: BoxDecoration(
               color: Colors.grey[200],
               borderRadius: BorderRadius.circular(8.0),
@@ -775,15 +793,15 @@ class _HomeScreenState extends State<HomeScreen> {
         _projects.isEmpty
             ? AppCommonWidgets.emptyState('Нет проектов')
             : SizedBox(
-                height: 150,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _projects.length,
-                  separatorBuilder: (context, index) => AppSpacing.width6,
-                  itemBuilder: (context, index) =>
-                      _buildProjectCell(_projects[index]),
-                ),
-              ),
+          height: 150,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _projects.length,
+            separatorBuilder: (context, index) => AppSpacing.width6,
+            itemBuilder: (context, index) =>
+                _buildProjectCell(_projects[index]),
+          ),
+        ),
       ],
     );
   }
