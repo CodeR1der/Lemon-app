@@ -275,10 +275,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
                             itemCount: _allEmployees.length,
                             itemBuilder: (context, index) {
                               final employee = _allEmployees[index];
-                              final isInProject =
-                                  _tempSelectedEmployees.firstWhereOrNull(
-                                          (e) => e.userId == employee.userId) !=
-                                      null;
+                              final isInProject = _tempSelectedEmployees
+                                  .any((e) => e.userId == employee.userId);
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 12),
                                 child: Row(
@@ -287,11 +285,18 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
                                       onTap: () {
                                         setModalState(() {
                                           if (isInProject) {
-                                            _tempSelectedEmployees
-                                                .remove(employee);
+                                            _tempSelectedEmployees.removeWhere(
+                                                (e) =>
+                                                    e.userId ==
+                                                    employee.userId);
                                           } else {
-                                            _tempSelectedEmployees
-                                                .add(employee);
+                                            if (!_tempSelectedEmployees.any(
+                                                (e) =>
+                                                    e.userId ==
+                                                    employee.userId)) {
+                                              _tempSelectedEmployees
+                                                  .add(employee);
+                                            }
                                           }
                                         });
                                       },
@@ -334,7 +339,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen>
                                       child: employee.avatarUrl == null ||
                                               employee.avatarUrl!.isEmpty
                                           ? Text(
-                                              employee.fullName?.isNotEmpty == true
+                                              employee.fullName?.isNotEmpty ==
+                                                      true
                                                   ? employee.firstName
                                                       .toUpperCase()
                                                   : 'N',

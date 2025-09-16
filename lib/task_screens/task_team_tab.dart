@@ -70,17 +70,17 @@ class _TaskTeamTab extends State<TaskTeamTab> {
                 employees: [team.communicatorId],
               ),
 
-            // Исполнители (все кроме creator и communicator)
+            // Исполнители (могут совпадать с creator, но не с communicator)
             if (hasTeamMembers)
               _buildTeamMemberSection(
                 context: context,
-                title: 'Исполнители',
+                title: 'Исполнитель',
                 employees: team.teamMembers
                     .where((member) =>
-                        member.userId != team.creatorId.userId &&
-                        member.userId != team.communicatorId.userId)
+                member.userId != team.communicatorId.userId)
                     .toList(),
               ),
+
             SizedBox(height: MediaQuery.of(context).padding.bottom),
           ],
         ),

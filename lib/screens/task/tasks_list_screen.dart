@@ -169,7 +169,7 @@ class _TaskListByStatusScreenState extends State<TaskListByStatusScreen> {
                       ],
                       // Название задачи для всех
                       AppCommonWidgets.labeledField(
-                        label: 'Название задачи',
+                        label: 'Название задачи' ,
                         child: Text(
                           task.taskName,
                           style: AppTextStyles.bodyMedium,

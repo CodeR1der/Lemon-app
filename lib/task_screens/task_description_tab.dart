@@ -202,6 +202,16 @@ class _TaskDescriptionTabState extends State<TaskDescriptionTab> {
                 style: AppTextStyles.bodyMedium),
             const SizedBox(height: 16),
 
+            if(_currentTask.number != null)...[
+              // Название задачи
+              Text('Номер задачи',
+                  style: AppTextStyles.titleSmall),
+              const SizedBox(height: 4),
+              Text(_currentTask.number.toString() ,
+                  style: AppTextStyles.bodyMedium),
+              const SizedBox(height: 16),
+            ],
+
             // Название задачи
             Text('Название задачи',
                 style: AppTextStyles.titleSmall),

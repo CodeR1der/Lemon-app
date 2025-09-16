@@ -462,6 +462,27 @@ class TaskService {
         task.id = const Uuid().v4();
       }
 
+      // Определяем следующий номер задачи в рамках компании
+      if (task.number == 1) {
+        try {
+          final List<dynamic> maxResp = await _client
+              .from('task')
+              .select('number')
+              .eq('company_id', task.companyId)
+              .order('number', ascending: false)
+              .limit(1);
+          final int currentMax = (maxResp.isNotEmpty)
+              ? (maxResp.first['number'] is int
+                  ? maxResp.first['number'] as int
+                  : int.tryParse(maxResp.first['number']?.toString() ?? '') ??
+                      -1)
+              : -1;
+          task.number = currentMax + 1;
+        } catch (_) {
+          task.number = 0;
+        }
+      }
+
       // Загрузка вложений
       if (task.attachments.isNotEmpty) {
         final uploadedAttachments = await fileService.uploadFilesFromPaths(
@@ -484,7 +505,7 @@ class TaskService {
             task.videoMessage!, 'TaskAttachments',
             prefix: 'video_${task.id}');
         task.videoMessage = uploadedVideos;
-      }
+      }//
 
       print('Все файлы успешно загружены!');
 

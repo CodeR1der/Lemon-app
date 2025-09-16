@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:task_tracker/models/task_team.dart';
+import 'package:task_tracker/services/project_operations.dart';
 import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/widgets/common/app_common.dart';
 import 'package:uuid/uuid.dart';
@@ -79,6 +80,14 @@ class _TaskTitleScreenState extends State<TaskTitleScreen>
       if (widget.project != null) {
         // Если проект уже выбран, пропускаем экран выбора проекта
         task.project = widget.project!;
+        // Обновляем команду проекта перед продолжением
+        try {
+          final latestTeam =
+              await ProjectService().getProjectTeam(widget.project!.projectId);
+          task.project!.team
+            ..clear()
+            ..addAll(latestTeam);
+        } catch (_) {}
         await Get.to(() => AddedFilesScreen(task));
       } else {
         // Если проект не выбран, идем на экран выбора проекта
@@ -131,7 +140,8 @@ class _TaskTitleScreenState extends State<TaskTitleScreen>
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      resizeToAvoidBottomInset: true, // Обязательно для корректной работы клавиатуры
+      resizeToAvoidBottomInset:
+          true, // Обязательно для корректной работы клавиатуры
       appBar: AppBar(
         title: const Text('Постановка задачи'),
         elevation: 0,
@@ -148,7 +158,8 @@ class _TaskTitleScreenState extends State<TaskTitleScreen>
               AppCommonWidgets.inputField(
                 controller: _nameController,
                 hintText: 'Название',
-                validator: (value) => value!.isEmpty ? 'Введите название' : null,
+                validator: (value) =>
+                    value!.isEmpty ? 'Введите название' : null,
               ),
               const SizedBox(height: 16),
               Text('Описание задачи', style: AppTextStyles.titleSmall),
@@ -156,7 +167,8 @@ class _TaskTitleScreenState extends State<TaskTitleScreen>
               AppCommonWidgets.inputField(
                 controller: _descriptionController,
                 hintText: 'Описание',
-                validator: (value) => value!.isEmpty ? 'Введите описание' : null,
+                validator: (value) =>
+                    value!.isEmpty ? 'Введите описание' : null,
               ),
               const Spacer(),
               AppButtons.primaryButton(

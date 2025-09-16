@@ -1,8 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:task_tracker/services/task_operations.dart';
-import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/services/project_operations.dart';
+import 'package:task_tracker/services/user_service.dart';
 import 'package:task_tracker/task_screens/deadline_screen.dart';
 import 'package:task_tracker/widgets/common/app_common.dart';
 import 'package:uuid/uuid.dart';
@@ -41,24 +40,32 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
     }
 
     employeesFuture = loadEmployees().then((employees) {
-      // Убираем предвыбранного сотрудника из списка, чтобы избежать конфликта
-      final filteredEmployees = employees
-          .where((employee) =>
-              selectedPerformer == null ||
-              employee.userId != selectedPerformer!.userId)
-          .toList();
-      if (selectedPerformer != null && !widget.taskData.project!.team.contains(selectedPerformer)) {
-        return [...filteredEmployees, selectedPerformer!];
+      final currentUser = UserService.to.currentUser;
+
+      // Убираем возможные дубли по userId
+      final uniqueEmployees =
+          {for (var e in employees) e.userId: e}.values.toList();
+
+      if (currentUser != null &&
+          !uniqueEmployees.any((e) => e.userId == currentUser.userId)) {
+        uniqueEmployees.add(currentUser);
       }
 
-      return filteredEmployees;
+      return uniqueEmployees;
     });
   }
 
-
   Future<List<Employee>> loadEmployees() async {
-    // Загружаем только сотрудников из команды проекта
-    return widget.taskData.project!.team;
+    // Загружаем сотрудников из команды проекта (актуальные данные)
+    final projectId = widget.taskData.project?.projectId;
+    if (projectId != null && projectId.isNotEmpty) {
+      try {
+        return await ProjectService().getProjectTeam(projectId);
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
   }
 
   @override
@@ -103,10 +110,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                     }
                   },
                   employees: employees
-                      .where((employee) =>
-                          employee.userId !=
-                              UserService.to.currentUser!.userId &&
-                          employee.role != 'Коммуникатор')
+                      .where((employee) => employee.role != 'Коммуникатор')
                       .toList(),
                   isSelected: widget.taskData.team.teamMembers.isNotEmpty,
                 ),
@@ -150,12 +154,12 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
                       });
                     }
                   },
-                  employees: employees
-                      .where((employee) =>
-                          employee.userId !=
-                              UserService.to.currentUser!.userId &&
-                          employee.role != 'Коммуникатор')
-                      .toList(),
+                  employees: employees.where((employee) {
+                    final currentUser = UserService.to.currentUser;
+                    return employee.userId != selectedPerformer?.userId &&
+                        employee.userId != selectedCommunicator?.userId &&
+                        employee.userId != currentUser?.userId;
+                  }).toList(),
                 ),
                 const SizedBox(height: 16),
                 const Spacer(),
@@ -202,9 +206,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen> {
         (selectedPerformer != null &&
             employee.userId == selectedPerformer!.userId) ||
         (selectedObserver != null &&
-            employee.userId == selectedObserver!.userId) ||
-        (UserService.to.currentUser != null &&
-            employee.userId == UserService.to.currentUser!.userId);
+            employee.userId == selectedObserver!.userId);
   }
 
   Widget _buildEmployeeSelectionTile({

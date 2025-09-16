@@ -21,6 +21,7 @@ class Task {
   Priority priority;
   TaskStatus status;
   String companyId;
+  int number;
 
   Task(
       {required this.id,
@@ -37,7 +38,8 @@ class Task {
       this.audioMessage,
       this.videoMessage,
       this.priority = Priority.low, // Значение по умолчанию
-      this.status = TaskStatus.newTask});
+      this.status = TaskStatus.newTask,
+      this.number = 1});
 
   // Метод для преобразования строки из базы данных в Priority
   static Priority parsePriority(String priority) {
@@ -79,7 +81,8 @@ class Task {
       'audio_message': audioMessage,
       'video_message': videoMessage,
       'status': status.toString().substring(11),
-      'company_id': companyId
+      'company_id': companyId,
+      'number': number
     };
   }
 
@@ -102,6 +105,9 @@ class Task {
           json['deadline'] != null ? DateTime.parse(json['deadline']) : null,
       videoMessage: List<String>.from(json['video_message'] ?? []),
       status: StatusHelper.toTaskStatus(json['status']),
+      number: (json['number'] is int)
+          ? json['number'] as int
+          : int.tryParse(json['number']?.toString() ?? '') ?? 0,
     );
   }
 
@@ -151,7 +157,8 @@ class Task {
       String? queuePosition,
       Priority? priority,
       TaskStatus? status,
-      String? companyId}) {
+      String? companyId,
+      int? number}) {
     return Task(
         id: id ?? this.id,
         taskName: taskName ?? this.taskName,
@@ -168,7 +175,8 @@ class Task {
         queuePosition: queuePosition ?? this.queuePosition,
         priority: priority ?? this.priority,
         status: status ?? this.status,
-        companyId: companyId ?? this.companyId);
+        companyId: companyId ?? this.companyId,
+        number: number ?? this.number);
   }
 }
 

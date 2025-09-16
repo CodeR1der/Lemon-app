@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:task_tracker/models/correction.dart';
 import 'package:task_tracker/services/task_operations.dart';
-import 'package:task_tracker/widgets/common/app_buttons.dart';
 import 'package:task_tracker/widgets/common/app_common.dart';
 
 import '../../models/task.dart';
@@ -59,36 +58,36 @@ class _AddExtraTimeScreen extends State<AddExtraTimeScreen> {
               // Название задачи
               Text(
                 'Название задачи',
-                style: Theme.of(context).textTheme.titleSmall,
+                style: AppTextStyles.titleSmall,
               ),
               const SizedBox(height: 4),
               Text(
                 widget.task.taskName,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: AppTextStyles.bodyMedium,
               ),
               const SizedBox(height: 16),
 
               // Причина запроса на дополнительное время (Correction Description)
               Text(
                 'Причина запроса на дополнительное время',
-                style: Theme.of(context).textTheme.titleSmall,
+                style: AppTextStyles.titleSmall,
               ),
               const SizedBox(height: 8),
               Text(
                 widget.correction.description ?? 'Причина не указана',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: AppTextStyles.bodyMedium,
               ),
               const SizedBox(height: 16),
 
               // Текущий дедлайн
               Text(
                 'Сдeлать до',
-                style: Theme.of(context).textTheme.titleSmall,
+                style: AppTextStyles.titleSmall,
               ),
               const SizedBox(height: 4),
               Text(
                 _formatDeadline(widget.task.endDate),
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: AppTextStyles.bodyMedium,
               ),
               const SizedBox(height: 16),
 
