@@ -87,11 +87,12 @@ class AppCommonWidgets {
   }
 
   /// Виджет для отображения статуса задачи
-  static Widget statusChip(
-      {required IconData icon,
-      required String text,
-      Color? textColor,
-      TaskStatus? status}) {
+  static Widget statusChip({
+    required IconData icon,
+    required String text,
+    Color? textColor,
+    TaskStatus? status
+  }) {
     var backgroundColor = status == TaskStatus.completed
         ? Colors.green.withOpacity(0.2)
         : status == TaskStatus.closed
@@ -100,8 +101,8 @@ class AppCommonWidgets {
     var textColor = status == TaskStatus.completed
         ? Colors.green[800]
         : status == TaskStatus.closed
-            ? Colors.red[800]
-            : Colors.black;
+    ? Colors.red[800]
+        : Colors.black;
     return Container(
       padding: AppSpacing.paddingHorizontal8Vertical4,
       decoration: AppContainerStyles.statusContainerDecoration.copyWith(
@@ -353,12 +354,15 @@ class AppCommonWidgets {
   }
 
   static Widget inputPhoneField(
-      {required TextEditingController phoneController,
-      required String hintText,
-      Widget? prefixIcon,
-      bool enabled = true,
-      VoidCallback? onTap,
-      VoidCallback? onChanged}) {
+      {
+        required TextEditingController phoneController,
+        required String hintText,
+        Widget? prefixIcon,
+        bool enabled = true,
+        VoidCallback? onTap,
+        VoidCallback? onChanged
+      }
+      ){
     return GestureDetector(
       onTap: onTap,
       child: TextFormField(
@@ -504,8 +508,8 @@ class AppCommonWidgets {
     final employeeService = EmployeeService();
 
     return ListTile(
-      contentPadding:
-          contentPadding ?? const EdgeInsets.symmetric(vertical: 4.0),
+      contentPadding: contentPadding ??
+          const EdgeInsets.symmetric(vertical: 4.0),
       leading: CircleAvatar(
         radius: avatarRadius,
         backgroundImage: employee.avatarUrl != null &&
@@ -571,8 +575,8 @@ class AppCommonWidgets {
     final employeeService = EmployeeService();
 
     return ListTile(
-      contentPadding:
-          contentPadding ?? const EdgeInsets.symmetric(vertical: 0.0),
+      contentPadding: contentPadding ??
+          const EdgeInsets.symmetric(vertical: 0.0),
       leading: CircleAvatar(
         radius: avatarRadius,
         backgroundImage: employee.avatarUrl != null &&

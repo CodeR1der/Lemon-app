@@ -75,17 +75,17 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
             child: categories.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.separated(
-                    padding: const EdgeInsets.all(1.0),
-                    itemCount: categories.length,
-                    separatorBuilder: (context, index) => const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Divider(),
-                    ),
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      return _buildCategoryItem(context, category);
-                    },
-                  ),
+              padding: const EdgeInsets.all(1.0),
+              itemCount: categories.length,
+              separatorBuilder: (context, index) => const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Divider(),
+              ),
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                return _buildCategoryItem(context, category);
+              },
+            ),
           ),
         );
       },
@@ -97,7 +97,7 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
 
     return ListTile(
       contentPadding:
-          const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
+      const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
       leading: Icon(icon, color: Colors.blue),
       title: Text(
         category.title,
@@ -136,8 +136,8 @@ class _PositionTasksTabState extends State<PositionTasksTab> {
         );
       } else if (widget.position != null && widget.employeeId != null) {
         if ((widget.position == RoleHelper.convertToString(TaskRole.executor) ||
-                widget.position ==
-                    RoleHelper.convertToString(TaskRole.creator)) &&
+            widget.position ==
+                RoleHelper.convertToString(TaskRole.creator)) &&
             category.status == TaskStatus.queue) {
           Navigator.push(
             context,
